@@ -139,3 +139,77 @@ def test_prompt_version_advanced_past_the_pilot():
     re-reading the bug."""
     assert cp.PROMPT_VERSION != "census-v4", \
         "bump PROMPT_VERSION or the cache returns the pre-fix classifications"
+
+
+# ── v6: the conjunction guard ────────────────────────────────────────────────
+#
+# v5 fixed the disjunction under-call and introduced a LARGER over-call. It told
+# the model to "ask one question first: is English in the accepted set?" and to
+# stop at the first matching rule -- so precedence 2 fired before precedence 4
+# ("OR is not AND") could be read. Both v5 regressions were conjunctions:
+#
+#   "Du må kunne gjøre deg forstått på norsk OG engelsk"        (#18)
+#   "Kommuniserer godt på et skandinavisk språk OG engelsk"     (#37)
+#
+# In a conjunction English is an ADDITIONAL requirement, not an alternative, so
+# Norwegian/Scandinavian is still required and the ad is NOT English-accessible.
+#
+# Measured over the corpus: 781 ads carry the disjunction shape, 863 the
+# conjunction shape. The v5 over-call was 1.1x the size of the under-call it
+# fixed -- which is why the English-wins rule has to be gated on the connective
+# rather than on English merely appearing.
+
+def test_english_wins_is_gated_on_the_connective_not_mere_presence():
+    """The v5 bug in one assertion. The rule must turn on eller/or vs og/and,
+    not on whether English is mentioned."""
+    low = SYSTEM.lower()
+    i = low.find("either_norwegian_or_english")
+    assert i != -1
+    window = low[max(0, i - 1200):i + 1200]
+    assert re.search(r"\beller\b|\bor\b", window), "the rule must name the disjunctive connective"
+    assert re.search(r"\bog\b|\band\b", window), \
+        "the rule must contrast the conjunctive connective in the same breath"
+
+
+def test_conjunction_is_not_accessible():
+    """`norsk og engelsk` must be stated as NOT accessible, adjacent enough to
+    the English-wins rule that a model reading rule 2 cannot miss it."""
+    low = SYSTEM.lower()
+    assert re.search(r"(norsk|skandinavisk)\w*\s+og\s+engelsk", low), \
+        "the prompt must show a conjunction surface form verbatim"
+    assert re.search(r"og\s+engelsk[\s\S]{0,500}?(not|ikke|still required|begge|both)", low), \
+        "the conjunction example must be labelled as still requiring Norwegian"
+
+
+def test_a_fewshot_demonstrates_the_conjunction():
+    """v5's lesson: a rule with no demonstration loses to a rule that has one.
+    The conjunction needs its own worked example or the same failure recurs."""
+    conj = re.compile(r"(norsk|skandinavisk|nordisk)\w*\s+og\s+(engelsk|english)", re.I)
+    hits = []
+    for _t, _b, _l, f in cp.FEWSHOT:
+        for sp in f.get("evidence_spans", []):
+            if conj.search(sp["span"]):
+                hits.append((f["norwegian_requirement_level"], sp["span"]))
+    assert hits, "no few-shot demonstrates an X-AND-English conjunction"
+    for level, span in hits:
+        assert level != "either_norwegian_or_english", (
+            f"a conjunction must NOT be demonstrated as accessible: {span!r} -> {level}"
+        )
+
+
+def test_precedence_puts_the_connective_check_before_the_english_check():
+    """Rule 2 says "stop at the first that matches". If the English test is
+    reachable before the OR/AND test, v5's ordering bug is still live."""
+    low = SYSTEM.lower()
+    or_not_and = low.find("or is not and")
+    scope = low.find("scope beats bar")
+    assert or_not_and != -1 and scope != -1
+    assert or_not_and < scope, (
+        "the OR-is-not-AND test must precede SCOPE BEATS BAR, or the English "
+        "rule fires first and conjunctions are misread as accessible"
+    )
+
+
+def test_prompt_version_advanced_past_v5():
+    assert cp.PROMPT_VERSION not in ("census-v4", "census-v5"), \
+        "bump PROMPT_VERSION or the cache returns the v5 over-calls"

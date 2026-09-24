@@ -31,7 +31,7 @@ REJECTED (measurement refuted the claim):
   * "språkmodell for barna" - 5 ads, not the 727 implied by occupation counts.
 """
 
-PROMPT_VERSION = "census-v5"
+PROMPT_VERSION = "census-v6"
 
 SYSTEM = """You extract language-requirement facts from Norwegian job advertisements for a \
 search engine whose users include people who speak English but no Norwegian.
@@ -65,6 +65,15 @@ An English speaker satisfies every one of them by speaking English. 436 \
 advertisements use this shape and 364 of them never also say "norsk eller \
 engelsk", so no other rule rescues them.
 
+THE CONNECTIVE IS THE WHOLE TEST. Swap "eller" for "og" and the answer \
+reverses, because a conjunction demands every language it lists:
+  "skandinavisk eller engelsk"  → `either_norwegian_or_english`  (accessible)
+  "skandinavisk og engelsk"     → `scandinavian_accepted`        (NOT accessible)
+  "norsk eller engelsk"         → `either_norwegian_or_english`  (accessible)
+  "norsk og engelsk"            → the Norwegian bar stated       (NOT accessible)
+863 advertisements use the conjunction shape and 781 the disjunction — they are \
+almost equally common, so reading the connective is not an edge case.
+
 Contrast: "norsk eller et annet skandinavisk språk" still EXCLUDES an English speaker — \
 there is no English in the set. That absence, not the presence of a Nordic language, \
 is what makes it `scandinavian_accepted`.
@@ -85,26 +94,37 @@ stop at the first that matches:
 1. **An explicit negation wins.** "Norsk er en fordel, men ikke et krav" is \
    `explicitly_not_required`, not `desirable` — "ikke et krav" overrides "en \
    fordel" in the same sentence.
-2. **SCOPE BEATS BAR, AND ENGLISH BEATS EVERYTHING.** The set of accepted \
-   languages decides the level; the proficiency demanded does not.
-   Ask one question first: **is English in the accepted set?**
+2. **READ THE CONNECTIVE BEFORE ANYTHING ELSE: OR is not AND.** This decides \
+   whether the languages named are ALTERNATIVES or a LIST OF REQUIREMENTS, and \
+   nothing below can be applied until you know which.
+   - **"eller" / "or" — alternatives.** Any ONE of them suffices. Go to rule 3.
+   - **"og" / "and" — requirements.** ALL of them are demanded. English being \
+     among them makes it an EXTRA requirement, not an escape route: \
+     "gjøre deg forstått på norsk **og** engelsk" still requires Norwegian, so \
+     the level is the Norwegian bar stated (`conversational` here) and the ad \
+     is NOT English-accessible. "skandinavisk språk **og** engelsk" still \
+     requires Scandinavian → `scandinavian_accepted`. Do NOT apply rule 3 to a \
+     conjunction.
+   A comma-separated list with no connective ("norsk, engelsk") is a \
+   conjunction — treat it as "og".
+3. **SCOPE BEATS BAR — for alternatives only.** Having established a \
+   DISJUNCTION in rule 2, the set of accepted languages decides the level and \
+   the proficiency demanded does not. Ask: **is English one of the \
+   alternatives?**
    - **Yes → `either_norwegian_or_english`.** Whatever the bar, whatever the \
-     other languages listed, and whether or not norsk is named. "skandinavisk \
+     other languages offered, and whether or not norsk is named. "skandinavisk \
      eller engelsk" and "engelsk eller ett nordisk språk" are BOTH this level. \
      A Nordic word in the sentence does not change it — read the whole \
      disjunction before choosing, not the first language you recognise.
    - **No, but a Nordic/Scandinavian language is → `scandinavian_accepted`.** \
-     This level means English is ABSENT from the accepted set. Use it only \
+     This level means English is ABSENT from the alternatives. Use it only \
      then — even when the bar is only "gjøre seg forstått", and even when the \
      sentence also says "flytende".
-3. **A REQUIREMENT outranks a parenthetical.** "Gode kommunikasjonsevner, \
+4. **A REQUIREMENT outranks a parenthetical.** "Gode kommunikasjonsevner, \
    skandinavisk og engelsk (norsk er en fordel)" requires Scandinavian, so it \
    is `scandinavian_accepted`. The bracketed "fordel" does not soften a \
    requirement stated beside it. Contrast "gode kommunikasjonsevner i engelsk \
    (norsk er en fordel)", which requires only English and IS `desirable`.
-4. **OR is not AND.** "norsk eller engelsk" is a disjunction and accessible. \
-   "norsk og engelsk" is a conjunction: both are required, so it is a Norwegian \
-   requirement at whatever bar is stated.
 
 ### PROFICIENCY BARS, when scope does not decide
 `certified` — any named test or level: norskprøve, Norskprøve 2, Bergenstest, \

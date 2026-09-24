@@ -4,7 +4,7 @@
  "unscored": [],
  "extra_predictions": 0,
  "coverage": 1.0,
- "pooled_accuracy": 0.8409090909090909,
+ "pooled_accuracy": 0.8181818181818182,
  "pooled_accuracy_caveat": "Pooled accuracy is dominated by the golden set's level mix, which is a stratified sampling artifact: `desirable` is over-represented ~200x relative to the corpus. Read per_level instead.",
  "per_level": {
   "certified": {
@@ -14,13 +14,13 @@
   },
   "either_norwegian_or_english": {
    "n": 5,
-   "correct": 3,
-   "accuracy": 0.6
+   "correct": 5,
+   "accuracy": 1.0
   },
   "desirable": {
    "n": 4,
-   "correct": 4,
-   "accuracy": 1.0
+   "correct": 3,
+   "accuracy": 0.75
   },
   "fluent": {
    "n": 1,
@@ -29,8 +29,8 @@
   },
   "scandinavian_accepted": {
    "n": 8,
-   "correct": 8,
-   "accuracy": 1.0
+   "correct": 7,
+   "accuracy": 0.875
   },
   "unstated": {
    "n": 12,
@@ -49,33 +49,33 @@
   },
   "conversational": {
    "n": 2,
-   "correct": 2,
-   "accuracy": 1.0
+   "correct": 1,
+   "accuracy": 0.5
   }
  },
  "invalid_levels": 0,
  "taxonomy_gap": [],
  "accessibility": {
-  "hidden_wrongly": 3,
-  "shown_wrongly": 0,
+  "hidden_wrongly": 2,
+  "shown_wrongly": 2,
   "n_accessible": 13,
   "n_blocking": 31,
-  "hidden_wrongly_rate": 0.23076923076923078,
-  "shown_wrongly_rate": 0.0,
+  "hidden_wrongly_rate": 0.15384615384615385,
+  "shown_wrongly_rate": 0.06451612903225806,
   "hidden_wrongly_ci95": [
-   0.08179379092465713,
-   0.5025687399512693
+   0.04325726318273798,
+   0.4223517050863101
   ],
   "shown_wrongly_ci95": [
-   0.0,
-   0.11025900073475385
+   0.017874407775063147,
+   0.20718988318746434
   ]
  },
  "evidence": {
   "n_expected": 32,
-  "exact": 19,
+  "exact": 18,
   "different": 13,
-  "missing": 0,
+  "missing": 1,
   "spurious": 3,
   "fabricated": 0
  },
@@ -92,17 +92,19 @@
  },
  "confusion": {
   "certified->certified": 4,
-  "either_norwegian_or_english->either_norwegian_or_english": 3,
-  "desirable->desirable": 4,
+  "either_norwegian_or_english->either_norwegian_or_english": 5,
+  "desirable->unstated": 1,
   "fluent->fluent": 1,
-  "scandinavian_accepted->scandinavian_accepted": 8,
+  "scandinavian_accepted->scandinavian_accepted": 7,
   "unstated->professional": 3,
   "professional->professional": 5,
   "explicitly_not_required->certified": 1,
-  "conversational->conversational": 2,
+  "conversational->conversational": 1,
+  "conversational->either_norwegian_or_english": 1,
   "explicitly_not_required->desirable": 1,
-  "either_norwegian_or_english->scandinavian_accepted": 2,
+  "desirable->desirable": 3,
   "explicitly_not_required->explicitly_not_required": 1,
-  "unstated->unstated": 9
+  "unstated->unstated": 9,
+  "scandinavian_accepted->either_norwegian_or_english": 1
  }
 }
