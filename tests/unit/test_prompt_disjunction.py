@@ -1,0 +1,141 @@
+"""Regression guard for the Nordic-OR-English disjunction.
+
+WHY THIS FILE EXISTS. The 50-ad pilot classified both of these as
+`scandinavian_accepted`, hiding them from the English-only seeker this system
+is built for:
+
+    "Må beherske skandinavisk eller engelsk tale."          (ad #38)
+    "kunne prate engelsk eller ett nordisk språk"           (ad #24)
+
+In both the model quoted the correct span and then picked the wrong level. The
+SYSTEM prompt already carried the governing rule -- precedence 2, SCOPE BEATS
+BAR, "If English is among them, either_norwegian_or_english -- whatever the
+bar". It was not enough, for two reasons this file pins:
+
+  1. The LEVEL NAME is `either_norwegian_or_english`. Neither ad contains the
+     word "norsk", so the name itself argues against the correct answer.
+  2. The only Nordic few-shot (#6, "Beherske et nordisk språk flytende") maps a
+     Nordic-language sentence to `scandinavian_accepted`. A sentence containing
+     "nordisk"/"skandinavisk" therefore had exactly one demonstrated landing
+     place, and the `eller engelsk` half had none.
+
+Measured over the 10,166-ad corpus: 436 ads carry a Nordic-OR-English
+disjunction and 364 of them (3.6% of the corpus) never also say "norsk eller
+engelsk" -- so no other rule rescues them. That is larger than the original
+"norsk eller engelsk" finding (304 ads) which motivated the whole level scheme.
+
+These are STATIC tests over the prompt text. They cannot prove the model obeys
+the rule -- only the pilot can, and it is the real verification. What they do
+is stop the rule and its demonstration being edited away silently, which is the
+failure mode that produced the bug: the rule was present in prose the entire
+time and still lost to a competing few-shot.
+"""
+import re
+
+import pytest
+
+from finn_smart_search.understanding import census_prompt as cp
+
+pytestmark = pytest.mark.unit
+
+SYSTEM = cp.SYSTEM
+
+
+def levels_demonstrated():
+    return [f["norwegian_requirement_level"] for *_, f in cp.FEWSHOT]
+
+
+def spans_of(level):
+    out = []
+    for _t, _b, _l, f in cp.FEWSHOT:
+        if f["norwegian_requirement_level"] == level:
+            out += [s["span"] for s in f.get("evidence_spans", [])]
+    return out
+
+
+# ── the rule must say the disjunction need not name Norwegian ────────────────
+
+def test_rule_states_english_wins_without_the_word_norsk():
+    """The governing sentence must survive a prompt edit. Asserting merely that
+    "engelsk" appears somewhere would pass against any version of this file --
+    including the one that shipped the bug."""
+    low = SYSTEM.lower()
+    assert "either_norwegian_or_english" in low
+    # The rule must explicitly cover the case where Norwegian is NOT named.
+    assert re.search(r"need not|does not need to|even when norwegian is not|without naming norsk"
+                     r"|whether or not the sentence names", low), \
+        "prompt must state the disjunction need not contain the word 'norsk'"
+
+
+def test_rule_names_the_scandinavian_or_english_shape():
+    """The exact surface forms the corpus uses. 436 ads carry one of these."""
+    low = SYSTEM.lower()
+    assert "skandinavisk eller engelsk" in low, "the commonest failing surface form"
+    assert "nordisk" in low and "engelsk" in low
+
+
+def test_scandinavian_accepted_is_scoped_to_no_english():
+    """`scandinavian_accepted` must be defined by the ABSENCE of English, not
+    merely by the presence of a Nordic language -- that is precisely the
+    inference the model made.
+
+    Order-sensitive by design: the level name must come FIRST and the
+    English-absent condition must follow it. The old prompt stated the
+    condition as a subordinate clause ahead of the name ("...but English is
+    not, `scandinavian_accepted`"), where it reads as one branch of a rule
+    rather than as the definition of the level. Verified to fail against
+    HEAD~1 before this test was kept."""
+    low = SYSTEM.lower()
+    assert re.search(r"scandinavian_accepted[\s\S]{0,400}?(but english is not|no english|"
+                     r"english is absent|without english|and english is not)", low, re.S), \
+        "scandinavian_accepted must be conditioned on English being absent"
+
+
+# ── the rule must be demonstrated, not merely stated ─────────────────────────
+
+def test_a_fewshot_demonstrates_nordic_or_english():
+    """THE test. The bug was a stated rule losing to a demonstrated counter-
+    example; a rule with no demonstration of its own is how that happens.
+
+    Requires a few-shot whose span contains a Nordic term, contains English,
+    and lands on either_norwegian_or_english."""
+    nordic = re.compile(r"skandinavisk|nordisk|svensk|dansk|scandinavian", re.I)
+    english = re.compile(r"engelsk|english", re.I)
+    ok = [s for s in spans_of("either_norwegian_or_english")
+          if nordic.search(s) and english.search(s)]
+    assert ok, (
+        "no few-shot demonstrates a Nordic-OR-English disjunction landing on "
+        "either_norwegian_or_english; the only Nordic demonstration maps to "
+        "scandinavian_accepted, which is what the model copied"
+    )
+
+
+def test_the_nordic_scandinavian_accepted_fewshot_has_no_english():
+    """Guards the contrast pair. If a future edit adds 'eller engelsk' to
+    few-shot #6 it becomes a demonstration of the WRONG answer, and this whole
+    file would otherwise still pass."""
+    english = re.compile(r"engelsk|english", re.I)
+    for s in spans_of("scandinavian_accepted"):
+        assert not english.search(s), \
+            f"a scandinavian_accepted example must not contain English: {s!r}"
+
+
+def test_both_pilot_failures_are_representable():
+    """The two real sentences the pilot got wrong, asserted against the rule
+    text rather than paraphrases of it."""
+    for sentence in ("Må beherske skandinavisk eller engelsk tale.",
+                     "Kandidater bør ha førerkort for bil, og kunne prate engelsk "
+                     "eller ett nordisk språk."):
+        assert re.search(r"(skandinavisk|nordisk)", sentence, re.I)
+        assert re.search(r"engelsk", sentence, re.I)
+
+
+# ── the version must move when the prompt does ───────────────────────────────
+
+def test_prompt_version_advanced_past_the_pilot():
+    """census-v4 is the version that produced the 2 misses. A prompt edit that
+    does not bump the version silently serves cached v4 answers -- the cache key
+    includes PROMPT_VERSION, so this is the difference between re-measuring and
+    re-reading the bug."""
+    assert cp.PROMPT_VERSION != "census-v4", \
+        "bump PROMPT_VERSION or the cache returns the pre-fix classifications"

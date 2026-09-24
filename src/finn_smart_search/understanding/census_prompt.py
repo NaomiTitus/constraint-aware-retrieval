@@ -31,7 +31,7 @@ REJECTED (measurement refuted the claim):
   * "språkmodell for barna" - 5 ads, not the 727 implied by occupation counts.
 """
 
-PROMPT_VERSION = "census-v4"
+PROMPT_VERSION = "census-v5"
 
 SYSTEM = """You extract language-requirement facts from Norwegian job advertisements for a \
 search engine whose users include people who speak English but no Norwegian.
@@ -53,7 +53,21 @@ norsk, but it does not require Norwegian. Set \
 industrial, warehouse and cleaning roles. Getting it wrong hides jobs from exactly the \
 people this system serves.
 
-Contrast: "norsk eller et annet skandinavisk språk" still EXCLUDES an English speaker.
+THE DISJUNCTION NEED NOT NAME NORWEGIAN. The level is called \
+`either_norwegian_or_english`, but it is decided by whether ENGLISH IS ACCEPTED, \
+whether or not the sentence names norsk at all. All of these are \
+`either_norwegian_or_english`:
+  "Må beherske skandinavisk eller engelsk tale"
+  "kunne prate engelsk eller ett nordisk språk"
+  "Scandinavian or English"
+  "engelsk eller et skandinavisk språk"
+An English speaker satisfies every one of them by speaking English. 436 \
+advertisements use this shape and 364 of them never also say "norsk eller \
+engelsk", so no other rule rescues them.
+
+Contrast: "norsk eller et annet skandinavisk språk" still EXCLUDES an English speaker — \
+there is no English in the set. That absence, not the presence of a Nordic language, \
+is what makes it `scandinavian_accepted`.
 
 ### "EN FORDEL" MEANS NOT REQUIRED
 "norsk er en fordel", "ønskelig med norsk", "du trenger ikke å snakke flytende \
@@ -71,12 +85,18 @@ stop at the first that matches:
 1. **An explicit negation wins.** "Norsk er en fordel, men ikke et krav" is \
    `explicitly_not_required`, not `desirable` — "ikke et krav" overrides "en \
    fordel" in the same sentence.
-2. **SCOPE BEATS BAR.** The set of accepted languages decides the level; the \
-   proficiency demanded does not. If English is among them, \
-   `either_norwegian_or_english` — whatever the bar. If a non-Norwegian \
-   Scandinavian or Nordic language is among them but English is not, \
-   `scandinavian_accepted` — even when the bar is only "gjøre seg forstått" \
-   and even when the sentence also says "flytende".
+2. **SCOPE BEATS BAR, AND ENGLISH BEATS EVERYTHING.** The set of accepted \
+   languages decides the level; the proficiency demanded does not.
+   Ask one question first: **is English in the accepted set?**
+   - **Yes → `either_norwegian_or_english`.** Whatever the bar, whatever the \
+     other languages listed, and whether or not norsk is named. "skandinavisk \
+     eller engelsk" and "engelsk eller ett nordisk språk" are BOTH this level. \
+     A Nordic word in the sentence does not change it — read the whole \
+     disjunction before choosing, not the first language you recognise.
+   - **No, but a Nordic/Scandinavian language is → `scandinavian_accepted`.** \
+     This level means English is ABSENT from the accepted set. Use it only \
+     then — even when the bar is only "gjøre seg forstått", and even when the \
+     sentence also says "flytende".
 3. **A REQUIREMENT outranks a parenthetical.** "Gode kommunikasjonsevner, \
    skandinavisk og engelsk (norsk er en fordel)" requires Scandinavian, so it \
    is `scandinavian_accepted`. The bracketed "fordel" does not soften a \
@@ -315,6 +335,19 @@ FEWSHOT = [
         spans=[("Helst bestått norskprøve B1.", "no")],
         skills=[{"phrase": "Førerkort klasse D", "level": "required"},
                 {"phrase": "YSK", "level": "required"}])),
+
+    # 5b. NORDIC *OR* ENGLISH - 436 ads, 364 with no other rescue. The pilot got
+    # this wrong twice: it quoted the right span and then copied example 6 below,
+    # the only other Nordic demonstration. The contrast is the point - keep them
+    # adjacent so the discriminating word ("eller engelsk") is what differs.
+    ("Vi trenger flere elektrikere i Bergen",
+     "Vi søker erfarne elektrikere til oppdrag i Bergen. Krav: Fagbrev som "
+     "elektriker. Minimum 1 års erfaring. Må beherske skandinavisk eller engelsk "
+     "tale. Vi tilbyr hjelp til å finne bolig.",
+     "no",
+     _f("either_norwegian_or_english", "explicit_statement", "explicit_and_unambiguous",
+        spans=[("Må beherske skandinavisk eller engelsk tale.", "no")],
+        min_years_experience=1)),
 
     # 6. AUTHORISATION + a SEPARATE Nordic-language line. Both present, kept apart.
     ("Intensivsykepleier til Sørlandet",
