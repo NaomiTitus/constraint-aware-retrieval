@@ -12,6 +12,13 @@
 #      pytest-timeout installed, so pytest exited non-zero on every run and all
 #      16 mutations reported "killed".
 #
+#   5. ONE OCCURRENCE ONLY. The replace below is `replace(old, new, 1)`, so a
+#      statement duplicated in the source is mutated in only one place. An
+#      `INSERT OR IGNORE` mutation once landed on an in-loop flush that small
+#      tests never reach, and reported SURVIVED while the real path was
+#      untouched. If a pattern appears more than once, either mutate a unique
+#      anchor or refactor the duplication away.
+#
 #   4. NEVER LET PYTHON REUSE BYTECODE. `git checkout --` restores the .py but
 #      Python can reuse a .pyc compiled from the MUTATED source, so the suite
 #      fails on a clean tree and every later mutation aborts on the baseline

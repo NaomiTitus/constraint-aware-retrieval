@@ -9,6 +9,8 @@ silently invalidates the silver layer.
 Resumability matters here: the full corpus is ~12 minutes of detection, long
 enough that an interruption should not cost the whole run.
 """
+from datetime import datetime, timezone
+
 import pytest
 
 from finn_smart_search.understanding import enrich_language as el
@@ -45,38 +47,92 @@ def rows(con):
 
 # ── 1 · the transform ────────────────────────────────────────────────────────
 
-def test_1_1_a_norwegian_ad_gets_a_row():
-    pass  # covered by 1_2, kept for scenario-table traceability
-
-
 def test_1_2_full_detect_output_is_persisted(con):
-    add(con, "a", NO)
+    """`lang_mix is not None` catches nothing: json.dumps({}) is the non-None
+    string "{}". Parse it back. Without the evidence behind a verdict you
+    cannot tell a 0.51/0.49 "no" from a 0.99 "no" without another 12-minute
+    run — which is exactly what you need when the next regression appears."""
+    import json
+    add(con, "a", NO + "\n" + NO)        # two blocks -> confidence "high"
+    add(con, "b", NO + "\n" + EN)        # one of each -> mixed, bilingual
+    add(con, "c", NO)                    # ONE block -> confidence "low"
     el.run(con)
-    r = con.execute("SELECT doc_lang, lang_mix, n_scored, confidence FROM ad_language").fetchone()
+    r = con.execute("SELECT doc_lang, lang_mix, n_scored, confidence, is_bilingual, "
+                    "detected_at FROM ad_language WHERE uuid='a'").fetchone()
     assert r[0] == "no"
-    assert r[1] is not None, "lang_mix must be stored, not just the verdict"
-    assert r[2] >= 1 and r[3] in ("high", "low")
+    mix = json.loads(r[1])
+    assert max(mix, key=mix.get) == "no" and mix["no"] > 0.5
+    assert sum(mix.values()) == pytest.approx(1.0)
+    assert r[2] == 2 and r[3] == "high"
+    assert r[4] is False, "a monolingual ad is not bilingual"
+    assert r[5].tzinfo is not None, "detected_at must be tz-aware"
+    assert abs((datetime.now(timezone.utc) - r[5]).total_seconds()) < 120
+
+    bi = con.execute("SELECT doc_lang, is_bilingual FROM ad_language WHERE uuid='b'").fetchone()
+    assert bi == ("mixed", True), "is_bilingual was asserted nowhere; True pins the other pole"
+
+    # A single scored block is LOW confidence by the n_scored >= 2 rule. Pinning
+    # both poles is what kills a hardcoded "high".
+    assert con.execute("SELECT n_scored, confidence FROM ad_language "
+                       "WHERE uuid='c'").fetchone() == (1, "low")
 
 
-def test_1_3_rerun_is_idempotent(con):
+def test_1_3_a_second_run_does_NO_WORK(con):
+    """The old version called run() then run(force=True), which deliberately
+    redoes the work — so the skip path was untested, and `count == 1` was
+    guaranteed by the PRIMARY KEY rather than by anything in run().
+
+    The timestamp check is the load-bearing part: without it, a mutant that
+    rewrites every row on every run still passes, and on 10,166 ads that is 12
+    wasted minutes — resumability silently gone."""
     add(con, "a", NO)
     el.run(con)
-    el.run(con, force=True)
-    assert con.execute("SELECT count(*) FROM ad_language WHERE uuid='a'").fetchone()[0] == 1
+    ts = con.execute("SELECT detected_at FROM ad_language WHERE uuid='a'").fetchone()[0]
+
+    out = el.run(con)
+    assert out["processed"] == 0
+    assert out["distribution"] == {}
+    assert con.execute("SELECT count(*) FROM ad_language").fetchone()[0] == 1
+    assert con.execute("SELECT detected_at FROM ad_language WHERE uuid='a'").fetchone()[0] == ts
 
 
-def test_1_4_an_empty_ad_is_written_as_unknown_not_skipped(con):
-    """Silently skipping would leave the ad with no doc_lang, and the census
-    would then default it to "no" — hidden."""
-    add(con, "a", "")
+@pytest.mark.parametrize("html", ["", None, "<p></p>", "   "])
+def test_1_4_an_empty_ad_is_written_as_unknown_not_skipped(con, html):
+    """Silently skipping leaves the ad with no row, and no row defaults to "no"
+    downstream — hidden. NULL is the real-database shape and was untested; the
+    add() helper only ever produced "" or "<p></p>"."""
+    con.execute("INSERT INTO ads VALUES (?,?,?,?)", ["a", html, html, 0])
     el.run(con)
     assert rows(con) == [("a", "unknown", None, 0, "low", el.LANGID_VERSION)]
 
 
-def test_1_5_rows_carry_the_langid_version(con):
+def test_1_4b_every_ad_gets_a_row_whatever_its_body(con):
+    """The count-equality invariant, as a UNIT test. It previously existed only
+    in the integration suite, which CI excludes — so a skip-empties mutation
+    would ship green."""
+    con.execute("INSERT INTO ads VALUES ('a', NULL, NULL, 0)")
+    con.execute("INSERT INTO ads VALUES ('b', '', '', 0)")
+    add(con, "c", NO)
+    out = el.run(con)
+    n_ads = con.execute("SELECT count(*) FROM ads").fetchone()[0]
+    n_rows = con.execute("SELECT count(*) FROM ad_language").fetchone()[0]
+    assert n_rows == n_ads == 3
+    assert out["processed"] == n_rows, "`processed` is a loop counter; cross-check it"
+
+
+def test_1_5_the_version_written_is_the_CONSTANT_not_a_literal(con, monkeypatch):
+    """Comparing the stored value to the constant passes even if the literal
+    "langid-1" was inlined — they are equal today. Patching the constant breaks
+    the tie.
+
+    Why it matters: the day someone bumps to langid-2, _todo() selects all
+    10,166 ads, writes "langid-1" back, and EVERY subsequent run reprocesses
+    the whole corpus forever. "A bump triggers reprocessing" inverts into "a
+    bump never completes"."""
+    monkeypatch.setattr(el, "LANGID_VERSION", "langid-test-9")
     add(con, "a", NO)
     el.run(con)
-    assert rows(con)[0][5] == el.LANGID_VERSION
+    assert rows(con)[0][5] == "langid-test-9"
 
 
 def test_1_6_the_ads_table_is_not_touched(con):
@@ -121,10 +177,55 @@ def test_2_3_a_version_change_triggers_reprocessing(con):
     assert rows(con)[0][5] == el.LANGID_VERSION
 
 
+def test_2_3b_a_NULL_version_also_triggers_reprocessing(con):
+    """`IS DISTINCT FROM` -> `!=` is the standard "simplify the SQL" edit. Under
+    `!=`, a NULL version yields NULL rather than TRUE and the row is never
+    re-selected: permanently stale, permanently skipped."""
+    add(con, "a", NO)
+    el.run(con)
+    con.execute("UPDATE ad_language SET langid_version = NULL")
+    assert el.run(con)["processed"] == 1
+
+
 def test_2_4_summary_reports_the_distribution(con):
     for u, t in (("a", NO), ("b", EN), ("c", PL)):
         add(con, u, t)
     out = el.run(con)
     assert out["processed"] == 3
-    assert out["distribution"]["no"] == 1
-    assert out["distribution"]["other"] == 1
+    assert out["distribution"] == {"no": 1, "en": 1, "other": 1}
+
+
+def test_2_5_a_crash_preserves_completed_work(con):
+    """The actual interruption scenario: N ads flushed, process killed, restart
+    must skip those N and finish the rest. test_2_1 only proves NEW ads get
+    picked up, which is a different property.
+
+    Note there is deliberately no transaction around the whole run — per-batch
+    commits are what make resume possible. Wrapping it in one transaction later
+    would silently destroy that, so this test locks the behaviour."""
+    for u, txt in (("a", NO), ("b", EN), ("c", PL), ("d", NO), ("e", EN)):
+        add(con, u, txt)
+    el.run(con)
+    before = dict(con.execute("SELECT uuid, detected_at FROM ad_language").fetchall())
+
+    con.execute("DELETE FROM ad_language WHERE uuid IN ('d','e')")     # simulated crash
+    assert el.run(con)["processed"] == 2, "must resume, not restart"
+
+    after = dict(con.execute("SELECT uuid, detected_at FROM ad_language").fetchall())
+    assert len(after) == 5
+    for u in ("a", "b", "c"):
+        assert after[u] == before[u], "completed work must not be redone"
+
+
+@pytest.mark.parametrize("batch", [1, 2, 500])
+def test_2_6_all_rows_are_written_across_batch_boundaries(con, batch):
+    """batch=500 with 1-4 ads per test meant the in-loop flush NEVER ran. A
+    broken flush — wrong column order, a missing buf.clear(), a miscounted
+    `done` — would survive the entire unit suite and surface only in the
+    12-minute production run."""
+    for i, txt in enumerate((NO, EN, PL, NO, EN)):
+        add(con, f"u{i}", txt)
+    out = el.run(con, batch=batch)
+    assert out["processed"] == 5
+    assert con.execute("SELECT count(*) FROM ad_language").fetchone()[0] == 5
+    assert sum(out["distribution"].values()) == out["processed"]

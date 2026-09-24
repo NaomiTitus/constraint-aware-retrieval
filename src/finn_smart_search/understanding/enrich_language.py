@@ -41,6 +41,19 @@ def _todo(con, force: bool) -> list[tuple[str, str]]:
     """, [LANGID_VERSION]).fetchall()
 
 
+def _flush(con, buf: list) -> int:
+    """Single write path. Duplicating the INSERT let a mutation land on dead
+    code: with batch=500 and small tests the in-loop copy never ran, so an
+    `INSERT OR IGNORE` mutation on it survived while the real bug — stale rows
+    never replaced on a version bump — went undetected."""
+    if not buf:
+        return 0
+    con.executemany("INSERT OR REPLACE INTO ad_language VALUES (?,?,?,?,?,?,?,?,?)", buf)
+    n = len(buf)
+    buf.clear()
+    return n
+
+
 def run(con, *, force: bool = False, log=print, batch: int = 500) -> dict:
     con.execute(DDL)
     todo = _todo(con, force)
@@ -54,10 +67,7 @@ def run(con, *, force: bool = False, log=print, batch: int = 500) -> dict:
                     r["detected_other"], r["is_bilingual"], r["n_scored"],
                     r["confidence"], LANGID_VERSION, datetime.now(timezone.utc)])
         if len(buf) >= batch:
-            con.executemany("INSERT OR REPLACE INTO ad_language VALUES (?,?,?,?,?,?,?,?,?)", buf)
-            done += len(buf); buf.clear()
+            done += _flush(con, buf)
             log(f"  {done}/{len(todo)}")
-    if buf:
-        con.executemany("INSERT OR REPLACE INTO ad_language VALUES (?,?,?,?,?,?,?,?,?)", buf)
-        done += len(buf)
+    done += _flush(con, buf)
     return {"processed": done, "distribution": dict(dist)}
