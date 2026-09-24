@@ -1,0 +1,192 @@
+[
+ {
+  "custom_id": "25552313-1874-4601-ba07-1f6c7b250481",
+  "result": {
+   "type": "succeeded",
+   "message": {
+    "model": "claude-haiku-4-5-20251001",
+    "id": "msg_011CfNuMpXoYnr1PMeLZNcHA",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+     {
+      "type": "tool_use",
+      "id": "toolu_014ikhAeKE2buZiVNZ5DLwzU",
+      "name": "record_ad_facets",
+      "input": {
+       "evidence_spans": [],
+       "evidence_basis": "no_mention",
+       "evidence_strength": "none",
+       "norwegian_requirement_level": "unstated",
+       "stated_working_language": "unstated",
+       "application_language": "unstated",
+       "conflicting_statements": false,
+       "implicit_evidence": [
+        "kundebehandling"
+       ],
+       "authorisation_required": null,
+       "security_clearance_required": false,
+       "visa_sponsorship": "unstated",
+       "relocation_support": "unstated",
+       "seniority": "manager",
+       "min_years_experience": null,
+       "skills": []
+      },
+      "caller": {
+       "type": "direct"
+      }
+     }
+    ],
+    "container": null,
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "stop_details": null,
+    "usage": {
+     "input_tokens": 1092,
+     "cache_creation_input_tokens": 0,
+     "cache_read_input_tokens": 9217,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+     },
+     "output_tokens": 325,
+     "service_tier": "batch",
+     "inference_geo": "not_available"
+    },
+    "diagnostics": null
+   }
+  }
+ },
+ {
+  "custom_id": "26b60e69-ba34-43e2-a609-aaa717f335c5",
+  "result": {
+   "type": "succeeded",
+   "message": {
+    "model": "claude-haiku-4-5-20251001",
+    "id": "msg_011CfNuNLxPWRGgXonu3SpYc",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+     {
+      "type": "tool_use",
+      "id": "toolu_01TSJnWjYUArevabTXZcoWNK",
+      "name": "record_ad_facets",
+      "input": {
+       "evidence_spans": [
+        {
+         "span": "Gode norskkunnskaper",
+         "section_language": "no"
+        }
+       ],
+       "evidence_basis": "explicit_statement",
+       "evidence_strength": "explicit_and_unambiguous",
+       "norwegian_requirement_level": "professional",
+       "stated_working_language": "unstated",
+       "application_language": "unstated",
+       "conflicting_statements": false,
+       "implicit_evidence": [
+        "journalforing",
+        "kundebehandling"
+       ],
+       "authorisation_required": null,
+       "security_clearance_required": false,
+       "visa_sponsorship": "unstated",
+       "relocation_support": "unstated",
+       "seniority": "unstated",
+       "min_years_experience": null,
+       "skills": [
+        {
+         "phrase": "Infodoc journalsystem",
+         "level": "preferred"
+        }
+       ]
+      },
+      "caller": {
+       "type": "direct"
+      }
+     }
+    ],
+    "container": null,
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "stop_details": null,
+    "usage": {
+     "input_tokens": 456,
+     "cache_creation_input_tokens": 0,
+     "cache_read_input_tokens": 9217,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+     },
+     "output_tokens": 378,
+     "service_tier": "batch",
+     "inference_geo": "not_available"
+    },
+    "diagnostics": null
+   }
+  }
+ },
+ {
+  "custom_id": "46b3d20b-9287-4819-892d-585cea4346dc",
+  "result": {
+   "type": "succeeded",
+   "message": {
+    "model": "claude-haiku-4-5-20251001",
+    "id": "msg_011CfNuMACTcYZhZLNfvR6bq",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+     {
+      "type": "tool_use",
+      "id": "toolu_01PbXXpb6HJBJKvhtNSrjvQt",
+      "name": "record_ad_facets",
+      "input": {
+       "evidence_spans": [
+        {
+         "span": "Behersker norsk eller engelsk",
+         "section_language": "no"
+        }
+       ],
+       "evidence_basis": "explicit_statement",
+       "evidence_strength": "explicit_and_unambiguous",
+       "norwegian_requirement_level": "either_norwegian_or_english",
+       "stated_working_language": "unstated",
+       "application_language": "unstated",
+       "conflicting_statements": false,
+       "implicit_evidence": [
+        "none"
+       ],
+       "authorisation_required": null,
+       "security_clearance_required": false,
+       "visa_sponsorship": "unstated",
+       "relocation_support": "unstated",
+       "seniority": "unstated",
+       "min_years_experience": null,
+       "skills": []
+      },
+      "caller": {
+       "type": "direct"
+      }
+     }
+    ],
+    "container": null,
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "stop_details": null,
+    "usage": {
+     "input_tokens": 604,
+     "cache_creation_input_tokens": 0,
+     "cache_read_input_tokens": 9217,
+     "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+     },
+     "output_tokens": 355,
+     "service_tier": "batch",
+     "inference_geo": "not_available"
+    },
+    "diagnostics": null
+   }
+  }
+ }
+]

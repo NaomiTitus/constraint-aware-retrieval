@@ -164,3 +164,36 @@ is exactly when it is cheapest to add.
 *Kept from D6:* clustering is on the body only. Chain stores vary the title per
 location, and a key including the title found only 157 redundant ads — worse
 than plain exact hashing at 320.
+
+
+---
+
+### D9 · Batch API over REST, and the cost model corrected by measurement
+**2026-09-24**
+
+The client talks to `api.anthropic.com/v1/messages/batches` directly over httpx
+rather than through the SDK: the installed SDK pulls an `httpx2` whose
+decompressor signature mismatches this environment, and the Batch API is three
+endpoints. Fewer dependencies, and the protocol is explicit in the source.
+
+*Verified against the live API with a 3-request batch (~$0.003), recorded as
+`tests/fixtures/batch_results_real.json`.* All three matched their golden
+labels, including the disjunction case quoting "Behersker norsk eller engelsk"
+— the 274-ad correction working end to end.
+
+**The cost model was wrong and is now measured:**
+
+| | Estimated | Measured |
+|---|---:|---:|
+| Cached prefix tokens | 3,413 | **9,217** |
+| Output tokens | 200 | **~350** |
+| Full census | ~$10.45 | **~$14.50** |
+
+The estimate counted characters÷4 over the prompt text and ignored the tool
+schema, the twelve tool_use/tool_result envelopes, and JSON structural
+overhead. Still well inside the $50 ceiling, and still roughly a third of the
+uncached cost — but measured rather than asserted.
+
+*Truncation is not salvaged.* `stop_reason == "max_tokens"` maps to `errored`
+and is retried by the existing path. A half-parsed facet set is
+indistinguishable from a real one downstream.

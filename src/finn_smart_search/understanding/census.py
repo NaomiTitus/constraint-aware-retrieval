@@ -7,8 +7,15 @@ Design notes, each earned the hard way:
   rather than original text, and a "don't say absence_of_requirement when
   truncated" rule. The longest corpus ad is 18,081 chars (~5,166 tokens).
 
-  PREFIX CACHING IS A COST CONTROL. The 3,030-token system+few-shot prefix
-  billed at 0.1x is the difference between $10.45 and $22.61 for the same run.
+  PREFIX CACHING IS A COST CONTROL. MEASURED against the live API: 9,217
+  cached prefix tokens per request, billed at 0.1x, with only 456-1,092
+  uncached. Without caching the same run roughly triples.
+
+  COST, MEASURED not estimated. My estimate was 3,413 prefix tokens and 200
+  output; the real figures are 9,217 and ~350. The estimate counted
+  characters/4 over the prompt text and ignored the tool schema, the twelve
+  tool_use/tool_result envelopes and JSON structural overhead. Full census is
+  ~$14.50, not the ~$10.45 first quoted.
 
   MAP BY custom_id, NEVER BY POSITION. Batch results are unordered; position
   mapping would assign one ad's language verdict to another, silently.
