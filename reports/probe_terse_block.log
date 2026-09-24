@@ -1,0 +1,17 @@
+prompt census-v6  |  TERSE no-glyph disjunction blocks
+  population 269   sampled 30
+
+census: 204s  calls=27  cache_hits=3  spend=$0.035
+
+RESULT
+  correct                        29/30  97%
+  glyph subpopulation (all 22)   12/22  55%
+  general disjunction population 19/20  95%
+  of 1 misses, 0 returned NO evidence span
+  wrongly NOT accessible         0/30
+
+  -> population 269 ads; at this rate ~9 ads wrongly hidden
+
+MISSES
+  8ee2b304  desirable                    accessible=True
+            'Ønskelig med gode kommunikasjonsevner på norsk eller engelsk.'

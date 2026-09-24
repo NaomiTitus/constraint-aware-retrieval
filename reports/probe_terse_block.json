@@ -1,0 +1,15 @@
+{
+ "prompt_version": "census-v6",
+ "population": 269,
+ "n": 30,
+ "correct": 29,
+ "no_span": 0,
+ "misses": [
+  [
+   "8ee2b304-ce82-401e-9b4c-247660eb28d2",
+   "desirable",
+   true,
+   "\u00d8nskelig med gode kommunikasjonsevner p\u00e5 norsk eller engelsk."
+  ]
+ ]
+}

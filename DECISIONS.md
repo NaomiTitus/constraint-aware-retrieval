@@ -300,3 +300,105 @@ At 44 ads the mistake cost $0.06. At 9,823 clusters it is $14.50, and a
 validator bug is the likeliest reason to need a re-run. Migration is additive:
 `ensure_schema()` ALTERs an existing table, and the 172 already-paid-for rows
 were preserved.
+
+## D13 — Span boundaries are decided by character CLASS, not by a list of glyphs
+
+**Decision.** Walking outward from a candidate span, `_boundaries_ok` classifies
+each character: a sentence terminator (`. ! ? : ;`) or a block edge (`\n`)
+ACCEPTS; a letter or digit REJECTS; anything else is **list furniture** and is
+skipped. No enumeration of bullet characters.
+
+**How this was found — the measurement inverted twice.** A probe of ads stating
+a disjunction as a bullet reported 12/22 "model accuracy" against 95% on the
+general disjunction population, every miss returning `unstated` with no evidence
+span. That reads unambiguously as the model failing to see the line.
+
+It was not the model. **All 9 misses were DEMOTED**, 8 of them
+`starts_mid_sentence`. The model had found and quoted every requirement
+correctly; demotion reset the level to `unstated` and stripped the spans, which
+is indistinguishable from a miss unless you look at `reasons`.
+
+`BOUNDARY` enumerated `•` U+2022 but not `·` U+00B7 or `●` U+25CF. **The model
+quotes a bullet's TEXT, not its glyph**, so the character immediately before the
+span is the glyph — and it was not a boundary.
+
+**Why the earlier corpus check missed it.** A prior measurement reported 0 false
+rejects over 12,572 language-bearing blocks. It passed whole blocks *including*
+the leading glyph, so the character before the span was always the newline. It
+never reproduced what the model does. Re-measured with the glyph stripped — the
+model's actual behaviour — the rate was the real one, and after the fix it is
+**0 of 12,569**.
+
+**Why a list was the wrong instrument.** Block-leading glyphs absent from the
+old set, measured over the corpus:
+
+| glyph | blocks | |
+|---|---:|---|
+| `·` U+00B7 middle dot | 1,930 | |
+| `●` U+25CF black circle | 141 | |
+| 📍 ✅ ✨ 👉 ⭐ 🤝 🔹 ✔ … | ~500 | emoji bullets |
+| U+200B zero-width space | 106 | invisible |
+| U+2060 word joiner | — | invisible, not whitespace, so unfolded |
+| `` U+F0B7 | 29 | the Wingdings bullet Word emits into pasted ads |
+| **total** | **2,998** | |
+
+Nobody writes U+F0B7 into a hand-maintained list. `not ch.isalnum()` covers it
+and everything else of its kind, and the guard against over-accepting is pinned
+separately: a span preceded by a WORD is still `starts_mid_sentence`, which
+matters because 863 ads say "norsk og engelsk" and "engelsk" lifted out of one
+supports the opposite of its sentence.
+
+**Result, and the first real use of D12.** Re-judging the affected ads cost
+**$0.00 and made no API call** — `revalidate_cache` re-ran the fixed validator
+over answers already paid for.
+
+| | before | after |
+|---|---:|---:|
+| glyph subpopulation (all 22) | 12/22 · 55% | **21/22 · 95%** |
+| general disjunction population | 19/20 · 95% | 19/20 · 95% |
+| corpus false rejects / 12,569 blocks | 9+ | **0** |
+| 44-ad pilot | 88.6% | 88.6% (no regression) |
+
+The glyph subpopulation now matches the general population exactly, which is the
+evidence that the subpopulation never had a problem of its own.
+
+The single remaining miss is the validator being RIGHT: the model wrote
+`passasjøres` where the ad says `passasjerers`, and `not_verbatim` rejected the
+paraphrase. That is what the verbatim rule is for.
+
+## D14 — Six hand-written patterns, zero model errors: why the LLM layer earns its place
+
+Recorded because it is the strongest empirical argument in the project, and it
+was not the argument originally planned.
+
+Every "model error" chased in this module resolved into **my own pattern**:
+
+| # | The pattern | What it did |
+|---|---|---|
+| 1 | `normalise()` collapsing `\n` in span matching | demoted 55% of the pilot; 26 of 28 rejections were legitimate block quotes |
+| 2 | `BOUNDARY` enumerating `•` but not `·` `●` emoji U+F0B7 | demoted 9 of 22 glyph-bullet ads with correct evidence |
+| 3 | corpus false-reject check passing blocks WITH their glyph | reported 0 false rejects while (2) was live |
+| 4 | probe oracle matching document-language clauses | 4 of 9 "model errors" in probe run 1 |
+| 5 | the same exclusion written `dokument`, missing English `documentation` | 1 of 2 "model errors" in probe run 2, in a ~7% English corpus |
+| 6 | glyph filter selecting 20 of 289 affected ads | made a 289-ad population look like 26, nearly closing the investigation |
+
+Against that, genuine model errors found across ~180 ads: the census-v4/v5
+connective confusion (fixed, and it was a *prompt* defect, not a capability
+one), one dropped disjunction, and one paraphrased quote — which the verbatim
+check caught.
+
+**Two consequences.**
+
+*For the thesis.* The project argues that constraints are predicates over
+metadata and cannot be expressed as similarity. The sharper version, evidenced
+above, is that they cannot reliably be expressed as **surface patterns** either:
+a language requirement in this corpus is stated in bokmål and nynorsk, in
+English, as a bare bullet, behind a Wingdings glyph, inside a disjunction whose
+other half may be Scandinavian or Polish, and next to a clause about what
+language your CV may be in. Six careful attempts to pattern-match it failed.
+
+*For the retrieval work.* The planned BM25 channel is a surface matcher and will
+make mistakes 4 and 5 by construction — it cannot distinguish "the job needs
+Norwegian" from "your diploma may be in English". That is an argument for the
+constraint stage reading `ad_facets` rather than text, and it is now measured
+rather than asserted.

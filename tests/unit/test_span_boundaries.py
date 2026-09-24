@@ -224,3 +224,95 @@ def test_the_reported_reason_is_the_first_occurrences():
     text = (f"Vi forventer {span} hos alle nyansatte\n"
             f"Krav: {span} og god IT-forståelse")
     assert v._span_ok(span, text) == (False, "starts_mid_sentence")
+
+
+# ── bullet GLYPHS: the sixth hand-written pattern to be the thing at fault ────
+#
+# The glyph-bullet probe measured "12/22 model accuracy" on ads stating a
+# disjunction as a bullet. All 9 misses were DEMOTED, 8 of them
+# `starts_mid_sentence`. The model had found and quoted every requirement
+# correctly; the validator threw the evidence away and the demotion reset the
+# level to `unstated`, which is why every miss looked like the model not seeing
+# the line.
+#
+# Cause: BOUNDARY enumerated • U+2022 but not · U+00B7 (1,930 corpus blocks) or
+# ● U+25CF (141). The model quotes the bullet's TEXT without the glyph, so the
+# character before the span is the glyph, which was not a boundary.
+#
+# Why the earlier corpus-wide check said 0 false rejects: it passed whole
+# blocks INCLUDING the glyph, so the character before the span was the newline.
+# It never reproduced what the model actually does. Same shape of blind spot as
+# the span tests that used single-line prose.
+#
+# 2,998 corpus blocks are led by a glyph absent from BOUNDARY, and the tail is
+# unenumerable: middle dot, black circle, 📍 ✅ ✨ 👉 ⭐ 🤝 🔹, U+200B zero-width
+# space, U+2060 word joiner, and U+F0B7 -- the Wingdings bullet Microsoft Word
+# emits into pasted job ads.
+#
+# So the rule is not a longer list. Walking back from a span, LIST FURNITURE --
+# anything not a letter or digit -- is skipped; a sentence terminator or a block
+# edge accepts; a letter or digit rejects. That is robust to glyphs nobody has
+# thought of, which is the only property worth having here.
+
+def bullet(glyph: str) -> str:
+    return (f"Om stillingen\n{glyph} Gode norskkunnskaper er et krav\n{glyph} Oppstart snarest")
+
+
+def test_middle_dot_bullet_is_a_boundary():
+    """U+00B7, 1,930 corpus blocks — the single commonest glyph absent from the
+    old BOUNDARY set, and the one in 6 of the 9 demoted probe ads."""
+    assert v._span_ok("Gode norskkunnskaper er et krav", bullet("·")) == (True, "")
+
+
+def test_black_circle_bullet_is_a_boundary():
+    assert v._span_ok("Gode norskkunnskaper er et krav", bullet("●")) == (True, "")
+
+
+def test_word_joiner_between_glyph_and_text_is_skipped():
+    """From ad 7cbe546e, verbatim: '•⁠ ⁠Norsk (Skandinavisk) eller engelsk'.
+    U+2060 is a format character, not whitespace, so _H_SPACE does not fold it
+    and the horizontal-space skip loop walked straight into it."""
+    text = "Krav\n•⁠ ⁠Gode norskkunnskaper er et krav\nOppstart"
+    assert v._span_ok("Gode norskkunnskaper er et krav", text) == (True, "")
+
+
+def test_zero_width_space_before_text_is_skipped():
+    """U+200B leads 106 corpus blocks."""
+    text = "Krav\n​Gode norskkunnskaper er et krav\nOppstart"
+    assert v._span_ok("Gode norskkunnskaper er et krav", text) == (True, "")
+
+
+def test_wingdings_bullet_from_word_is_a_boundary():
+    """U+F0B7, private use area, 29 corpus blocks. Nobody would think to add
+    this to a hand-written list -- which is the argument for not keeping one."""
+    assert v._span_ok("Gode norskkunnskaper er et krav", bullet("")) == (True, "")
+
+
+@pytest.mark.parametrize("glyph", ["\U0001F4CD", "✅", "✨", "\U0001F449",
+                                   "⭐", "\U0001F91D", "\U0001F539", "✔"])
+def test_emoji_bullets_are_boundaries(glyph):
+    """📍 ✅ ✨ 👉 ⭐ 🤝 🔹 ✔ all lead corpus blocks. Parametrised so the count of
+    covered glyphs is visible rather than buried in one assertion."""
+    assert v._span_ok("Gode norskkunnskaper er et krav", bullet(glyph)) == (True, "")
+
+
+def test_furniture_skipping_does_not_accept_a_real_mid_sentence_span():
+    """THE guard. Skipping non-alphanumerics must not turn the start rule into
+    always-true: a span preceded by a WORD is still mid-sentence.
+
+    This is the case the whole boundary rule exists for -- 863 corpus ads say
+    "norsk og engelsk", so "engelsk" lifted out of one is a real substring
+    supporting the opposite of the sentence."""
+    text = "Krav\n· Du må beherske norsk og engelsk godt\nOppstart"
+    assert v._span_ok("engelsk godt og presist nok", text) == (False, "not_verbatim")
+    # and a genuine substring of the sentence, long enough to pass the floor:
+    ok, why = v._span_ok("beherske norsk og engelsk godt", text)
+    assert (ok, why) == (False, "starts_mid_sentence"), f"got {ok} {why}"
+
+
+def test_a_digit_before_the_span_still_rejects():
+    """Numbered lists: "1. Gode norskkunnskaper" — the "." accepts, but a bare
+    digit run must not be treated as furniture in a way that lets
+    "3 norsk eller engelsk" through as a boundary."""
+    text = "Krav\nSe punkt 3 norsk eller engelsk kreves her\nOppstart"
+    assert v._span_ok("norsk eller engelsk kreves her", text) == (False, "starts_mid_sentence")

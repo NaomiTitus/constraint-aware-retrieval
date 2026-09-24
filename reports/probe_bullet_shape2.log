@@ -1,0 +1,15 @@
+prompt census-v6  |  glyph-bullet disjunction subpopulation
+  22 ads — the whole subpopulation, not a sample
+
+census: 1s  calls=0  cache_hits=22  spend=$0.000
+
+RESULT
+  correct level (either_norwegian_or_english)   20/22  91%
+  general disjunction population, measured  19/20  95%
+  of the 2 misses, 2 returned NO evidence span at all
+
+MISSES
+  8bc3fbae  unstated                     accessible=False
+            '• Personen må kunne kommunisere på norsk eller engelsk for å kunne forstå og håndtere pass'
+  df60fb97  unstated                     accessible=False
+            '· Behersker norsk eller engelsk'

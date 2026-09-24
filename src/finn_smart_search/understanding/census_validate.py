@@ -101,25 +101,42 @@ def _span_ok(span: str, sent_text: str) -> tuple[bool, str]:
 def _boundaries_ok(n_span: str, n_text: str, i: int) -> str:
     """"" if this occurrence begins and ends at a boundary, else the reason.
 
-    Horizontal space is skipped on both sides but newlines never are — the
-    newline IS the boundary being looked for. `_H_SPACE` has already folded
-    tabs, so the "\t" in these classes is defensive only.
+    Three kinds of character matter when walking outward from a span:
+
+      TERMINATOR  . ! ? : ; and the newline that separates blocks -> accept
+      FURNITURE   anything that is not a letter or digit -> skip and keep going
+      TEXT        a letter or digit -> the span starts mid-sentence, reject
+
+    FURNITURE is why this is not a character list. The corpus leads 2,998 blocks
+    with a glyph that a hand-written BOUNDARY set missed: · U+00B7 (1,930
+    blocks), ● U+25CF (141), 📍 ✅ ✨ 👉 ⭐ 🤝 🔹, U+200B zero-width space, U+2060
+    word joiner, and U+F0B7 -- the Wingdings bullet Word emits into pasted ads.
+    Enumerating them is a losing game; `not ch.isalnum()` is not.
+
+    That mattered: the model quotes a bullet's TEXT without its glyph, so the
+    preceding character IS the glyph. Nine probe ads had correct evidence thrown
+    away and their verdicts demoted to `unstated`, which read as the model
+    failing to see the line.
     """
     if i > 0:
         j = i - 1
-        while j >= 0 and n_text[j] in " \t":
-            j -= 1
-        if j >= 0 and n_text[j] not in BOUNDARY:
-            return "starts_mid_sentence"
+        while j >= 0:
+            ch = n_text[j]
+            if ch == "\n" or ch in BOUNDARY:
+                break                       # block edge or sentence terminator
+            if ch.isalnum():
+                return "starts_mid_sentence"
+            j -= 1                          # list furniture: keep walking back
 
-    # ...and END at one. The span usually carries its own terminator
-    # ("Gode norskkunnskaper."), but a bullet block often does not.
     if n_span[-1] not in BOUNDARY:
         k = i + len(n_span)
-        while k < len(n_text) and n_text[k] in " \t":
+        while k < len(n_text):
+            ch = n_text[k]
+            if ch == "\n" or ch in BOUNDARY:
+                break
+            if ch.isalnum():
+                return "ends_mid_sentence"
             k += 1
-        if k < len(n_text) and n_text[k] not in BOUNDARY:
-            return "ends_mid_sentence"
     return ""
 
 

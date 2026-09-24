@@ -1,0 +1,13 @@
+{
+ "prompt_version": "census-v6",
+ "n": 22,
+ "correct": 21,
+ "misses": [
+  [
+   "8bc3fbae-69d4-42a0-9c4a-7eb9ad0b0a40",
+   "unstated",
+   false,
+   "\u2022 Personen m\u00e5 kunne kommunisere p\u00e5 norsk eller engelsk for \u00e5 kunne forst\u00e5 og h\u00e5ndtere pass"
+  ]
+ ]
+}

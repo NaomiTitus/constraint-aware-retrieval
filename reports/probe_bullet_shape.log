@@ -1,0 +1,31 @@
+prompt census-v6  |  glyph-bullet disjunction subpopulation
+  22 ads — the whole subpopulation, not a sample
+
+census: 154s  calls=19  cache_hits=3  spend=$0.024
+
+RESULT
+  correct level (either_norwegian_or_english)   12/22  55%
+  general disjunction population, measured  19/20  95%
+  of the 10 misses, 10 returned NO evidence span at all
+
+MISSES
+  ac70ba00  unstated                     accessible=False
+            '● Gode kommunikasjonsevner på norsk eller engelsk / Good communication skills in Norwegian'
+  367d5967  unstated                     accessible=False
+            '● Snakker norsk eller engelsk'
+  6a0dedab  unstated                     accessible=False
+            '· Må kommuniserer på norsk eller engelsk.'
+  8bc3fbae  unstated                     accessible=False
+            '• Personen må kunne kommunisere på norsk eller engelsk for å kunne forstå og håndtere pass'
+  eeeef281  unstated                     accessible=False
+            '· Kjennskap til norsk eller engelsk språk'
+  5f63a811  unstated                     accessible=False
+            '● Gode kommunikasjonsevner på norsk eller engelsk / Good communication skills in Norwegian'
+  df60fb97  unstated                     accessible=False
+            '· Behersker norsk eller engelsk'
+  7cbe546e  unstated                     accessible=False
+            '•\u2060 \u2060Norsk (Skandinavisk) eller engelsk språk'
+  fa5f47e8  unstated                     accessible=False
+            'Som kokk i XL-gruppen er du lidenskapelig opptatt av mat og drikke, kan følge opp lærlinge'
+  ed82472f  unstated                     accessible=False
+            '· Kan kommunisere på norsk eller engelsk'
