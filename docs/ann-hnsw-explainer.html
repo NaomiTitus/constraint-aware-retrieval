@@ -1,0 +1,497 @@
+<title>Navigating Vector Space</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Literata:opsz,wght@7..72,400;7..72,500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#F4F2ED; --surface:#FBFAF7; --sunk:#EAE7DF;
+  --ink:#171A23; --ink-soft:#40465A; --muted:#767D91;
+  --rule:#D9D5CA; --rule-soft:#E6E3DA;
+  --signal:#C25E12;        /* query path — warm amber */
+  --struct:#26696C;        /* graph structure — deep teal */
+  --reject:#A33C33;        /* filtered out */
+  --accept:#3F7A3A;
+  --shadow:rgba(23,26,35,.07);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#12141B; --surface:#191C25; --sunk:#0D0F15;
+    --ink:#EDEAE2; --ink-soft:#B6BACA; --muted:#7E859A;
+    --rule:#2A2F3D; --rule-soft:#222733;
+    --signal:#E8913F; --struct:#5BA8AB; --reject:#D4685C; --accept:#7BB374;
+    --shadow:rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#12141B; --surface:#191C25; --sunk:#0D0F15;
+  --ink:#EDEAE2; --ink-soft:#B6BACA; --muted:#7E859A;
+  --rule:#2A2F3D; --rule-soft:#222733;
+  --signal:#E8913F; --struct:#5BA8AB; --reject:#D4685C; --accept:#7BB374;
+  --shadow:rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);
+  font-family:Literata,Georgia,serif;font-size:17px;line-height:1.65;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px 96px}
+.measure{max-width:64ch}
+h1,h2,h3,.disp{font-family:Archivo,"Helvetica Neue",sans-serif;text-wrap:balance}
+h1{font-size:clamp(2.4rem,6vw,4rem);line-height:1.02;font-weight:700;letter-spacing:-.025em;margin:0 0 .5rem}
+h2{font-size:clamp(1.5rem,3vw,2rem);font-weight:600;letter-spacing:-.018em;line-height:1.15;margin:0 0 .4rem}
+h3{font-size:1.12rem;font-weight:600;letter-spacing:-.008em;margin:0 0 .3rem}
+p{margin:0 0 1.05rem}
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.7rem;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 .7rem}
+header.hero{padding:96px 0 48px;border-bottom:1px solid var(--rule)}
+.lede{font-size:1.24rem;line-height:1.5;color:var(--ink-soft);max-width:56ch;margin:1.2rem 0 0}
+section{padding:60px 0;border-bottom:1px solid var(--rule-soft)}
+section:last-of-type{border-bottom:0}
+code,.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.86em}
+code{background:var(--sunk);padding:.12em .38em;border-radius:3px}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:4px;
+  box-shadow:0 1px 3px var(--shadow);margin:28px 0;overflow:hidden}
+.panel-hd{padding:14px 20px;border-bottom:1px solid var(--rule-soft);
+  display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between}
+.panel-hd .t{font-family:Archivo,sans-serif;font-weight:600;font-size:.95rem;letter-spacing:-.005em}
+.panel-bd{padding:20px}
+canvas{display:block;width:100%;height:auto;touch-action:manipulation}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  padding:14px 20px;border-top:1px solid var(--rule-soft);background:var(--sunk)}
+button{font-family:Archivo,sans-serif;font-weight:600;font-size:.83rem;letter-spacing:.01em;
+  background:var(--ink);color:var(--paper);border:1px solid var(--ink);
+  padding:.48em 1.05em;border-radius:3px;cursor:pointer;transition:opacity .15s}
+button:hover{opacity:.82}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+button:disabled{opacity:.35;cursor:not-allowed}
+input[type=range]{accent-color:var(--signal);width:190px;vertical-align:middle}
+.ctl-label{font-family:"JetBrains Mono",monospace;font-size:.74rem;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.readout{font-family:"JetBrains Mono",monospace;font-size:.82rem;color:var(--ink-soft);
+  font-variant-numeric:tabular-nums;margin-left:auto}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-family:"JetBrains Mono",monospace;
+  font-size:.72rem;color:var(--muted);padding:12px 20px;border-top:1px solid var(--rule-soft)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:baseline}
+table{width:100%;border-collapse:collapse;font-size:.92rem;margin:20px 0}
+th,td{text-align:left;padding:.62em .75em;border-bottom:1px solid var(--rule-soft)}
+th{font-family:Archivo,sans-serif;font-size:.74rem;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--muted);font-weight:600}
+td.num{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;text-align:right}
+.scroll{overflow-x:auto}
+.steps{counter-reset:s;list-style:none;padding:0;margin:24px 0}
+.steps li{counter-increment:s;position:relative;padding-left:46px;margin-bottom:18px}
+.steps li::before{content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.08em;
+  font-family:"JetBrains Mono",monospace;font-size:.78rem;color:var(--signal);font-weight:500}
+.callout{border-left:2px solid var(--signal);padding:2px 0 2px 20px;margin:26px 0;
+  color:var(--ink-soft)}
+.callout strong{color:var(--ink)}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:1px;
+  background:var(--rule-soft);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.grid3>div{background:var(--surface);padding:18px 20px}
+.big{font-family:Archivo,sans-serif;font-size:1.85rem;font-weight:700;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1.1}
+.tag{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:.68rem;
+  letter-spacing:.07em;text-transform:uppercase;padding:.2em .5em;border-radius:2px;
+  border:1px solid currentColor}
+.tag.good{color:var(--accept)} .tag.bad{color:var(--reject)} .tag.mid{color:var(--signal)}
+footer{padding:44px 0 0;color:var(--muted);font-size:.87rem}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">Approximate nearest neighbour search</p>
+  <h1>Navigating<br>Vector Space</h1>
+  <p class="lede">How HNSW finds close vectors without looking at all of them — and why
+  filtering that search is harder than it sounds, exactly in the regime this project lives in.</p>
+</header>
+
+<section>
+  <h2>The problem ANN solves</h2>
+  <div class="measure">
+    <p>Exact nearest-neighbour search is a loop. Take the query vector, compute a distance
+    against every vector in the corpus, keep the best <em>k</em>. It is O(N·d), embarrassingly
+    parallel, and completely exact.</p>
+    <p>At our scale that is not a problem worth solving:</p>
+  </div>
+
+  <div class="grid3">
+    <div>
+      <p class="eyebrow">This corpus</p>
+      <div class="big">10,166</div>
+      <p style="margin:.3rem 0 0;font-size:.88rem;color:var(--muted)">ads × 768 dims<br>
+      ≈ 7.8M multiply-adds · <strong style="color:var(--accept)">~5&nbsp;ms</strong></p>
+    </div>
+    <div>
+      <p class="eyebrow">A national marketplace</p>
+      <div class="big">10M</div>
+      <p style="margin:.3rem 0 0;font-size:.88rem;color:var(--muted)">listings × 768 dims<br>
+      ≈ 7.7B multiply-adds · <strong style="color:var(--reject)">seconds</strong></p>
+    </div>
+    <div>
+      <p class="eyebrow">The trade</p>
+      <div class="big">~99%</div>
+      <p style="margin:.3rem 0 0;font-size:.88rem;color:var(--muted)">recall, for a
+      <strong style="color:var(--ink)">100–1000×</strong> speedup</p>
+    </div>
+  </div>
+
+  <div class="measure">
+    <p>Approximate nearest neighbour search gives up certainty to buy time. It returns vectors
+    that are <em>probably</em> the closest. The quality of that "probably" is measured as
+    <strong>recall@k</strong> — of the true <em>k</em> nearest, how many did the index actually
+    return — and it is a tunable, not a fixed property.</p>
+    <p>That framing matters: ANN is not a faster exact algorithm. It is a different answer to a
+    slightly different question, and whether the difference costs you anything is an empirical
+    question about your data and your <em>k</em>.</p>
+  </div>
+</section>
+
+<section>
+  <h2>HNSW: a skip list for metric space</h2>
+  <div class="measure">
+    <p><strong>H</strong>ierarchical <strong>N</strong>avigable <strong>S</strong>mall
+    <strong>W</strong>orld is the index Qdrant, FAISS, Weaviate and pgvector all default to.
+    It builds a layered proximity graph:</p>
+    <ul style="padding-left:1.15em">
+      <li><strong>Layer 0</strong> holds every vector, linked to its close neighbours.</li>
+      <li>Each layer above holds an exponentially thinning random sample, with edges spanning
+      much longer distances.</li>
+    </ul>
+    <p>Search enters at the single top node and walks greedily downhill toward the query. When
+    no neighbour in the current layer is closer, it drops a layer and continues on a finer mesh.
+    Top layers cover ground fast; lower layers refine. Roughly <code>O(log N)</code> hops instead
+    of <code>N</code> comparisons.</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-hd">
+      <span class="t">Greedy descent through three layers</span>
+      <span class="readout" id="hnsw-out">ready</span>
+    </div>
+    <div class="panel-bd"><canvas id="hnsw" width="1000" height="620"></canvas></div>
+    <div class="legend">
+      <span><i style="background:var(--struct)"></i>corpus vector</span>
+      <span><i style="background:var(--signal)"></i>query</span>
+      <span><i style="background:var(--ink)"></i>visited</span>
+      <span><i style="background:var(--accept)"></i>current best</span>
+    </div>
+    <div class="controls">
+      <button id="hnsw-run">Run search</button>
+      <button id="hnsw-step" class="ghost">Step</button>
+      <button id="hnsw-new" class="ghost">New query</button>
+      <span class="readout" id="hnsw-cmp">comparisons: —</span>
+    </div>
+  </div>
+
+  <div class="callout measure">
+    <strong>Watch the comparison counter.</strong> A brute-force scan of this toy corpus would
+    compute 120 distances every time. The graph walk typically settles in under 30 — and the gap
+    widens as <code>log N</code> pulls away from <code>N</code>.
+  </div>
+</section>
+
+<section>
+  <h2>Filtering breaks the walk</h2>
+  <div class="measure">
+    <p>Now add a constraint. In this project the decisive one is
+    <em>"don't show me ads that require Norwegian"</em> — and only around
+    <strong>5%</strong> of the corpus qualifies as English-accessible. That is a
+    <em>highly selective</em> filter, and it is where naive approaches fall apart.</p>
+    <p>HNSW's navigability is a property of the <strong>whole graph</strong>. Delete most of the
+    nodes and the survivors may not be connected to each other at all: a greedy walk that can
+    only step on valid nodes gets marooned in whatever region it started in, and never reaches
+    equally-good matches elsewhere.</p>
+    <p>Three ways to combine a filter with a vector search:</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-hd">
+      <span class="t">Filter strategies at varying selectivity</span>
+      <span class="readout" id="filt-out">—</span>
+    </div>
+    <div class="panel-bd"><canvas id="filt" width="1000" height="440"></canvas></div>
+    <div class="legend">
+      <span><i style="background:var(--accept)"></i>passes filter</span>
+      <span><i style="background:var(--rule)"></i>filtered out</span>
+      <span><i style="background:var(--signal)"></i>query</span>
+      <span><i style="background:var(--ink)"></i>search path</span>
+    </div>
+    <div class="controls">
+      <span class="ctl-label">Passing</span>
+      <input type="range" id="filt-sel" min="3" max="100" value="5">
+      <span class="readout" id="filt-pct" style="margin-left:0">5%</span>
+      <button id="filt-run">Search all three</button>
+    </div>
+  </div>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Strategy</th><th>How it works</th><th>Fails when</th><th>At 5% passing</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Post-filter</strong></td>
+        <td>Run the normal ANN search for top-<em>k</em>, then discard results that fail the filter.</td>
+        <td>The filter is selective — you retrieve 100 and keep 5.</td>
+        <td><span class="tag bad">recall collapses</span></td>
+      </tr>
+      <tr>
+        <td><strong>Pre-filter</strong></td>
+        <td>Compute the matching subset first, then brute-force within it.</td>
+        <td>The subset is still large — you're back to O(N·d).</td>
+        <td><span class="tag good">exact &amp; fast</span></td>
+      </tr>
+      <tr>
+        <td><strong>In-engine</strong></td>
+        <td>Traverse the full graph for connectivity, but only <em>collect</em> passing nodes.</td>
+        <td>Rarely — but it costs extra hops through rejected nodes.</td>
+        <td><span class="tag mid">good recall</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout measure">
+    <strong>Note the inversion.</strong> Pre-filtering is the <em>best</em> option at high
+    selectivity and the worst at low selectivity; post-filtering is the reverse. There is no
+    single right answer — which is exactly why it is worth measuring rather than assuming.
+  </div>
+</section>
+
+<section>
+  <h2>What Qdrant actually does</h2>
+  <div class="measure">
+    <p>Qdrant stores a JSON <strong>payload</strong> beside every vector and indexes the fields
+    you nominate. A query carries both a vector and a filter, and the engine decides how to
+    execute the pair:</p>
+    <ol class="steps">
+      <li><strong>Estimate the filter's cardinality</strong> from the payload index — roughly how
+      many points will pass.</li>
+      <li><strong>If few points pass</strong>, skip the graph entirely and brute-force the
+      matching subset. Exact, and fast because the subset is small.</li>
+      <li><strong>If many points pass</strong>, traverse HNSW normally and apply the filter as a
+      predicate during traversal — walking through rejected nodes to stay connected, but only
+      admitting passing ones into the result heap.</li>
+      <li><strong>For filters used constantly</strong>, build additional graph links restricted
+      to that subset, restoring navigability within it.</li>
+    </ol>
+    <p>That cardinality-driven switch is the real feature, and it is why "just use FAISS plus a
+    mask" is not equivalent. FAISS has no payload concept; you would be hand-rolling steps 1–4.</p>
+  </div>
+
+  <div class="callout measure">
+    <strong>Why this is worth an experiment rather than a paragraph.</strong> Our constraint sits
+    right at the awkward end of the range — selective enough that post-filtering should fail,
+    large enough (≈500 ads) that brute force is trivially affordable. Measuring recall@10 and
+    latency across all three strategies, on our real skew, produces a defensible answer to
+    <em>"when should a marketplace adopt filtered vector search?"</em> — and at 10k vectors the
+    honest answer may well be "not yet", which is a finding, not a failure.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Diagrams are 2-D stand-ins for 768-dimensional space and use small synthetic graphs;
+  the mechanics are faithful, the geometry is illustrative.</p>
+</footer>
+</div>
+
+<script>
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+function fit(c){const r=c.getBoundingClientRect();c.width=r.width*dpr;c.height=(r.width*(c.dataset.ar||.62))*dpr;
+  c.style.height=(r.width*(c.dataset.ar||.62))+'px';const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);return x;}
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function rng(seed){return()=>((seed=seed*1103515245+12345&0x7fffffff)/0x7fffffff);}
+
+/* ---------- HNSW ---------- */
+const H={pts:[],layers:[],q:null,path:[],cmp:0,anim:null,done:false};
+const HN=120, HL=3;
+function buildH(seed){
+  const r=rng(seed); H.pts=[];
+  for(let i=0;i<HN;i++)H.pts.push({x:r(),y:r(),i});
+  H.layers=[];
+  for(let l=0;l<HL;l++){
+    const keep = l===0 ? H.pts : H.layers[l-1].nodes.filter(()=>r()<0.28);
+    const nodes = keep.length<3 ? H.layers[l-1].nodes.slice(0,4) : keep;
+    const K = l===0?4:3, adj=new Map();
+    nodes.forEach(n=>{
+      const near=nodes.filter(m=>m!==n).sort((a,b)=>dist(n,a)-dist(n,b)).slice(0,K);
+      adj.set(n.i,near);
+    });
+    H.layers.push({nodes,adj});
+  }
+  H.q={x:r()*.8+.1,y:r()*.8+.1};
+  H.path=[];H.cmp=0;H.done=false;
+}
+function searchH(){
+  const steps=[];let cmp=0;
+  let cur=H.layers[HL-1].nodes[0];
+  for(let l=HL-1;l>=0;l--){
+    const L=H.layers[l];
+    if(!L.adj.has(cur.i)) cur=L.nodes.reduce((a,b)=>dist(b,H.q)<dist(a,H.q)?b:a);
+    steps.push({l,node:cur,kind:'enter'});cmp++;
+    let improved=true;
+    while(improved){
+      improved=false;
+      const nb=L.adj.get(cur.i)||[];
+      let best=cur,bd=dist(cur,H.q);
+      for(const n of nb){cmp++;const d=dist(n,H.q);if(d<bd){bd=d;best=n;improved=true;}}
+      if(improved){cur=best;steps.push({l,node:cur,kind:'hop'});}
+    }
+  }
+  return{steps,cmp};
+}
+function drawH(upto){
+  const c=document.getElementById('hnsw');c.dataset.ar=.62;const x=fit(c);
+  const W=c.width/dpr,Hh=c.height/dpr, pad=16, lh=(Hh-pad*2)/HL, bw=W-pad*2;
+  x.clearRect(0,0,W,Hh);
+  const seen=H.path.slice(0,upto);
+  for(let l=HL-1;l>=0;l--){
+    const top=pad+(HL-1-l)*lh, L=H.layers[l];
+    const P=p=>({X:pad+p.x*bw, Y:top+p.y*(lh-26)+13});
+    x.fillStyle=css('--sunk');x.globalAlpha=l===0?.55:.3;
+    x.fillRect(pad,top,bw,lh-10);x.globalAlpha=1;
+    x.strokeStyle=css('--rule');x.lineWidth=1;x.strokeRect(pad,top,bw,lh-10);
+    x.fillStyle=css('--muted');x.font='500 10px "JetBrains Mono",monospace';
+    x.fillText('LAYER '+l+(l===HL-1?'  · entry':l===0?'  · all vectors':''),pad+8,top+14);
+    x.strokeStyle=css('--struct');x.globalAlpha=.3;x.lineWidth=1;
+    L.adj.forEach((nb,i)=>{const a=P(H.pts[i]);nb.forEach(n=>{const b=P(n);
+      x.beginPath();x.moveTo(a.X,a.Y);x.lineTo(b.X,b.Y);x.stroke();});});
+    x.globalAlpha=1;
+    L.nodes.forEach(n=>{const p=P(n);x.beginPath();x.arc(p.X,p.Y,l===0?2.6:3.4,0,7);
+      x.fillStyle=css('--struct');x.globalAlpha=.65;x.fill();x.globalAlpha=1;});
+    const q=P(H.q);
+    x.beginPath();x.arc(q.X,q.Y,5,0,7);x.fillStyle=css('--signal');x.fill();
+    x.beginPath();x.arc(q.X,q.Y,9,0,7);x.strokeStyle=css('--signal');x.globalAlpha=.4;x.stroke();x.globalAlpha=1;
+    const mine=seen.filter(s=>s.l===l);
+    x.strokeStyle=css('--ink');x.lineWidth=1.8;x.globalAlpha=.75;
+    for(let i=1;i<mine.length;i++){const a=P(mine[i-1].node),b=P(mine[i].node);
+      x.beginPath();x.moveTo(a.X,a.Y);x.lineTo(b.X,b.Y);x.stroke();}
+    x.globalAlpha=1;
+    mine.forEach((s,i)=>{const p=P(s.node);const last=(seen[seen.length-1]===s);
+      x.beginPath();x.arc(p.X,p.Y,last?6:4,0,7);
+      x.fillStyle=last?css('--accept'):css('--ink');x.fill();});
+    if(mine.length&&l>0){const lastN=P(mine[mine.length-1].node);
+      x.strokeStyle=css('--ink');x.globalAlpha=.3;x.setLineDash([3,3]);x.lineWidth=1.4;
+      x.beginPath();x.moveTo(lastN.X,lastN.Y);x.lineTo(lastN.X,top+lh-8);x.stroke();
+      x.setLineDash([]);x.globalAlpha=1;}
+  }
+}
+function hnswReset(seed){
+  buildH(seed||Date.now()%99999);
+  const r=searchH();H.path=r.steps;H.cmp=r.cmp;H.step=0;
+  drawH(0);
+  document.getElementById('hnsw-out').textContent='ready · '+HN+' vectors';
+  document.getElementById('hnsw-cmp').textContent='comparisons: 0 / '+HN+' brute force';
+}
+function hnswTick(){
+  H.step=Math.min(H.step+1,H.path.length);drawH(H.step);
+  const frac=H.step/H.path.length;
+  document.getElementById('hnsw-out').textContent=
+    H.step>=H.path.length?'converged · layer 0':'descending · layer '+H.path[H.step-1].l;
+  document.getElementById('hnsw-cmp').textContent=
+    'comparisons: '+Math.round(H.cmp*frac)+' / '+HN+' brute force';
+}
+document.getElementById('hnsw-run').onclick=()=>{
+  clearInterval(H.anim);H.step=0;
+  H.anim=setInterval(()=>{hnswTick();if(H.step>=H.path.length)clearInterval(H.anim);},260);
+};
+document.getElementById('hnsw-step').onclick=()=>{clearInterval(H.anim);hnswTick();};
+document.getElementById('hnsw-new').onclick=()=>{clearInterval(H.anim);hnswReset();};
+
+/* ---------- filter strategies ---------- */
+const F={pts:[],adj:new Map(),q:null,sel:.05,res:null};
+const FN=150;
+function buildF(){
+  const r=rng(7);F.pts=[];
+  for(let i=0;i<FN;i++)F.pts.push({x:r(),y:r(),i,pass:false});
+  F.adj=new Map();
+  F.pts.forEach(n=>F.adj.set(n.i,F.pts.filter(m=>m!==n).sort((a,b)=>dist(n,a)-dist(n,b)).slice(0,5)));
+  F.q={x:.5,y:.5};
+}
+function markPass(){
+  const r=rng(31);F.pts.forEach(p=>p.pass=r()<F.sel);
+  if(!F.pts.some(p=>p.pass))F.pts[0].pass=true;
+}
+function greedy(from,ok){
+  const path=[from];let cur=from,improved=true,guard=0;
+  while(improved&&guard++<60){
+    improved=false;let bd=dist(cur,F.q),best=cur;
+    for(const n of (F.adj.get(cur.i)||[])){ if(ok&&!ok(n))continue;
+      const d=dist(n,F.q); if(d<bd){bd=d;best=n;improved=true;} }
+    if(improved){cur=best;path.push(cur);}
+  }
+  return path;
+}
+function runF(){
+  markPass();
+  const passing=F.pts.filter(p=>p.pass);
+  const truth=passing.slice().sort((a,b)=>dist(a,F.q)-dist(b,F.q)).slice(0,5).map(p=>p.i);
+  const start=F.pts[0];
+  // post-filter: unconstrained walk, collect top-20 visited, keep passing
+  const pAll=greedy(start,null);
+  const pool=F.pts.slice().sort((a,b)=>dist(a,F.q)-dist(b,F.q)).slice(0,20);
+  const post=pool.filter(p=>p.pass).slice(0,5).map(p=>p.i);
+  // pre-filter: brute force within subset (exact)
+  const pre=truth.slice();
+  // in-engine: walk full graph, collect passing
+  const inEng=pAll.concat(pAll.flatMap(n=>F.adj.get(n.i)||[]))
+    .filter(p=>p.pass).sort((a,b)=>dist(a,F.q)-dist(b,F.q));
+  const inIds=[...new Set(inEng.map(p=>p.i))].slice(0,5);
+  const rec=a=>truth.length?a.filter(i=>truth.includes(i)).length/truth.length:0;
+  F.res={truth,post,pre,inIds,path:pAll,
+    recall:{post:rec(post),pre:rec(pre),in:rec(inIds)},passing:passing.length};
+  drawF();
+}
+function drawF(){
+  const c=document.getElementById('filt');c.dataset.ar=.44;const x=fit(c);
+  const W=c.width/dpr,Hh=c.height/dpr,pad=14,gap=14,bw=(W-pad*2-gap*2)/3,bh=Hh-pad*2;
+  x.clearRect(0,0,W,Hh);
+  const panels=[
+    {t:'POST-FILTER',ids:F.res?F.res.post:[],r:F.res?F.res.recall.post:0,showPath:true,dimFail:false},
+    {t:'PRE-FILTER',ids:F.res?F.res.pre:[],r:F.res?F.res.recall.pre:0,showPath:false,dimFail:true},
+    {t:'IN-ENGINE',ids:F.res?F.res.inIds:[],r:F.res?F.res.recall.in:0,showPath:true,dimFail:false}];
+  panels.forEach((pn,k)=>{
+    const ox=pad+k*(bw+gap),oy=pad;
+    const P=p=>({X:ox+8+p.x*(bw-16),Y:oy+26+p.y*(bh-46)});
+    x.fillStyle=css('--sunk');x.globalAlpha=.5;x.fillRect(ox,oy,bw,bh);x.globalAlpha=1;
+    x.strokeStyle=css('--rule');x.strokeRect(ox,oy,bw,bh);
+    x.fillStyle=css('--ink');x.font='600 10px Archivo,sans-serif';
+    x.fillText(pn.t,ox+8,oy+16);
+    if(F.res){x.fillStyle=pn.r>=.8?css('--accept'):pn.r>=.4?css('--signal'):css('--reject');
+      x.font='700 10px "JetBrains Mono",monospace';
+      x.fillText('recall '+Math.round(pn.r*100)+'%',ox+bw-66,oy+16);}
+    x.strokeStyle=css('--rule');x.globalAlpha=.5;x.lineWidth=.8;
+    F.adj.forEach((nb,i)=>{const a=P(F.pts[i]);
+      if(pn.dimFail&&!F.pts[i].pass)return;
+      nb.forEach(n=>{if(pn.dimFail&&!n.pass)return;const b=P(n);
+        x.beginPath();x.moveTo(a.X,a.Y);x.lineTo(b.X,b.Y);x.stroke();});});
+    x.globalAlpha=1;
+    F.pts.forEach(p=>{const q=P(p);
+      if(!p.pass){if(pn.dimFail)return;x.globalAlpha=.3;x.fillStyle=css('--rule');}
+      else{x.globalAlpha=1;x.fillStyle=css('--accept');}
+      x.beginPath();x.arc(q.X,q.Y,p.pass?3.2:2.2,0,7);x.fill();x.globalAlpha=1;});
+    if(pn.showPath&&F.res){x.strokeStyle=css('--ink');x.globalAlpha=.55;x.lineWidth=1.5;
+      const pa=F.res.path;for(let i=1;i<pa.length;i++){const a=P(pa[i-1]),b=P(pa[i]);
+        x.beginPath();x.moveTo(a.X,a.Y);x.lineTo(b.X,b.Y);x.stroke();}x.globalAlpha=1;}
+    if(F.res)pn.ids.forEach(id=>{const q=P(F.pts[id]);
+      x.beginPath();x.arc(q.X,q.Y,6,0,7);x.strokeStyle=css('--accept');x.lineWidth=2;x.stroke();});
+    const q=P(F.q);x.beginPath();x.arc(q.X,q.Y,5,0,7);x.fillStyle=css('--signal');x.fill();
+  });
+}
+const selEl=document.getElementById('filt-sel');
+selEl.oninput=()=>{F.sel=+selEl.value/100;
+  document.getElementById('filt-pct').textContent=selEl.value+'%';
+  markPass();F.res=null;drawF();
+  document.getElementById('filt-out').textContent=Math.round(FN*F.sel)+' of '+FN+' pass';};
+document.getElementById('filt-run').onclick=()=>{runF();
+  document.getElementById('filt-out').textContent=
+    'post '+Math.round(F.res.recall.post*100)+'% · pre '+Math.round(F.res.recall.pre*100)+
+    '% · in-engine '+Math.round(F.res.recall.in*100)+'%';};
+
+/* init */
+buildF();markPass();drawF();
+hnswReset(4242);
+document.getElementById('filt-out').textContent=Math.round(FN*F.sel)+' of '+FN+' pass';
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{drawH(H.step||0);drawF();},150);});
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{drawH(H.step||0);drawF();});
+</script>

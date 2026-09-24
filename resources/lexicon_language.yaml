@@ -1,0 +1,70 @@
+# Tiered bilingual lexicon for the Norwegian-language requirement facet.
+# Single source of truth: Python rules AND the generated browser-side lexicon.js
+# both derive from this file, so they cannot drift.
+version: 1
+
+tiers:
+  required:
+    - id: no_req_gode
+      pattern: '\bgode?\s+norsk(kunnskaper|kunnskapar|ferdigheter)\b'
+    - id: no_req_beherske
+      pattern: '\bm[åa]\s+(beherske|kunne|behersker|snakke)\s+\w{0,12}\s*norsk\b'
+    - id: no_req_flytende
+      pattern: '\bflytende\s+norsk\b|\bnorsk\s+flytende\b'
+    - id: no_req_cefr
+      pattern: '\bnorsk\w*\s+(niv[åa]|tilsvarende)\s*[ABC][12]\b|\bbest[åa]tt\s+norskpr[øo]ve\b'
+    - id: no_req_krav
+      pattern: '\bnorsk\w*\s+(er\s+)?(et\s+)?(absolutt\s+)?krav\b|\bkrav\s+om\s+norsk\w*'
+    - id: no_req_muntlig
+      pattern: '\bnorsk\s+(b[åa]de\s+)?(muntlig|skriftlig)\s+og\s+(skriftlig|muntlig)\b'
+    - id: no_req_skandinavisk
+      pattern: '\bskandinavisk\w*\s+spr[åa]k\s+(er\s+)?(et\s+)?krav\b'
+    - id: en_req_fluent
+      pattern: '\b(fluent|fluency|proficient|proficiency)\s+in\s+Norwegian\b'
+    - id: en_req_must
+      pattern: '\bmust\s+(speak|know|be\s+(fluent|proficient)\s+in)\s+\w{0,10}\s*Norwegian\b'
+    - id: en_req_isrequired
+      pattern: '\bNorwegian\s+(language\s+)?(skills\s+)?(is|are)\s+(a\s+)?(required|requirement|mandatory)\b'
+
+  preferred:
+    - id: no_pref_fordel
+      pattern: '\bnorsk\w*\s+(er\s+)?(en\s+)?fordel\b|\b[øo]nskelig\s+med\s+norsk\w*'
+    - id: no_pref_gjerne
+      pattern: '\bgjerne\s+norsk\w*\b'
+    - id: en_pref_plus
+      pattern: '\bNorwegian\s+is\s+(a\s+plus|an\s+advantage|beneficial|desirable)\b'
+    - id: en_pref_basic
+      pattern: '\bbasic\s+Norwegian\b|\bsome\s+Norwegian\b'
+
+  not_required:
+    - id: en_ok_working
+      pattern: '\b(our|the)\s+working\s+language\s+is\s+English\b|\bEnglish\s+is\s+(our|the)\s+working\s+language\b'
+    - id: no_ok_arbeidssprak
+      pattern: '\barbeidsspr[åa]ket?\s+(v[åa]rt\s+)?er\s+engelsk\b'
+    - id: en_ok_notneed
+      pattern: "\\byou\\s+d(o\\s+not|on't)\\s+need\\s+to\\s+(speak|know)\\s+Norwegian\\b"
+    - id: en_ok_notrequired
+      pattern: '\bNorwegian\s+is\s+not\s+(a\s+)?(required|requirement|necessary)\b'
+    - id: en_ok_allenglish
+      pattern: '\ball\s+(internal\s+)?communication\s+(is\s+)?in\s+English\b'
+
+# Matches here emit a DIFFERENT facet and must never produce a language verdict.
+exclusions:
+  - id: excl_authorisation
+    pattern: '\bnorsk\s+autorisasjon\b|\bautorisasjon\s+(som\s+\w+\s+)?i\s+Norge\b|\bHPR[- ]?nummer\b'
+    emits: authorisation_required
+  - id: excl_clearance
+    pattern: '\bnorsk\s+statsborgerskap\b|\bsikkerhetsklarering\b|\bpolitiattest\b'
+    emits: clearance_required
+  # Generic capitalisation CANNOT work here: Norwegian capitalises sentence starts and
+  # bullet fragments, so '\bNorsk\s+[A-ZÆØÅ]\w+' matched "Norsk Tåler hund" and would have
+  # suppressed a genuine 'flytende Norsk' hit. Measured 29/71 (41%) fire rate, almost all
+  # false positives. Use an explicit gazetteer instead.
+  - id: excl_company_name
+    pattern: '\bNorsk\s+(Hydro|Gjenvinning|Tipping|Folkehjelp|Luftambulanse|Helsenett|Industriarbeidermuseum|Rikstoto|Scania|Stein|Titanium|Kylling|Gjenvinning)\b'
+    emits: null
+
+negation_guard:
+  window_tokens: 6
+  cues_no: ['ikke', 'ingen', 'uten', 'trenger ikke']
+  cues_en: ['not', 'no', 'without', "don't", 'do not', 'need not']

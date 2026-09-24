@@ -1,0 +1,11 @@
+data/
+.cache/
+*.duckdb
+*.duckdb.wal
+models/
+__pycache__/
+*.pyc
+.env
+.venv/
+*.npy
+.DS_Store
