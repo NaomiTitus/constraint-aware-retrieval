@@ -33,4 +33,9 @@ markers = [
   "golden: LLM evals, needs an API key (skipped in CI)",
   "integration: end-to-end, slow (skipped in CI)",
 ]
-addopts = "-q --strict-markers"
+# STANDARDS.md: CI runs `unit` and `fixture` only, and must pass on a fresh
+# clone with no network and no API key. Integration/golden tests need the
+# corpus or an API key, so they are deselected by default and opted into with
+# `-m integration`. Without this, `pytest tests/unit` picked up an
+# integration-marked corpus test and failed whenever the database was locked.
+addopts = "-q --strict-markers -m 'not integration and not golden and not slow'"
