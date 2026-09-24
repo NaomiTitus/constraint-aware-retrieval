@@ -99,5 +99,5 @@ def fan_out(groups: Mapping[str, list[str]],
         if rep not in results:
             raise KeyError(f"no result for cluster representative {rep!r}")
         for uuid in uuids:
-            out[uuid] = dict(results[rep]) if isinstance(results[rep], dict) else results[rep]
+            out[uuid] = results[rep]
     return out
