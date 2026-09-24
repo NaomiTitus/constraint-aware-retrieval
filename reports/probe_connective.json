@@ -1,9 +1,9 @@
 {
  "prompt_version": "census-v6",
- "seed": 20260924,
+ "seed": 20260925,
  "result": {
   "disjunction": [
-   11,
+   18,
    20
   ],
   "conjunction": [
@@ -14,57 +14,15 @@
  "disagreements": [
   [
    "disjunction",
-   "ea6d0620-6a9b-45fa-95d0-e7e2621a7087",
-   "professional",
-   "skandinavisk spr\u00e5k eller engelsk"
-  ],
-  [
-   "disjunction",
-   "df60fb97-295e-40f3-9600-1b7def883ec4",
+   "367d5967-d066-4fda-ae0e-43126f7b3029",
    "unstated",
    "norsk eller engelsk"
   ],
   [
    "disjunction",
-   "af3aea61-80b4-4ef6-be50-b0198f88e2e7",
-   "unstated",
-   "skandinavisk spr\u00e5k eller engelsk"
-  ],
-  [
-   "disjunction",
-   "da25361c-98be-4cb1-849c-0823f6bffe21",
-   "scandinavian_accepted",
-   "norsk/skandinavisk eller engelsk"
-  ],
-  [
-   "disjunction",
-   "0f00816e-b55a-41c6-9ccb-3157f9bc19c5",
-   "scandinavian_accepted",
-   "skandinavisk spr\u00e5k eller engelsk"
-  ],
-  [
-   "disjunction",
-   "7ec4e215-ad17-4a1b-bcab-a456ee4b6ad4",
-   "certified",
-   "engelsk eller et skandinavisk"
-  ],
-  [
-   "disjunction",
-   "7ff6759b-660f-4333-80ac-e6808cb2825b",
-   "unstated",
-   "norsk, matematikk eller engelsk"
-  ],
-  [
-   "disjunction",
-   "5c77547e-796f-4218-b22d-b8ebfb409d49",
-   "professional",
-   "engelsk eller et skandinavisk"
-  ],
-  [
-   "disjunction",
-   "6fc41f40-9c5b-4047-9467-9e87f7474285",
-   "professional",
-   "engelsk eller et skandinavisk"
+   "c514de15-9fbe-4728-8f68-b601e347478c",
+   "desirable",
+   "Scandinavian language or English"
   ]
  ]
 }

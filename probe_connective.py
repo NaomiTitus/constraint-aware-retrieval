@@ -95,8 +95,8 @@ CONJ = re.compile(rf"\b{L}\b[^.\n]{{0,30}}\b(og|and)\b[^.\n]{{0,30}}\b{E}\b"
 # Applied per MATCHED SENTENCE, not per ad: an ad may legitimately contain a
 # real requirement AND a document-language clause.
 DOC_LANG = re.compile(
-    r"dokument|vedlegg|s[øo]knad|vitnem[åa]l|attest|cv\b|publikasjon|"
-    r"application|enclosure|diploma|certificate", re.I)
+    r"dokument|document|vedlegg|s[øo]knad|vitnem[åa]l|attest|cv\b|publikasjon|"
+    r"application|enclosure|diploma|certificate|submit|transcript", re.I)
 SUBJECT = re.compile(
     r"\b(matematikk|matte|naturfag|samfunnsfag|kroppsøving|musikk|kunst|"
     r"historie|fysikk|kjemi|biologi|basisfag|fagene|undervise|undervisning)\b", re.I)

@@ -1,0 +1,14 @@
+prompt census-v6  |  HELD-OUT connective probe
+  disjunction group 20   conjunction group 20   (golden ads excluded)
+
+census: 143s  calls=38  demoted=1  spend=$0.060
+
+HELD-OUT RESULT
+  disjunction  18/20    90%   (expect level == either_norwegian_or_english)
+  conjunction  20/20   100%   (expect level != either_norwegian_or_english)
+
+2 DISAGREEMENTS with the oracle
+  [disjunction] 367d5967  got unstated
+                 'norsk eller engelsk'
+  [disjunction] c514de15  got desirable
+                 'Scandinavian language or English'
