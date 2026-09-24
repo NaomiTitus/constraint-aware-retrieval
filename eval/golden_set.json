@@ -6,12 +6,13 @@
   "stratum": "certified",
   "expected": {
    "norwegian_requirement_level": "certified",
-   "english_accessible": false,
    "evidence_span": "Utenlandske søkere må ha dokumenterte norskkunnskaper på minimum nivå B2",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "CEFR gate, conditional on foreign applicants"
+  "note": "CEFR gate, conditional on foreign applicants",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 3,
@@ -20,12 +21,14 @@
   "stratum": "certified",
   "expected": {
    "norwegian_requirement_level": "certified",
-   "english_accessible": false,
    "evidence_span": "Minimum språknivå B2",
    "stated_working_language": "unstated",
-   "authorisation_required": null
+   "authorisation_required": null,
+   "conflicting_statements": false
   },
-  "note": "CEFR gate"
+  "note": "CEFR gate | B2 and 'gode kommunikasjonsferdigheter' are compatible, not contradictory — frozen explicitly so the CONTRADICTIONS rule does not push the model to true.",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 4,
@@ -34,12 +37,13 @@
   "stratum": "disjunction",
   "expected": {
    "norwegian_requirement_level": "either_norwegian_or_english",
-   "english_accessible": true,
    "evidence_span": "Behersker norsk eller engelsk",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "disjunction"
+  "note": "disjunction",
+  "doc_lang": "no",
+  "derived_accessible": true
  },
  {
   "n": 5,
@@ -48,12 +52,13 @@
   "stratum": "disjunction",
   "expected": {
    "norwegian_requirement_level": "either_norwegian_or_english",
-   "english_accessible": true,
    "evidence_span": "Behersker norsk eller engelsk",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "disjunction"
+  "note": "disjunction",
+  "doc_lang": "no",
+  "derived_accessible": true
  },
  {
   "n": 6,
@@ -62,12 +67,13 @@
   "stratum": "disjunction",
   "expected": {
    "norwegian_requirement_level": "either_norwegian_or_english",
-   "english_accessible": true,
    "evidence_span": "Kommuniserer godt på norsk eller engelsk",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "disjunction"
+  "note": "disjunction",
+  "doc_lang": "no",
+  "derived_accessible": true
  },
  {
   "n": 7,
@@ -76,12 +82,13 @@
   "stratum": "fluent",
   "expected": {
    "norwegian_requirement_level": "desirable",
-   "english_accessible": true,
    "evidence_span": "Flytende norsk er en fordel, eller vilje til å lære norsk, da norsk er arbeidsspråket i Statnett",
    "stated_working_language": "norwegian",
    "authorisation_required": null
   },
-  "note": "'vilje til å lære norsk' is a stated alternative to fluency; accessible per the desirable rule"
+  "note": "'vilje til å lære norsk' is a stated alternative to fluency; accessible per the desirable rule",
+  "doc_lang": "no",
+  "derived_accessible": true
  },
  {
   "n": 8,
@@ -90,12 +97,13 @@
   "stratum": "fluent",
   "expected": {
    "norwegian_requirement_level": "fluent",
-   "english_accessible": false,
    "evidence_span": "flytende norsk, både muntlig og skriftlig",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "TRAP: 'jeg har ikke verbalt språk' is the EMPLOYER's disability; the requirement is separate"
+  "note": "TRAP: 'jeg har ikke verbalt språk' is the EMPLOYER's disability; the requirement is separate",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 9,
@@ -104,12 +112,13 @@
   "stratum": "fluent",
   "expected": {
    "norwegian_requirement_level": "scandinavian_accepted",
-   "english_accessible": false,
    "evidence_span": "Snakker flytende norsk eller tydelig skandinavisk med god språkforståelse",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "Scandinavian disjunction, still excludes English"
+  "note": "Scandinavian disjunction, still excludes English",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 10,
@@ -118,12 +127,13 @@
   "stratum": "professional",
   "expected": {
    "norwegian_requirement_level": "unstated",
-   "english_accessible": false,
    "evidence_span": null,
    "stated_working_language": "unstated",
    "authorisation_required": "Norsk autorisasjon som vernepleier"
   },
-  "note": "authorisation only"
+  "note": "authorisation only",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 11,
@@ -132,12 +142,13 @@
   "stratum": "professional",
   "expected": {
    "norwegian_requirement_level": "professional",
-   "english_accessible": false,
    "evidence_span": "Gode norskkunnskaper",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": ""
+  "note": "",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 12,
@@ -146,12 +157,13 @@
   "stratum": "professional",
   "expected": {
    "norwegian_requirement_level": "professional",
-   "english_accessible": false,
    "evidence_span": "Gode norskkunnskaper skriftlig og muntlig",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": ""
+  "note": "",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 13,
@@ -160,12 +172,13 @@
   "stratum": "prof_muntlig",
   "expected": {
    "norwegian_requirement_level": "professional",
-   "english_accessible": false,
    "evidence_span": "Søkere må beherske norsk både skriftlig og muntlig",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "teaching job, but the requirement is STATED — no inference needed"
+  "note": "teaching job, but the requirement is STATED — no inference needed",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 14,
@@ -174,12 +187,13 @@
   "stratum": "prof_muntlig",
   "expected": {
    "norwegian_requirement_level": "certified",
-   "english_accessible": false,
    "evidence_span": "Norsk muntlig og skriftlig ferdigheter tilsvarende nivå 2",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "OWNER RULING: 'tilsvarende nivå 2' is Norskprøve 2 (pre-2014, ~A2/B1) — a named test, so a documentary gate"
+  "note": "OWNER RULING: 'tilsvarende nivå 2' is Norskprøve 2 (pre-2014, ~A2/B1) — a named test, so a documentary gate",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 15,
@@ -188,12 +202,14 @@
   "stratum": "prof_muntlig",
   "expected": {
    "norwegian_requirement_level": "explicitly_not_required",
-   "english_accessible": false,
    "evidence_span": "Er du polsktallende jurist men norskkunnskapene er under utvikling",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "OWNER RULING: level is explicitly_not_required. Accessibility OVERRIDDEN to False: the ad addresses POLISH speakers with developing Norwegian and never mentions English, so the derivation's True is wrong for an English-only applicant."
+  "note": "OWNER RULING: level is explicitly_not_required. Accessibility OVERRIDDEN to False: the ad addresses POLISH speakers with developing Norwegian and never mentions English, so the derivation's True is wrong for an English-only applicant.",
+  "doc_lang": "no",
+  "derived_accessible": true,
+  "accessibility_note": "Derivation gives True (explicitly_not_required). A human reading says False: the ad addresses POLISH speakers with developing Norwegian and never mentions English. Recorded as an annotation, NOT as a label — the model never emits this field, so overriding it in the frozen set would only break any harness that computes it."
  },
  {
   "n": 16,
@@ -202,12 +218,13 @@
   "stratum": "conversational",
   "expected": {
    "norwegian_requirement_level": "scandinavian_accepted",
-   "english_accessible": false,
    "evidence_span": "Du må kunne gjøre deg forstått på norsk eller annet skandinavisk språk",
    "stated_working_language": "unstated",
    "authorisation_required": "Gyldig norsk autorisasjon som helsefagarbeider"
   },
-  "note": "conversational bar, Scandinavian scope"
+  "note": "conversational bar, Scandinavian scope",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 17,
@@ -216,12 +233,13 @@
   "stratum": "conversational",
   "expected": {
    "norwegian_requirement_level": "conversational",
-   "english_accessible": false,
    "evidence_span": "Må kunne kommunisere på norsk",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": ""
+  "note": "",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 18,
@@ -230,12 +248,13 @@
   "stratum": "conversational",
   "expected": {
    "norwegian_requirement_level": "conversational",
-   "english_accessible": false,
    "evidence_span": "Du må kunne gjøre deg forstått på norsk og engelsk",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "AND not OR — both required"
+  "note": "AND not OR — both required",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 19,
@@ -244,12 +263,13 @@
   "stratum": "desirable",
   "expected": {
    "norwegian_requirement_level": "scandinavian_accepted",
-   "english_accessible": false,
    "evidence_span": "Gode kommunikasjonsevner, skandinavisk og engelsk(norsk er en fordel)",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "CORRECTED: 'skandinavisk OG engelsk' — Scandinavian is required; only the Norwegian part is a bonus"
+  "note": "CORRECTED: 'skandinavisk OG engelsk' — Scandinavian is required; only the Norwegian part is a bonus",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 20,
@@ -258,12 +278,13 @@
   "stratum": "desirable",
   "expected": {
    "norwegian_requirement_level": "explicitly_not_required",
-   "english_accessible": true,
    "evidence_span": "Norsk er en fordel, men ikke et krav",
    "stated_working_language": "english",
    "authorisation_required": null
   },
-  "note": "English required, Norwegian explicitly not"
+  "note": "English required, Norwegian explicitly not",
+  "doc_lang": "no",
+  "derived_accessible": true
  },
  {
   "n": 21,
@@ -272,12 +293,13 @@
   "stratum": "desirable",
   "expected": {
    "norwegian_requirement_level": "desirable",
-   "english_accessible": true,
    "evidence_span": "Gode kommunikasjonsevner i engelsk (norsk er en fordel)",
    "stated_working_language": "english",
    "authorisation_required": null
   },
-  "note": "CORRECTED: English is the requirement, Norwegian a parenthetical bonus — an English-only speaker can apply"
+  "note": "CORRECTED: English is the requirement, Norwegian a parenthetical bonus — an English-only speaker can apply",
+  "doc_lang": "no",
+  "derived_accessible": true
  },
  {
   "n": 22,
@@ -286,12 +308,13 @@
   "stratum": "scandinavian",
   "expected": {
    "norwegian_requirement_level": "scandinavian_accepted",
-   "english_accessible": false,
    "evidence_span": "Gode norske eller skandinaviske språkkunnskaper - både skriftlige og muntlige",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": ""
+  "note": "",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 23,
@@ -300,12 +323,13 @@
   "stratum": "scandinavian",
   "expected": {
    "norwegian_requirement_level": "scandinavian_accepted",
-   "english_accessible": false,
    "evidence_span": "Beherske et skandinavisk språk godt, muntlig og skriftlig",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": ""
+  "note": "",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 24,
@@ -314,12 +338,13 @@
   "stratum": "scandinavian",
   "expected": {
    "norwegian_requirement_level": "either_norwegian_or_english",
-   "english_accessible": true,
    "evidence_span": "Kandidater bør ha førerkort for bil, og kunne prate engelsk eller ett nordisk språk",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "disjunction INCLUDING English"
+  "note": "disjunction INCLUDING English",
+  "doc_lang": "no",
+  "derived_accessible": true
  },
  {
   "n": 25,
@@ -328,12 +353,13 @@
   "stratum": "not_required",
   "expected": {
    "norwegian_requirement_level": "explicitly_not_required",
-   "english_accessible": true,
    "evidence_span": "Du trenger ikke å snakke norsk, men du må kunne kommunisere godt på engelsk",
    "stated_working_language": "english",
    "authorisation_required": null
   },
-  "note": ""
+  "note": "",
+  "doc_lang": "no",
+  "derived_accessible": true
  },
  {
   "n": 26,
@@ -342,12 +368,13 @@
   "stratum": "not_required",
   "expected": {
    "norwegian_requirement_level": "desirable",
-   "english_accessible": true,
    "evidence_span": "Du trenger ikke å snakke flytende norsk når du starter",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "NOT 'no Norwegian' — 'not FLUENT INITIALLY'. Some Norwegian expected."
+  "note": "NOT 'no Norwegian' — 'not FLUENT INITIALLY'. Some Norwegian expected.",
+  "doc_lang": "no",
+  "derived_accessible": true
  },
  {
   "n": 27,
@@ -356,12 +383,13 @@
   "stratum": "not_required",
   "expected": {
    "norwegian_requirement_level": "desirable",
-   "english_accessible": true,
    "evidence_span": "Du trenger ikke å beherske norsk flytende fra første dag",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "same nuance as 26"
+  "note": "same nuance as 26",
+  "doc_lang": "no",
+  "derived_accessible": true
  },
  {
   "n": 28,
@@ -370,12 +398,13 @@
   "stratum": "nynorsk",
   "expected": {
    "norwegian_requirement_level": "professional",
-   "english_accessible": false,
    "evidence_span": "God kunnskap i norsk, munnleg og skriftleg",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "nynorsk"
+  "note": "nynorsk",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 29,
@@ -384,12 +413,13 @@
   "stratum": "nynorsk",
   "expected": {
    "norwegian_requirement_level": "certified",
-   "english_accessible": false,
    "evidence_span": "Krav om norsk språkferdigheit tilsvarande B2 munnleg og skriftleg",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "nynorsk CEFR gate"
+  "note": "nynorsk CEFR gate",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 30,
@@ -398,12 +428,13 @@
   "stratum": "nynorsk",
   "expected": {
    "norwegian_requirement_level": "professional",
-   "english_accessible": false,
    "evidence_span": "Kunne godt norsk, både munnleg og skriftleg",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "nynorsk"
+  "note": "nynorsk",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 31,
@@ -412,12 +443,13 @@
   "stratum": "auth_only",
   "expected": {
    "norwegian_requirement_level": "scandinavian_accepted",
-   "english_accessible": false,
    "evidence_span": "kommuniserer svært godt på norsk eller et annet skandinavisk språk",
    "stated_working_language": "unstated",
    "authorisation_required": "har norsk autorisasjon som tannlege"
   },
-  "note": "CORRECTED: I labelled on 'vi legger vekt på språkforståelse' and missed the real requirement"
+  "note": "CORRECTED: I labelled on 'vi legger vekt på språkforståelse' and missed the real requirement",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 32,
@@ -426,12 +458,13 @@
   "stratum": "auth_only",
   "expected": {
    "norwegian_requirement_level": "scandinavian_accepted",
-   "english_accessible": false,
    "evidence_span": "Beherske et nordisk språk flytende, både muntlig og skriftlig",
    "stated_working_language": "unstated",
    "authorisation_required": "Norsk autorisasjon"
   },
-  "note": "auth AND language, kept apart"
+  "note": "auth AND language, kept apart",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 33,
@@ -440,12 +473,13 @@
   "stratum": "auth_only",
   "expected": {
    "norwegian_requirement_level": "unstated",
-   "english_accessible": false,
    "evidence_span": null,
    "stated_working_language": "unstated",
    "authorisation_required": "Norsk autorisasjon som sykepleier eller vernepleier"
   },
-  "note": "authorisation only"
+  "note": "authorisation only",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 34,
@@ -454,12 +488,13 @@
   "stratum": "boilerplate_only",
   "expected": {
    "norwegian_requirement_level": "unstated",
-   "english_accessible": false,
    "evidence_span": null,
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "silent"
+  "note": "silent",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 35,
@@ -468,12 +503,13 @@
   "stratum": "boilerplate_only",
   "expected": {
    "norwegian_requirement_level": "unstated",
-   "english_accessible": false,
    "evidence_span": null,
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "silent"
+  "note": "silent",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 36,
@@ -482,12 +518,13 @@
   "stratum": "boilerplate_only",
   "expected": {
    "norwegian_requirement_level": "unstated",
-   "english_accessible": false,
    "evidence_span": null,
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "silent"
+  "note": "silent",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 37,
@@ -496,12 +533,13 @@
   "stratum": "english_written",
   "expected": {
    "norwegian_requirement_level": "scandinavian_accepted",
-   "english_accessible": false,
    "evidence_span": "Kommuniserer godt på et skandinavisk språk og engelsk",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "AND — both required, so Scandinavian needed"
+  "note": "AND — both required, so Scandinavian needed",
+  "doc_lang": "en",
+  "derived_accessible": false
  },
  {
   "n": 38,
@@ -510,12 +548,13 @@
   "stratum": "english_written",
   "expected": {
    "norwegian_requirement_level": "either_norwegian_or_english",
-   "english_accessible": true,
    "evidence_span": "Må beherske skandinavisk eller engelsk tale",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "disjunction INCLUDING English"
+  "note": "disjunction INCLUDING English",
+  "doc_lang": "en",
+  "derived_accessible": true
  },
  {
   "n": 39,
@@ -524,12 +563,13 @@
   "stratum": "english_written",
   "expected": {
    "norwegian_requirement_level": "unstated",
-   "english_accessible": true,
    "evidence_span": null,
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "English-written, silent"
+  "note": "English-written, silent",
+  "doc_lang": "en",
+  "derived_accessible": true
  },
  {
   "n": 40,
@@ -538,12 +578,13 @@
   "stratum": "silent_norwegian",
   "expected": {
    "norwegian_requirement_level": "unstated",
-   "english_accessible": false,
    "evidence_span": null,
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "silent"
+  "note": "silent",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 41,
@@ -552,12 +593,13 @@
   "stratum": "silent_norwegian",
   "expected": {
    "norwegian_requirement_level": "unstated",
-   "english_accessible": false,
    "evidence_span": null,
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "silent"
+  "note": "silent",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 42,
@@ -566,12 +608,13 @@
   "stratum": "silent_norwegian",
   "expected": {
    "norwegian_requirement_level": "unstated",
-   "english_accessible": false,
    "evidence_span": null,
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "silent"
+  "note": "silent",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 43,
@@ -580,12 +623,13 @@
   "stratum": "silent_norwegian",
   "expected": {
    "norwegian_requirement_level": "unstated",
-   "english_accessible": false,
    "evidence_span": null,
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "silent"
+  "note": "silent",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 44,
@@ -594,12 +638,13 @@
   "stratum": "silent_norwegian",
   "expected": {
    "norwegian_requirement_level": "unstated",
-   "english_accessible": false,
    "evidence_span": null,
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "silent"
+  "note": "silent",
+  "doc_lang": "no",
+  "derived_accessible": false
  },
  {
   "n": 45,
@@ -608,11 +653,12 @@
   "stratum": "silent_norwegian",
   "expected": {
    "norwegian_requirement_level": "unstated",
-   "english_accessible": false,
    "evidence_span": null,
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "silent"
+  "note": "silent",
+  "doc_lang": "no",
+  "derived_accessible": false
  }
 ]

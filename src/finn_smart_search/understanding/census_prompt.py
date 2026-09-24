@@ -31,7 +31,7 @@ REJECTED (measurement refuted the claim):
   * "språkmodell for barna" - 5 ads, not the 727 implied by occupation counts.
 """
 
-PROMPT_VERSION = "census-v3"
+PROMPT_VERSION = "census-v4"
 
 SYSTEM = """You extract language-requirement facts from Norwegian job advertisements for a \
 search engine whose users include people who speak English but no Norwegian.
@@ -63,6 +63,43 @@ learn on the job. Use `desirable`.
 Read the clause carefully: in "god formidlingsevne på norsk. Fordel med erfaring \
 fra drift", the "fordel" attaches to EXPERIENCE, not to Norwegian, and Norwegian \
 is required. The advantage must attach to the language itself.
+
+### PRECEDENCE — when several of these rules fire at once
+Most advertisements trigger more than one rule. Apply them in this order and \
+stop at the first that matches:
+
+1. **An explicit negation wins.** "Norsk er en fordel, men ikke et krav" is \
+   `explicitly_not_required`, not `desirable` — "ikke et krav" overrides "en \
+   fordel" in the same sentence.
+2. **SCOPE BEATS BAR.** The set of accepted languages decides the level; the \
+   proficiency demanded does not. If English is among them, \
+   `either_norwegian_or_english` — whatever the bar. If a non-Norwegian \
+   Scandinavian or Nordic language is among them but English is not, \
+   `scandinavian_accepted` — even when the bar is only "gjøre seg forstått" \
+   and even when the sentence also says "flytende".
+3. **A REQUIREMENT outranks a parenthetical.** "Gode kommunikasjonsevner, \
+   skandinavisk og engelsk (norsk er en fordel)" requires Scandinavian, so it \
+   is `scandinavian_accepted`. The bracketed "fordel" does not soften a \
+   requirement stated beside it. Contrast "gode kommunikasjonsevner i engelsk \
+   (norsk er en fordel)", which requires only English and IS `desirable`.
+4. **OR is not AND.** "norsk eller engelsk" is a disjunction and accessible. \
+   "norsk og engelsk" is a conjunction: both are required, so it is a Norwegian \
+   requirement at whatever bar is stated.
+
+### PROFICIENCY BARS, when scope does not decide
+`certified` — any named test or level: norskprøve, Norskprøve 2, Bergenstest, \
+CEFR A1-C2, "nivå 2", "språkkrav". A scale you can be examined on.
+`fluent` — flytende, beherske svært godt, meistre.
+`professional` — gode norskkunnskaper, god kunnskap i norsk, må beherske norsk.
+`conversational` — gjøre seg forstått, kunne kommunisere, grunnleggende norsk.
+
+### THE REQUIREMENT MUST APPLY TO THE APPLICANT
+A sentence may mention Norwegian without demanding it of you. "Jeg har ikke \
+verbalt språk" describes the employer. "Undervisning i norskopplæring" describes \
+the work. "Fullført mastergrad ved norsk studieinstitusjon" describes an \
+institution. None is a language requirement. Only a demand made of the applicant \
+counts. A gate that binds only some applicants — "utenlandske søkere må ha \
+dokumenterte norskkunnskaper på nivå B2" — still binds, and is `certified`.
 
 ### SILENCE IS SILENCE
 Three of every four advertisements say nothing whatever about language. That is \
@@ -366,14 +403,33 @@ BLOCKING_LEVELS = {"certified", "fluent", "professional", "conversational",
                    "scandinavian_accepted"}
 
 def derive_english_accessible(facets: dict, doc_lang: str) -> bool:
-    lvl = facets["norwegian_requirement_level"]
+    """Can a fluent English speaker with NO Norwegian realistically apply?
+
+    Derived, never asked of the model. Order matters: the requirement LEVEL
+    dominates, because an English-written ad can still demand fluent Norwegian.
+    Only when the level is `unstated` does anything else get consulted.
+    """
+    lvl = facets["norwegian_requirement_level"]        # fail loud if absent
     if lvl in ACCESSIBLE_LEVELS:
         return True
     if lvl in BLOCKING_LEVELS:
         return False
-    if facets.get("stated_working_language") == "english":
+
+    # `unstated` only. A STATED working language beats the ad's own language in
+    # both directions: an English-written ad that says the working language is
+    # Norwegian is NOT accessible, which the doc_lang fallback alone got wrong.
+    working = facets.get("stated_working_language", "unstated")
+    if working in ("english", "both"):
         return True
-    return doc_lang in ("en", "mixed")        # 'unstated' falls back to document language
+    if working in ("norwegian", "scandinavian"):
+        return False
+
+    # Silence: fall back to the language the ad is written in. Anything that is
+    # not positively English (including "unknown", None, "") is inaccessible —
+    # 95.3% of the corpus is Norwegian, and silence correlates negatively with
+    # accessibility in the care and retail roles that dominate it.
+    return doc_lang in ("en", "mixed")
+
 
 USER_TEMPLATE = (
     "<advertisement document_language=\"{doc_lang}\" truncated=\"{truncated}\">\n"

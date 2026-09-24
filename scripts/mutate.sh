@@ -12,6 +12,11 @@
 #      pytest-timeout installed, so pytest exited non-zero on every run and all
 #      16 mutations reported "killed".
 #
+#   4. NEVER LET PYTHON REUSE BYTECODE. `git checkout --` restores the .py but
+#      Python can reuse a .pyc compiled from the MUTATED source, so the suite
+#      fails on a clean tree and every later mutation aborts on the baseline
+#      check. PYTHONDONTWRITEBYTECODE removes the failure mode entirely.
+#
 #   3. BASELINE AND MUTATION MUST RUN THE IDENTICAL COMMAND. The fix for (2)
 #      used plain pytest for the baseline and `timeout 120 pytest` for the
 #      mutation. `timeout` is GNU coreutils and absent on macOS, so the
@@ -23,12 +28,12 @@
 set -uo pipefail
 FILE="$1"; TESTS="$2"; OLD="$3"; NEW="$4"; DESC="${5:-mutation}"
 
-run_tests() { python3 -m pytest "$TESTS" -q --timeout=120 >/dev/null 2>&1; }
+run_tests() { PYTHONDONTWRITEBYTECODE=1 python3 -m pytest "$TESTS" -q -p no:cacheprovider --timeout=120 >/dev/null 2>&1; }
 
 git diff --quiet -- "$FILE" || { echo "ABORT: $FILE has uncommitted changes"; exit 1; }
 run_tests || { echo "ABORT: baseline not green under the exact mutation command"; exit 1; }
 
-trap 'git checkout -- "$FILE"' EXIT INT TERM
+trap 'git checkout -- "$FILE"; find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null' EXIT INT TERM
 
 python3 - "$FILE" "$OLD" "$NEW" <<'PY' || { printf "%-46s SKIP (no match)\n" "$DESC"; exit 0; }
 import sys
