@@ -8,20 +8,11 @@ from __future__ import annotations
 
 import hashlib
 import re
-import unicodedata
 from collections import defaultdict
 
 from .census_prompt import HEAD_CHARS, TAIL_CHARS
 
-# Curly quotes, NBSP, soft hyphens and dashes survive HTML extraction and would
-# otherwise cause CORRECT spans to fail the substring check.
-_QUOTES = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"',
-                         " ": " ", "­": "", "–": "-", "—": "-"})
-
-
-def norm(s: str) -> str:
-    """NFKC + punctuation/whitespace unification. Applied to BOTH sides of a match."""
-    return re.sub(r"\s+", " ", unicodedata.normalize("NFKC", s).translate(_QUOTES)).strip()
+from .text_norm import normalise as norm   # the single shared implementation
 
 
 LANG_TOKEN = re.compile(

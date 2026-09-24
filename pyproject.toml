@@ -24,3 +24,13 @@ packages = ["src/finn_smart_search"]
 
 [tool.ruff]
 line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "unit: pure functions, no I/O (runs in CI)",
+  "fixture: recorded I/O, offline (runs in CI)",
+  "golden: LLM evals, needs an API key (skipped in CI)",
+  "integration: end-to-end, slow (skipped in CI)",
+]
+addopts = "-q --strict-markers"

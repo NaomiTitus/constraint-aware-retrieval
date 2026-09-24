@@ -1,55 +1,111 @@
 """HTML -> ordered blocks -> text.
 
-Blocks (not a flattened string) because ads are frequently bilingual: a Norwegian
-"Om stillingen" section followed by an English "About the role". Per-block language
-ID needs that structure, and evidence spans need to be locatable.
+Blocks rather than a flattened string because ads are frequently bilingual: a
+Norwegian "Om stillingen" section followed by an English "About the role".
+Per-block language ID needs that structure, and evidence spans need to be
+locatable.
+
+Two rules, both established by measurement:
+
+  LEAF-ONLY. Emit a node only if it has no block DESCENDANT. Norwegian ads are
+  marked up as <li><p>text</p></li>, so a div-only skip emitted every bullet
+  twice across 27% of ads, masked by a prefix dedup that also destroyed
+  genuinely repeated bullets in 1.4% of ads. There is no block dedup here now:
+  removing the cause beats tuning the workaround.
+
+  MIXED CONTENT. When a node has both its own text and block children, emit its
+  own text as a separate block first. Measured: 272 ads (2.68%), 418 nodes,
+  98,300 characters — including "God norsk ferdigheter. Helst bestått
+  norskprøve B1.", a language requirement that discarding would have turned
+  from `certified` into `unstated`.
 """
 from __future__ import annotations
 
 import re
-import unicodedata
 
 from selectolax.lexbor import LexborHTMLParser
 
+from .text_norm import normalise
+
 BLOCK_TAGS = {"p", "li", "h1", "h2", "h3", "h4", "h5", "h6", "td", "div"}
-_WS = re.compile(r"[ \t   ]+")
+_SELECTOR = ", ".join(BLOCK_TAGS)
 _NL = re.compile(r"\n{3,}")
 
+MIN_BLOCK_CHARS = 2      # a block must carry at least this much text
+MIN_OWN_CHARS = 3        # mixed-content own text must carry at least this much
 
-def normalise(s: str) -> str:
-    s = unicodedata.normalize("NFKC", s)
-    s = s.replace(" ", " ").replace("’", "'").replace("“", '"').replace("”", '"')
-    return _WS.sub(" ", s).strip()
+__all__ = ["BLOCK_TAGS", "normalise", "to_blocks", "blocks_to_text", "clean"]
+
+
+def _has_block_descendant(node) -> bool:
+    """True if any descendant is a block node.
+
+    Walks children explicitly: selectolax's `node.css()` includes the node
+    itself and returns a fresh wrapper object, so an identity check against the
+    result never matches and every node looks like it contains a block.
+    """
+    child = node.child
+    while child is not None:
+        if child.tag in BLOCK_TAGS:
+            return True
+        if child.tag != "-text" and _has_block_descendant(child):
+            return True
+        child = child.next
+    return False
+
+
+def _own_text(node) -> str:
+    """Text belonging directly to a node, excluding its block descendants'."""
+    full = normalise(node.text(separator=" ", strip=True))
+    if not full:
+        return ""
+    inner: list[str] = []
+
+    def collect(n):
+        while n is not None:
+            if n.tag in BLOCK_TAGS:
+                inner.append(normalise(n.text(separator=" ", strip=True)))
+            elif n.tag != "-text":
+                collect(n.child)
+            n = n.next
+
+    collect(node.child)
+    for piece in inner:
+        if piece:
+            full = full.replace(piece, " ", 1)
+    return normalise(full)
 
 
 def to_blocks(html: str | None) -> list[dict]:
-    """Ordered content blocks. Nested containers are skipped when a child already emits."""
-    if not html:
+    """Ordered content blocks: [{index, tag, text, n_chars}]."""
+    if not html or not html.strip():
         return []
+
     tree = LexborHTMLParser(html)
     for bad in tree.css("script, style, noscript"):
         bad.decompose()
 
     blocks: list[dict] = []
-    seen: set[str] = set()
-    for node in tree.css(", ".join(BLOCK_TAGS)):
-        # skip containers whose text is already covered by a descendant block
-        if node.tag == "div" and node.css_first(", ".join(BLOCK_TAGS - {"div"})):
-            continue
-        txt = normalise(node.text(separator=" ", strip=True) or "")
-        if len(txt) < 2:
-            continue
-        key = txt[:160]
-        if key in seen:
-            continue
-        seen.add(key)
-        blocks.append({"index": len(blocks), "tag": node.tag, "text": txt, "n_chars": len(txt)})
 
-    if not blocks:  # plain-text ad with no markup
-        txt = normalise(tree.text(separator="\n", strip=True) or "")
-        if txt:
-            blocks = [{"index": i, "tag": "p", "text": t, "n_chars": len(t)}
-                      for i, t in enumerate(x for x in txt.split("\n") if x.strip())]
+    def emit(tag: str, text: str) -> None:
+        if len(text) >= MIN_BLOCK_CHARS:
+            blocks.append({"index": len(blocks), "tag": tag, "text": text,
+                           "n_chars": len(text)})
+
+    for node in tree.css(_SELECTOR):
+        if _has_block_descendant(node):
+            own = _own_text(node)
+            if len(own) >= MIN_OWN_CHARS:
+                emit(node.tag, own)
+            continue
+        emit(node.tag, normalise(node.text(separator=" ", strip=True)))
+
+    if not blocks:  # plain-text ad with no usable markup
+        # Split on newlines BEFORE normalising: normalise() collapses all
+        # whitespace, so normalising first would merge every line into one.
+        raw = tree.text(separator="\n", strip=True) or ""
+        for line in raw.split("\n"):
+            emit("p", normalise(line))
     return blocks
 
 
