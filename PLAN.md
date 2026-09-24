@@ -10,6 +10,10 @@ A4 ESCO graph: 1,242 occupations, 10,063 skills, 52,009 edges, bilingual ✓
 A5 Bilingual lexicon + corpus measurement ✓
 A6 Census prompt v2: 3 adversarial reviews, findings validated against corpus ✓
 
+## A7 Corpus is FROZEN — see DECISIONS.md D2
+Snapshot 2026-09-24, 10,166 ads. No refresh. 37% expire within 7 days, 83%
+within 30 — so the demo states the snapshot date and shows per-ad expiry state.
+
 ## B. Facet census — NEXT
 B1 Wire dedup.cluster() into the runner — MinHash over body shingles, 395 redundant
    ads (3.9%), largest cluster 44. Extract once per cluster, fan out results.

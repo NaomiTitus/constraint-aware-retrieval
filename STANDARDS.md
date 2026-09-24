@@ -19,6 +19,7 @@ finnno_smart_search/
 ├── PLAN.md                       ✓  step-by-step status
 ├── STANDARDS.md                  ✓  this file
 ├── DATA_LICENSE.md               ✓  NAV terms · ESCO · "no finn.no crawling"
+├── DECISIONS.md                  ✓  decision log with evidence
 ├── LICENSE                       ✗  MIT
 ├── .github/workflows/ci.yml      ✗  ruff + mypy + pytest (offline markers only)
 ├── configs/                      ~  ingest · extract · eval · ranking/NN_*.yaml
