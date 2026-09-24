@@ -15,8 +15,8 @@ Snapshot 2026-09-24, 10,166 ads. No refresh. 37% expire within 7 days, 83%
 within 30 — so the demo states the snapshot date and shows per-ad expiry state.
 
 ## B. Facet census — NEXT
-B1 Wire dedup.cluster() into the runner — MinHash over body shingles, 395 redundant
-   ads (3.9%), largest cluster 44. Extract once per cluster, fan out results.
+B1 ✓ dedup: exact hash of normalised text (D8). 9,823 clusters, 343 redundant,
+   largest 44. signature/cluster/representatives/fan_out, 20 tests, 100% mutation score.
 B2 Pilot 50 ads; verify schema adherence, span validity, demotion rate
 B3 Batch census over ~9,500 unique clusters (Haiku 4.5, ~$3, <1h expected)
 B4 Post-validate; track demotion rate as a first-class metric

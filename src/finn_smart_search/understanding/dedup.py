@@ -1,68 +1,98 @@
-"""Near-duplicate detection over ad bodies.
+"""Near-duplicate detection over ad bodies, by exact hash of normalised text.
 
 Three distinct dedup problems, which need different answers:
 
-  1. REVISION dedup - the same ad appearing many times in the feed as it is
-     edited. Solved at ingest by keeping max(sist_endret) per uuid.
+  1. REVISION dedup — the same ad appearing many times in the feed as it is
+     edited. Solved at ingest by keeping max(sist_endret) per uuid:
      220,988 listing entries -> 59,830 distinct ads.
 
-  2. CONTENT dedup - different uuids carrying substantially the same text,
+  2. CONTENT dedup — different uuids carrying substantially the same text,
      because chains and agencies post one template per location. Solved here.
-     Purpose: extract once per cluster (saves spend) and stop a single template
-     error becoming 44 rows that look like consistent signal.
 
-  3. RESULT DIVERSITY - whether 44 near-identical ads should all appear in one
+  3. RESULT DIVERSITY — whether 44 near-identical ads should all appear on one
      result page. That is a RANKING concern (MMR / per-employer capping), not
      an ETL one, and is deliberately not solved here.
 
-A first attempt keyed on `title + first 400 chars` performed WORSE than plain
-exact hashing (157 vs 320 redundant ads), because chain stores vary the title
-per location - "KIWI Mørkvedvegen...", "KIWI Frognerveien..." - while the body
-is identical. Including the title split exactly the clusters we wanted merged.
-MinHash over body shingles fixes it: 456 redundant (4.5%), largest cluster 44.
+Why exact hashing rather than MinHash (supersedes DECISIONS.md D6). Measured
+over the full corpus: raw HTML 249 redundant (2.4%), cleaned text 320 (3.1%),
+normalised text 345 (3.4%), MinHash 423 (4.2%). MinHash's extra 78 merges are
+legitimate but sit in clusters of 2-6, where error amplification is negligible;
+the large clusters that matter (44, 32, 21) are caught identically by every
+strategy. Exact hashing is explainable in one sentence, deterministic across
+processes, and has zero false merges by construction.
+
+The purpose is NOT cost — deduping saves about $0.12 on a $3 census. It exists
+to stop one template mistake becoming 44 corpus rows that look like consistent
+signal and survive random-sample evaluation.
 """
 from __future__ import annotations
 
-import random
+import hashlib
 import re
-import unicodedata
 from collections import defaultdict
+from typing import Any, Iterable, Mapping
 
-SHINGLE_WORDS = 5
-N_PERMS = 32
+from .text_norm import normalise
 
-_rng = random.Random(20260924)
-_PERMS = [(_rng.getrandbits(32) | 1, _rng.getrandbits(32)) for _ in range(N_PERMS)]
-_MASK = 0xFFFFFFFF
+# Strip the variation that distinguishes sibling ads, and nothing else.
+# \w under re.UNICODE keeps æøå; stripping them would collapse Norwegian ads
+# toward a common key and make clustering catastrophically over-eager.
+_DIGITS = re.compile(r"\d+")
+_NON_WORD = re.compile(r"[^\w#]+", re.UNICODE)
 
-
-def _normalise(text: str) -> str:
-    """Strip the variation that distinguishes sibling ads: digits, case, spacing."""
-    t = unicodedata.normalize("NFKC", text or "").lower()
-    t = re.sub(r"\d+", "#", t)
-    return re.sub(r"[^\w#æøå ]+", " ", t)
+__all__ = ["canonical", "signature", "cluster", "representatives", "fan_out"]
 
 
-def signature(body: str) -> tuple[int, ...]:
-    """MinHash signature over word shingles of the BODY ONLY (never the title)."""
-    words = _normalise(body).split()
-    if len(words) < SHINGLE_WORDS:
-        return (hash(" ".join(words)) & _MASK,) * N_PERMS
-    shingles = {
-        hash(" ".join(words[i:i + SHINGLE_WORDS])) & _MASK
-        for i in range(len(words) - SHINGLE_WORDS + 1)
-    }
-    return tuple(min(((s * a + b) & _MASK) for s in shingles) for a, b in _PERMS)
+def canonical(body: str | None) -> str:
+    """The comparison form: shared normaliser, case-folded, digits masked."""
+    text = normalise(body).lower()
+    text = _DIGITS.sub("#", text)
+    return _NON_WORD.sub(" ", text).strip()
 
 
-def cluster(ads: list[dict]) -> dict[tuple, list[str]]:
-    """Group ads by MinHash signature. Returns {signature: [uuid, ...]}."""
-    groups: dict[tuple, list[str]] = defaultdict(list)
-    for ad in ads:
-        groups[signature(ad.get("description_text", ""))].append(ad["uuid"])
-    return dict(groups)
+def signature(body: str | None) -> str:
+    """Stable 64-char hex digest of the canonical form.
+
+    A hex string rather than MinHash's tuple of permutations: serialisable,
+    comparable across processes, and with no seed to keep in sync.
+    """
+    return hashlib.sha256(canonical(body).encode("utf-8")).hexdigest()
 
 
-def representatives(groups: dict[tuple, list[str]]) -> list[str]:
-    """One uuid per cluster - the ads actually sent to the LLM."""
-    return [uuids[0] for uuids in groups.values()]
+def cluster(ads: Iterable[Mapping[str, Any]]) -> dict[str, list[str]]:
+    """Group ads by signature. Returns {signature: [uuid, ...]} with uuids
+    sorted, so cluster contents do not depend on input order."""
+    groups: dict[str, list[str]] = defaultdict(list)
+    for adv in ads:
+        groups[signature(adv.get("description_text"))].append(adv["uuid"])
+    return {sig: sorted(uuids) for sig, uuids in groups.items()}
+
+
+def representatives(groups: Mapping[str, list[str]]) -> list[str]:
+    """One uuid per cluster — the ads actually sent to the LLM.
+
+    Deterministic: the lowest uuid in each cluster, returned in sorted order, so
+    two runs over the same corpus send exactly the same requests and the cache
+    keys line up.
+    """
+    return sorted(min(uuids) for uuids in groups.values() if uuids)
+
+
+def fan_out(groups: Mapping[str, list[str]],
+            results: Mapping[str, Any]) -> dict[str, Any]:
+    """Spread each representative's result to every member of its cluster.
+
+    Raises KeyError if a representative is missing from `results`. Silently
+    dropping ads whose representative failed extraction would shrink the corpus
+    without anyone noticing.
+    """
+    out: dict[str, Any] = {}
+    for uuids in groups.values():
+        if not uuids:
+            continue
+        rep = min(uuids)
+        if rep not in results:
+            raise KeyError(f"no result for cluster representative {rep!r}")
+        for uuid in uuids:
+            out[uuid] = results[rep]
+    return out

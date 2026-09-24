@@ -91,7 +91,7 @@ with an unbiased held-out set at this scale).
 
 ---
 
-### D6 · Near-duplicate clustering on body only, via MinHash
+### D6 · Near-duplicate clustering on body only, via MinHash — SUPERSEDED by D8
 **2026-09-24**
 
 *Evidence:* a first attempt keyed on `title + first 400 chars` found **157**
@@ -121,3 +121,39 @@ overkill" is an assertion.
 
 Also measure filtered-search strategies (post / pre / in-engine) at the real ~7%
 selectivity, where post-filtering should collapse.
+
+
+---
+
+### D8 · Exact hash of normalised text, superseding MinHash (D6)
+**2026-09-24**
+
+`signature(body) = sha256(normalise(body).lower() → digits masked → punctuation
+collapsed)`. A 64-char hex digest, not a tuple of permutations.
+
+*Evidence — four strategies over the full corpus:*
+
+| Strategy | Redundant | Largest cluster |
+|---|---:|---:|
+| Raw HTML, exact | 249 (2.4%) | 28 |
+| Cleaned text, exact | 320 (3.1%) | 44 |
+| **Normalised text, exact** | **343 (3.4%)** | 44 |
+| MinHash shingles | 423 (4.2%) | 44 |
+
+MinHash's extra 78 merges were inspected and are legitimate (Kid Interiør across
+three stores at 0.976 similarity; Adecco at 0.995). But they sit in clusters of
+2–6, where error amplification is negligible, and the large clusters that
+actually matter are caught identically by every strategy.
+
+*Reasoning:* the purpose is error amplification, not cost — deduping saves $0.12
+on a $3 census. Against a marginal 0.8% of the corpus, exact hashing buys:
+explainable in one sentence, deterministic across processes with no seed to keep
+in sync, serialisable cluster keys, and **zero false merges by construction**.
+
+*Accepted loss:* ads differing by a sentence or so (the Adecco case, ~20 chars)
+stay in separate clusters. Tested explicitly, so the tradeoff is visible rather
+than forgotten.
+
+*Kept from D6:* clustering is on the body only. Chain stores vary the title per
+location, and a key including the title found only 157 redundant ads — worse
+than plain exact hashing at 320.
