@@ -68,6 +68,14 @@ class SpendLimitError(RuntimeError):
     """Running spend exceeded the cap."""
 
 
+class BatchFailedError(RuntimeError):
+    """The batch reached a terminal state that is not success."""
+
+
+OK_STATES = ("ended", "completed")
+DEAD_STATES = ("canceled", "cancelled", "errored", "expired", "failed")
+
+
 # ── requests ─────────────────────────────────────────────────────────────────
 
 def build_request(ad: Mapping[str, Any], **_) -> dict:
@@ -113,9 +121,25 @@ def cache_put(con, model: str, prompt_version: str, text: str | None,
 
 # ── run ──────────────────────────────────────────────────────────────────────
 
-def _collect(client, batch_id, expected: set[str], poll_seconds: float) -> dict:
-    while client.poll(batch_id) not in ("ended", "completed"):
+def _collect(client, batch_id, expected: set[str], poll_seconds: float,
+             max_polls: int = 5000) -> dict:
+    """Poll to a terminal state.
+
+    A status that is terminal but NOT successful must raise, not loop. The
+    first version looped while `status not in ("ended","completed")`, so
+    "canceled" span forever — and with poll_seconds=0.0 that is a busy loop at
+    100% CPU with no timeout and no error. max_polls bounds the remaining case
+    of a batch that never terminates at all.
+    """
+    for _ in range(max_polls):
+        status = client.poll(batch_id)
+        if status in OK_STATES:
+            break
+        if status in DEAD_STATES:
+            raise BatchFailedError(f"batch {batch_id} reached terminal state {status!r}")
         time.sleep(poll_seconds)
+    else:
+        raise BatchFailedError(f"batch {batch_id} did not terminate after {max_polls} polls")
     got = {}
     for res in client.results(batch_id):
         got[res["custom_id"]] = res

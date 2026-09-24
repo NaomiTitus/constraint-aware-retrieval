@@ -1,14 +1,33 @@
 #!/usr/bin/env bash
 # Mutation-testing harness.
 #
-# Restores from GIT, never from a /tmp copy. An earlier version snapshotted the
-# file to /tmp before each mutation; a timeout killed the loop mid-restore, the
-# next run snapshotted the ALREADY-MUTATED file as its "original", and a mutated
-# implementation was committed. Git is the only trustworthy baseline.
+# Three rules, each learned by getting it wrong:
+#
+#   1. RESTORE FROM GIT. An early version snapshotted the file to /tmp; a
+#      timeout killed the loop mid-restore, the next run snapshotted the
+#      ALREADY-MUTATED file as its "original", and a mutated implementation was
+#      committed.
+#
+#   2. VERIFY THE BASELINE. A later version passed --timeout without
+#      pytest-timeout installed, so pytest exited non-zero on every run and all
+#      16 mutations reported "killed".
+#
+#   3. BASELINE AND MUTATION MUST RUN THE IDENTICAL COMMAND. The fix for (2)
+#      used plain pytest for the baseline and `timeout 120 pytest` for the
+#      mutation. `timeout` is GNU coreutils and absent on macOS, so the
+#      mutation run failed with command-not-found — and reported "killed"
+#      again. Any difference between the two invocations hides a broken runner.
+#
+# The common thread: a harness that cannot distinguish a failing TEST from a
+# failing TEST RUNNER reports exactly what you hope to hear.
 set -uo pipefail
 FILE="$1"; TESTS="$2"; OLD="$3"; NEW="$4"; DESC="${5:-mutation}"
 
+run_tests() { python3 -m pytest "$TESTS" -q --timeout=120 >/dev/null 2>&1; }
+
 git diff --quiet -- "$FILE" || { echo "ABORT: $FILE has uncommitted changes"; exit 1; }
+run_tests || { echo "ABORT: baseline not green under the exact mutation command"; exit 1; }
+
 trap 'git checkout -- "$FILE"' EXIT INT TERM
 
 python3 - "$FILE" "$OLD" "$NEW" <<'PY' || { printf "%-46s SKIP (no match)\n" "$DESC"; exit 0; }
@@ -19,8 +38,5 @@ t = p.read_text()
 sys.exit(3) if old not in t else p.write_text(t.replace(old, new, 1))
 PY
 
-if python3 -m pytest "$TESTS" -q -x --timeout=60 >/dev/null 2>&1; then
-  printf "%-46s %s\n" "$DESC" "SURVIVED"
-else
-  printf "%-46s %s\n" "$DESC" "killed"
-fi
+if run_tests; then printf "%-46s %s\n" "$DESC" "SURVIVED"
+else printf "%-46s %s\n" "$DESC" "killed"; fi

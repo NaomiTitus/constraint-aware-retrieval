@@ -72,11 +72,14 @@ def ad(uuid, text=AD_TEXT, lang="no"):
 class FakeClient:
     """Records what it was asked to do and replays canned results."""
 
-    def __init__(self, results=None, statuses=None):
+    def __init__(self, results=None, statuses=None, reverse=False, mangle_id=False):
         self.submitted = []          # list[list[request]]
         self._results = results or {}
         self._statuses = list(statuses or ["ended"])
+        self.reverse = reverse       # batch APIs do not guarantee ordering
+        self.mangle_id = mangle_id
         self.calls = 0
+        self.polls = 0
 
     def submit_batch(self, requests):
         self.submitted.append(requests)
@@ -84,12 +87,18 @@ class FakeClient:
         return f"batch_{len(self.submitted)}"
 
     def poll(self, batch_id):
+        self.polls += 1
         return self._statuses.pop(0) if len(self._statuses) > 1 else self._statuses[0]
 
     def results(self, batch_id):
         idx = int(batch_id.split("_")[1]) - 1
-        for req in self.submitted[idx]:
+        reqs = list(reversed(self.submitted[idx])) if self.reverse else self.submitted[idx]
+        for req in reqs:
             cid = req["custom_id"]
+            if self.mangle_id:
+                yield {"custom_id": cid.upper(), "type": "succeeded",
+                       "facets": dict(SILENT), "usage": {}}
+                continue
             yield self._results.get(cid, {
                 "custom_id": cid, "type": "succeeded",
                 "facets": dict(SILENT), "usage": {"input_tokens": 1000, "output_tokens": 200},
@@ -296,3 +305,166 @@ def test_6_4_summary_reports_the_numbers_that_matter(tmp_con):
     out = census.run([ad("a"), ad("b", OTHER["b"])], FakeClient(), tmp_con)
     for k in ("calls", "cache_hits", "demoted", "demotion_rate", "spend_usd", "levels", "failed"):
         assert k in out, f"summary must report {k}"
+
+
+# ── gaps found by external review + an honest mutation run ──────────────────
+
+def test_results_are_mapped_by_id_when_returned_OUT_OF_ORDER(tmp_con):
+    """The fake previously returned results in submission order, so position
+    mapping and custom_id mapping were indistinguishable. Reversing makes the
+    difference observable."""
+    b_text = "Vi soker tomrer til nybygg. Helst bestatt norskprove B1. Oppstart snarest."
+    certified = dict(SILENT, norwegian_requirement_level="certified",
+                     evidence_basis="explicit_statement",
+                     evidence_strength="explicit_and_unambiguous",
+                     evidence_spans=[{"span": "Helst bestatt norskprove B1.",
+                                      "section_language": "no"}])
+    out = census.run([ad("a"), ad("b", b_text)],
+                     FakeClient(reverse=True, results={
+                         "b": {"custom_id": "b", "type": "succeeded", "facets": certified,
+                               "usage": {"input_tokens": 1, "output_tokens": 1}}}), tmp_con)
+    assert out["facets"]["a"]["norwegian_requirement_level"] == "unstated"
+    assert out["facets"]["b"]["norwegian_requirement_level"] == "certified"
+
+
+def test_unknown_custom_id_in_results_raises(tmp_con):
+    with pytest.raises(census.MissingResultError):
+        census.run([ad("a")], FakeClient(mangle_id=True), tmp_con)
+
+
+def test_cache_hit_avoids_the_api_call_entirely(tmp_con):
+    """The only end-to-end proof that caching works. Counting rows after two
+    runs is a tautology — INSERT OR REPLACE gives one row whether run two was a
+    hit or a full re-bill. Without this, a disabled cache costs $22.61."""
+    ads = [ad("a"), ad("b", OTHER["b"])]
+    c1 = FakeClient(); first = census.run(ads, c1, tmp_con)
+    c2 = FakeClient(); second = census.run(ads, c2, tmp_con)
+    assert second["calls"] == 0
+    assert second["cache_hits"] == 2
+    assert second["spend_usd"] == 0.0
+    assert c2.submitted == [], "a fully cached run must not submit a batch at all"
+    assert second["facets"] == first["facets"]
+
+
+def test_cache_stores_the_validated_record_not_the_raw_model_output(tmp_con):
+    """Caching before validation would store a falsified verdict forever, and
+    every rerun would skip validation and fan the lie out to the whole cluster."""
+    bad = dict(SILENT, norwegian_requirement_level="certified",
+               evidence_basis="explicit_statement",
+               evidence_strength="explicit_and_unambiguous",
+               evidence_spans=[{"span": "Invented sentence entirely.", "section_language": "no"}])
+    res = {"a": {"custom_id": "a", "type": "succeeded", "facets": bad,
+                 "usage": {"input_tokens": 1, "output_tokens": 1}}}
+    census.run([ad("a")], FakeClient(results=res), tmp_con, max_demotion_rate=1.0)
+    second = census.run([ad("a")], FakeClient(results=res), tmp_con, max_demotion_rate=1.0)
+    assert second["cache_hits"] == 1
+    assert second["facets"]["a"]["norwegian_requirement_level"] == "unstated"
+
+
+def test_spend_uses_asymmetric_prices(tmp_con):
+    """1M in AND 1M out is symmetric: swapping PRICE_IN and PRICE_OUT gives the
+    same total, so the original test could not detect it."""
+    out = census.run([ad("a")], FakeClient(results={
+        "a": {"custom_id": "a", "type": "succeeded", "facets": dict(SILENT),
+              "usage": {"input_tokens": 1_000_000, "output_tokens": 0}}}), tmp_con)
+    assert out["spend_usd"] == pytest.approx(0.50, rel=1e-6)
+
+
+def test_demotion_rate_is_over_new_records_not_all_representatives(tmp_con):
+    """With a warm cache, dividing by len(reps) makes one demotion out of one
+    new call read as a small fraction — and a broken prompt runs to completion."""
+    ads = [ad(k, OTHER[k]) for k in list(OTHER)[:10]]
+    census.run(ads[:9], FakeClient(), tmp_con)          # warm the cache
+    bad = dict(SILENT, norwegian_requirement_level="certified",
+               evidence_basis="explicit_statement",
+               evidence_strength="explicit_and_unambiguous",
+               evidence_spans=[{"span": "Invented sentence entirely.", "section_language": "no"}])
+    last = ads[9]["uuid"]
+    with pytest.raises(census.DemotionRateError):
+        census.run(ads, FakeClient(results={
+            last: {"custom_id": last, "type": "succeeded", "facets": bad,
+                   "usage": {"input_tokens": 1, "output_tokens": 1}}}), tmp_con)
+
+
+def test_cache_key_components_cannot_collide(tmp_con):
+    """A ":" separator makes model="haiku:v1"/pv="x" collide with
+    model="haiku"/pv="v1:x", serving one version's facets under another."""
+    assert census.cache_key("haiku:v1", "x", AD_TEXT) != census.cache_key("haiku", "v1:x", AD_TEXT)
+
+
+def test_poll_accepts_completed_as_well_as_ended(tmp_con):
+    census.run([ad("a")], FakeClient(statuses=["completed"]), tmp_con)
+
+
+def test_poll_waits_for_a_terminal_state(tmp_con):
+    c = FakeClient(statuses=["in_progress", "in_progress", "ended"])
+    census.run([ad("a")], c, tmp_con)
+    assert c.polls == 3
+
+
+def test_terminal_failure_state_raises_instead_of_hanging(tmp_con):
+    """"canceled" is terminal but not successful. The first version looped while
+    status not in ("ended","completed"), so it span forever — a busy loop at
+    100% CPU with poll_seconds=0.0, no timeout, no error."""
+    c = FakeClient(statuses=["canceled"])
+    with pytest.raises(census.BatchFailedError):
+        census.run([ad("a")], c, tmp_con)
+    # Must fail FAST. Without the DEAD_STATES check it still raises, but only
+    # after exhausting max_polls — 5,000 wasted polls, and in production a busy
+    # loop. Asserting the exception alone passes for the wrong reason.
+    assert c.polls == 1
+
+
+def test_doc_lang_is_used_when_deriving_accessibility(tmp_con):
+    """A hardcoded "no" would misclassify every English-written ad."""
+    out = census.run([ad("a", "We are hiring a barista for our coffee bar.", lang="en")],
+                     FakeClient(), tmp_con)
+    assert out["facets"]["a"]["english_accessible"] is True
+    out2 = census.run([ad("z", "Vi soker barista til kaffebaren var.", lang="no")],
+                      FakeClient(), tmp_con)
+    assert out2["facets"]["z"]["english_accessible"] is False
+
+
+def test_every_ad_is_accounted_for(tmp_con):
+    """Conservation. The `live` filter and the limit filter both key on min(u);
+    if a representative were ever not the lexicographic minimum, whole clusters
+    would vanish with no error."""
+    ads = [ad("a"), ad("b"), ad("c", OTHER["c"]), ad("d", OTHER["d"])]
+    out = census.run(ads, FakeClient(results={
+        "c": {"custom_id": "c", "type": "errored", "error": "overloaded"}}), tmp_con)
+    assert set(out["facets"]) | set(out["failed"]) == {a["uuid"] for a in ads}
+
+
+def test_fan_out_spreads_a_non_default_verdict(tmp_con):
+    """The original asserted only that members appear in the output, while every
+    fake result was SILENT — so members and representative were trivially equal."""
+    text = "Krav: Behersker norsk eller engelsk. Oppstart snarest."
+    disj = dict(SILENT, norwegian_requirement_level="either_norwegian_or_english",
+                evidence_basis="explicit_statement",
+                evidence_strength="explicit_and_unambiguous",
+                evidence_spans=[{"span": "Behersker norsk eller engelsk.",
+                                 "section_language": "no"}])
+    ads = [ad(u, text) for u in ("a", "b", "c")]
+    out = census.run(ads, FakeClient(results={
+        "a": {"custom_id": "a", "type": "succeeded", "facets": disj,
+              "usage": {"input_tokens": 1, "output_tokens": 1}}}), tmp_con)["facets"]
+    assert all(out[u]["norwegian_requirement_level"] == "either_norwegian_or_english"
+               for u in ("a", "b", "c"))
+    assert all(out[u]["english_accessible"] is True for u in ("a", "b", "c"))
+    assert "_reasons" not in out["a"], "internal bookkeeping must not leak into facets"
+
+
+def test_retry_resubmits_only_the_expired_request(tmp_con):
+    """len(submitted)==2 passes even if the retry re-sends every request,
+    re-billing the whole census."""
+    client = FakeClient(results={"a": {"custom_id": "a", "type": "expired"}})
+    census.run([ad("a"), ad("b", OTHER["b"])], client, tmp_con)
+    assert [r["custom_id"] for r in client.submitted[1]] == ["a"]
+
+
+def test_long_ad_is_sent_in_full(tmp_con):
+    """"[...]" not in body catches one marker spelling; a silent body[:8000]
+    would pass."""
+    long_text = "Norsk. " * 3000
+    body = census.build_request(ad("a", long_text))["params"]["messages"][-1]["content"]
+    assert long_text.strip() in body and len(body) >= 21_000
