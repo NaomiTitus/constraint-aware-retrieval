@@ -347,3 +347,35 @@ USER_TEMPLATE = (
     "{title}\n\n{body}\n</advertisement>"
 )
 HEAD_CHARS, TAIL_CHARS = 3500, 2500   # head+tail beats head-only; affects 539 ads
+
+
+def build_request(title: str, body: str, doc_lang: str, truncated: bool = False) -> dict:
+    """Assemble the exact Messages API payload for one advertisement.
+
+    The system block and all ten few-shot turns are marked with cache_control,
+    so the ~2.4k-token prefix is billed at 0.1x on every call after the first.
+    """
+    messages = []
+    for ex_title, ex_body, ex_lang, ex_facets in FEWSHOT:
+        messages.append({"role": "user", "content": USER_TEMPLATE.format(
+            doc_lang=ex_lang, truncated="false", title=ex_title, body=ex_body)})
+        messages.append({"role": "assistant", "content": [{
+            "type": "tool_use", "id": f"fs_{len(messages)}",
+            "name": TOOL["name"], "input": ex_facets}]})
+        messages.append({"role": "user", "content": [{
+            "type": "tool_result", "tool_use_id": f"fs_{len(messages)-1}",
+            "content": "recorded"}]})
+    # cache breakpoint at the end of the stable prefix
+    messages[-1]["content"][0]["cache_control"] = {"type": "ephemeral"}
+    messages.append({"role": "user", "content": USER_TEMPLATE.format(
+        doc_lang=doc_lang, truncated=str(truncated).lower(), title=title, body=body)})
+    return {
+        "model": "claude-haiku-4-5-20251001",
+        "max_tokens": 1024,
+        "temperature": 0,
+        "system": [{"type": "text", "text": SYSTEM,
+                    "cache_control": {"type": "ephemeral"}}],
+        "tools": [TOOL],
+        "tool_choice": {"type": "tool", "name": TOOL["name"]},
+        "messages": messages,
+    }
