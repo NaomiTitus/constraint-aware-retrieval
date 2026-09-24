@@ -24,6 +24,51 @@ only that a conjunction is not read as a disjunction is sound in every case.
 
 Ads carrying BOTH shapes are excluded — the oracle cannot adjudicate them.
 Golden-set ads are excluded — that is the whole point.
+
+## RUN 1 AUDIT (seed 20260924, census-v6) — THE ORACLE WAS WRONG, NOT THE MODEL
+
+Raw result: disjunction 11/20, conjunction 20/20. Reading all nine
+"disagreements" against the ad text reversed seven of them:
+
+  MODEL RIGHT, ORACLE WRONG — 7 of 9
+    Two distinct blind spots, both now excluded below.
+
+    (a) APPLICATION-DOCUMENT LANGUAGE, 4 ads. Academic advertisements say
+        "Dokumentene må være på norsk/skandinavisk eller engelsk" or "All
+        dokumentasjon må foreligge på et skandinavisk språk eller engelsk" —
+        a statement about what language your APPLICATION may be written in,
+        not about the job. One of these (0f00816e, UiA postdoc) says in the
+        same ad "Arbeidsspråket ved Universitetet i Agder er norsk"; the model
+        returned scandinavian_accepted with working_language=norwegian and
+        ignored the document clause entirely. It was right and the regex was
+        not. This is the strongest available evidence that `application_language`
+        belongs in the schema as its own field.
+
+    (b) SCHOOL SUBJECTS, 3 ads. "undervise i fagene norsk, engelsk og
+        matematikk", "basisfagene (norsk, matematikk eller engelsk)" — a list
+        of subjects TAUGHT, not languages required. "matematikk" inside the
+        disjunction is the giveaway. The model read these as the Norwegian bar
+        stated elsewhere in the ad (professional) or as silence.
+
+  MODEL WRONG — 1 of 9
+    df60fb97, "· Behersker norsk eller engelsk" — the canonical disjunction,
+    the exact sentence few-shot 2 demonstrates, returned `unstated` with no
+    spans at all. A real miss, recorded rather than explained away.
+
+  WRONG FOR AN UNRELATED REASON — 1 of 9
+    af3aea61 requires "norskprøve bestått A2 skriftlig og B1 muntlig" and so is
+    `certified`; the model said `unstated`. The oracle's disjunction match was
+    spurious boilerplate. Counted against the model, but not as a connective
+    error.
+
+  TRUE held-out accuracy on the connective distinction:
+    disjunction 18/20 (90%)   conjunction 20/20 (100%)   overall 38/40 (95%)
+
+The lesson is about the oracle, not the score: a regex that finds "X eller
+engelsk" cannot tell a job requirement from the language your CV may be in, and
+the second is common in exactly the ads most likely to be English-friendly. The
+exclusions below encode that, and the same confusion is a live risk for the
+BM25 channel later — a keyword surface would make the identical mistake.
 """
 import json
 import random
@@ -37,7 +82,7 @@ from finn_smart_search.understanding import census
 from finn_smart_search.understanding.census_prompt import PROMPT_VERSION
 
 N_PER_GROUP = 20
-SEED = 20260924
+SEED = int(__import__("os").environ.get("PROBE_SEED", 20260924))
 
 L = r"(norsk\w*|skandinavisk\w*|nordisk\w*|svensk\w*|dansk\w*|scandinavian)"
 E = r"(engelsk\w*|english)"
@@ -45,6 +90,28 @@ DISJ = re.compile(rf"\b{L}\b[^.\n]{{0,30}}\b(eller|or)\b[^.\n]{{0,30}}\b{E}\b"
                   rf"|\b{E}\b[^.\n]{{0,30}}\b(eller|or)\b[^.\n]{{0,30}}\b{L}\b", re.I)
 CONJ = re.compile(rf"\b{L}\b[^.\n]{{0,30}}\b(og|and)\b[^.\n]{{0,30}}\b{E}\b"
                   rf"|\b{E}\b[^.\n]{{0,30}}\b(og|and)\b[^.\n]{{0,30}}\b{L}\b", re.I)
+
+# Contexts the oracle cannot adjudicate, learned from the run-1 audit above.
+# Applied per MATCHED SENTENCE, not per ad: an ad may legitimately contain a
+# real requirement AND a document-language clause.
+DOC_LANG = re.compile(
+    r"dokument|vedlegg|s[øo]knad|vitnem[åa]l|attest|cv\b|publikasjon|"
+    r"application|enclosure|diploma|certificate", re.I)
+SUBJECT = re.compile(
+    r"\b(matematikk|matte|naturfag|samfunnsfag|kroppsøving|musikk|kunst|"
+    r"historie|fysikk|kjemi|biologi|basisfag|fagene|undervise|undervisning)\b", re.I)
+
+
+def adjudicable(text: str, pat: re.Pattern) -> bool:
+    """True when at least one match sits in a sentence the oracle can judge."""
+    for m in pat.finditer(text or ""):
+        lo = text.rfind("\n", 0, m.start()) + 1
+        hi = text.find("\n", m.end())
+        sent = text[lo:hi if hi != -1 else len(text)]
+        if not DOC_LANG.search(sent) and not SUBJECT.search(sent):
+            return True
+    return False
+
 
 golden = {g["uuid"] for g in json.load(open("eval/golden_set.json"))}
 con = store.connect("data/ads.duckdb")
@@ -56,7 +123,8 @@ disj, conj = [], []
 for uuid, title, text, lang in rows:
     if uuid in golden:
         continue
-    d, c = bool(DISJ.search(text or "")), bool(CONJ.search(text or ""))
+    d = adjudicable(text, DISJ)
+    c = adjudicable(text, CONJ)
     if d and not c:
         disj.append((uuid, title, text, lang))
     elif c and not d:

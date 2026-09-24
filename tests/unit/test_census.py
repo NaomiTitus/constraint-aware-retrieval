@@ -15,6 +15,9 @@ Decisions encoded:
   * Expired batch requests retry once, then are recorded as failed. Expired
     requests are not billed, so the retry is free.
 """
+import json
+from datetime import datetime, timezone
+
 import pytest
 
 from finn_smart_search.understanding import census
@@ -184,7 +187,8 @@ def test_2_5_whitespace_only_change_is_a_hit(tmp_con):
 
 def test_2_7_corrupt_cache_row_is_a_miss_not_a_crash(tmp_con):
     tmp_con.execute(
-        "INSERT INTO llm_cache VALUES (?,?,?,?,?,?,?)",
+        "INSERT INTO llm_cache (key, model, prompt_version, response, "
+        "input_tokens, output_tokens, created_at) VALUES (?,?,?,?,?,?,?)",
         [census.cache_key(MODEL, PROMPT_VERSION, AD_TEXT), MODEL, PROMPT_VERSION,
          "{not json", 0, 0, None])   # truncated write; VARCHAR column permits it
     assert census.cache_get(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT) is None
@@ -482,3 +486,190 @@ def test_long_ad_is_sent_in_full(tmp_con):
     long_text = "Norsk. " * 3000
     body = census.build_request(ad("a", long_text))["params"]["messages"][-1]["content"]
     assert long_text.strip() in body and len(body) >= 21_000
+
+
+# ── the cache must survive a VALIDATOR change, not only a prompt change ──────
+#
+# WHAT THIS COST. The 50-ad pilot demoted 55% of records. The cause was a bug in
+# the span validator, not in the prompt. Fixing it should have been free to
+# re-measure -- the model's answers were fine, only the judgement of them was
+# wrong -- but cache_put stored `checked["facets"]`, the POST-validation record,
+# and discarded the raw response. The cache key is the ad text, so a plain
+# re-run served the demoted records straight back, and the only way to
+# re-measure was to clear the cache and pay the API again.
+#
+# The original design was a deliberate answer to a real objection: caching the
+# RAW response and returning it unvalidated would store a falsified verdict
+# forever and skip validation on every rerun. Storing both satisfies that
+# objection and this one -- nothing unvalidated is ever served, and a validator
+# change can be re-evaluated for $0.
+#
+# At 44 ads this cost $0.06. At 9,823 clusters it costs $14.50, and validator
+# bugs are the likeliest reason to need a re-run.
+
+RAW_WITH_BAD_SPAN = dict(
+    VALID,
+    evidence_spans=[{"span": "norsk", "section_language": "no"}],   # too short
+)
+
+
+def test_the_raw_response_is_stored_alongside_the_validated_one(tmp_con):
+    """The core of the fix. Both must be retrievable from one cache row."""
+    census.cache_put(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT, VALID, {},
+                     raw_facets=RAW_WITH_BAD_SPAN)
+    assert census.cache_get(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT) == VALID
+    assert census.cache_get_raw(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT) == RAW_WITH_BAD_SPAN
+
+
+def test_cache_get_still_returns_the_validated_record(tmp_con):
+    """Non-negotiable: an unvalidated record must never be served. This is the
+    objection that motivated the original post-validation-only design and it
+    still holds."""
+    census.cache_put(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT, VALID, {},
+                     raw_facets=RAW_WITH_BAD_SPAN)
+    got = census.cache_get(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT)
+    assert got != RAW_WITH_BAD_SPAN
+    assert got == VALID
+
+
+def test_revalidate_rewrites_verdicts_with_no_api_call(tmp_con):
+    """The operation that was impossible. Store a record validated under an
+    over-strict rule, then re-validate against the current one and see the
+    verdict change -- without a client, so an accidental API call cannot pass."""
+    strict = dict(VALID, evidence_spans=[])          # as if everything was stripped
+    census.cache_put(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT, strict, {},
+                     raw_facets=VALID)
+    n = census.revalidate_cache(tmp_con, {census.cache_key(MODEL, PROMPT_VERSION, AD_TEXT): AD_TEXT})
+    assert n == 1
+    assert census.cache_get(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT)["evidence_spans"] \
+        == VALID["evidence_spans"]
+
+
+def test_revalidate_is_idempotent(tmp_con):
+    census.cache_put(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT, VALID, {}, raw_facets=VALID)
+    keys = {census.cache_key(MODEL, PROMPT_VERSION, AD_TEXT): AD_TEXT}
+    census.revalidate_cache(tmp_con, keys)
+    first = census.cache_get(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT)
+    census.revalidate_cache(tmp_con, keys)
+    assert census.cache_get(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT) == first
+
+
+def test_a_row_with_no_raw_response_is_left_alone_by_revalidate(tmp_con):
+    """Rows written before this change have no raw column. They must be skipped,
+    not crash and not be silently blanked -- the whole point is not to lose
+    paid-for work."""
+    tmp_con.execute(
+        "INSERT INTO llm_cache (key, model, prompt_version, response, "
+        "input_tokens, output_tokens, created_at) VALUES (?,?,?,?,?,?,?)",
+        [census.cache_key(MODEL, PROMPT_VERSION, AD_TEXT), MODEL, PROMPT_VERSION,
+         json.dumps(VALID), 0, 0, datetime.now(timezone.utc)])
+    n = census.revalidate_cache(
+        tmp_con, {census.cache_key(MODEL, PROMPT_VERSION, AD_TEXT): AD_TEXT})
+    assert n == 0
+    assert census.cache_get(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT) == VALID
+
+
+def test_cache_put_without_raw_still_works(tmp_con):
+    """Backwards compatible: raw_facets is optional, so no caller breaks."""
+    census.cache_put(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT, VALID, {})
+    assert census.cache_get(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT) == VALID
+    assert census.cache_get_raw(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT) is None
+
+
+def test_an_existing_seven_column_cache_is_migrated_not_recreated(tmp_con):
+    """CREATE TABLE IF NOT EXISTS does NOT add a column to a table that already
+    exists, so the corpus database -- which already holds a 7-column llm_cache
+    -- would keep failing every INSERT until it is migrated.
+
+    The migration must be additive: rows already paid for must survive it.
+    """
+    tmp_con.execute("DROP TABLE IF EXISTS llm_cache")
+    tmp_con.execute("""CREATE TABLE llm_cache (
+        key VARCHAR PRIMARY KEY, model VARCHAR, prompt_version VARCHAR,
+        response VARCHAR, input_tokens INTEGER, output_tokens INTEGER,
+        created_at TIMESTAMPTZ)""")
+    key = census.cache_key(MODEL, PROMPT_VERSION, AD_TEXT)
+    tmp_con.execute(
+        "INSERT INTO llm_cache (key, model, prompt_version, response, "
+        "input_tokens, output_tokens, created_at) VALUES (?,?,?,?,?,?,?)",
+        [key, MODEL, PROMPT_VERSION, json.dumps(VALID), 7, 3,
+         datetime.now(timezone.utc)])
+
+    census.ensure_schema(tmp_con)
+
+    cols = [r[0] for r in tmp_con.execute("DESCRIBE llm_cache").fetchall()]
+    assert "response_raw" in cols
+    # the paid-for row survived, with its token counts
+    row = tmp_con.execute("SELECT response, input_tokens, response_raw "
+                          "FROM llm_cache WHERE key = ?", [key]).fetchone()
+    assert json.loads(row[0]) == VALID and row[1] == 7 and row[2] is None
+    # and the new path works against the migrated table
+    census.cache_put(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT + " Nytt.", VALID, {},
+                     raw_facets=VALID)
+    assert census.cache_get_raw(tmp_con, MODEL, PROMPT_VERSION, AD_TEXT + " Nytt.") == VALID
+
+
+def test_ensure_schema_is_idempotent(tmp_con):
+    census.ensure_schema(tmp_con)
+    census.ensure_schema(tmp_con)
+    cols = [r[0] for r in tmp_con.execute("DESCRIBE llm_cache").fetchall()]
+    assert cols.count("response_raw") == 1
+
+
+def test_run_stores_the_raw_response_so_a_validator_change_is_free(tmp_con):
+    """The mutation that survived everything above: deleting `raw_facets=facets`
+    from run()'s cache_put left every other cache test green, so the mechanism
+    could be dead in production while the unit tests all passed.
+
+    This is the end-to-end proof. run() demotes a fabricated span, the demoted
+    verdict is what gets served -- and the raw answer is still there to be
+    re-judged if the VALIDATOR later turns out to have been wrong, which is
+    exactly what happened in the 50-ad pilot.
+    """
+    bad = dict(SILENT, norwegian_requirement_level="certified",
+               evidence_basis="explicit_statement",
+               evidence_strength="explicit_and_unambiguous",
+               evidence_spans=[{"span": "Invented sentence entirely.", "section_language": "no"}])
+    res = {"a": {"custom_id": "a", "type": "succeeded", "facets": bad,
+                 "usage": {"input_tokens": 1, "output_tokens": 1}}}
+    census.run([ad("a")], FakeClient(results=res), tmp_con, max_demotion_rate=1.0)
+
+    text = ad("a")["description_text"]
+    served = census.cache_get(tmp_con, census.MODEL, PROMPT_VERSION, text)
+    raw = census.cache_get_raw(tmp_con, census.MODEL, PROMPT_VERSION, text)
+
+    assert served["norwegian_requirement_level"] == "unstated", "the demotion must be served"
+    assert raw is not None, "run() must store the raw answer"
+    assert raw["norwegian_requirement_level"] == "certified", \
+        "the raw answer must be the model's own, before demotion"
+    assert raw["evidence_spans"] == bad["evidence_spans"]
+
+
+def test_revalidating_a_run_recovers_verdicts_without_a_client(tmp_con):
+    """The whole point, exercised through run(): after a validator fix, the
+    previously demoted record can be re-judged for $0. Simulated by demoting
+    under a stub validator that rejects everything, then revalidating under the
+    real one."""
+    good_span = "Behersker norsk eller engelsk."
+    facets = dict(SILENT, norwegian_requirement_level="either_norwegian_or_english",
+                  evidence_basis="explicit_statement",
+                  evidence_strength="explicit_and_unambiguous",
+                  evidence_spans=[{"span": good_span, "section_language": "no"}])
+    res = {"a": {"custom_id": "a", "type": "succeeded", "facets": facets,
+                 "usage": {"input_tokens": 1, "output_tokens": 1}}}
+    text = good_span + "\nVi tilbyr opplæring."
+    a = dict(ad("a"), description_text=text)
+    census.run([a], FakeClient(results=res), tmp_con, max_demotion_rate=1.0)
+
+    # a validator bug demoted it; overwrite the served record to simulate that
+    key = census.cache_key(census.MODEL, PROMPT_VERSION, text)
+    tmp_con.execute("UPDATE llm_cache SET response = ? WHERE key = ?",
+                    [json.dumps(dict(facets, norwegian_requirement_level="unstated",
+                                     evidence_spans=[])), key])
+    assert census.cache_get(tmp_con, census.MODEL, PROMPT_VERSION,
+                            text)["norwegian_requirement_level"] == "unstated"
+
+    assert census.revalidate_cache(tmp_con, {key: text}) == 1
+    back = census.cache_get(tmp_con, census.MODEL, PROMPT_VERSION, text)
+    assert back["norwegian_requirement_level"] == "either_norwegian_or_english"
+    assert back["evidence_spans"][0]["span"] == good_span

@@ -197,3 +197,106 @@ uncached cost — but measured rather than asserted.
 *Truncation is not salvaged.* `stop_reason == "max_tokens"` maps to `errored`
 and is retried by the existing path. A half-parsed facet set is
 indistinguishable from a real one downstream.
+
+---
+
+## D10 — The connective decides accessibility, and it is read first
+
+**Decision.** `norwegian_requirement_level` is chosen by reading the CONNECTIVE
+in a language list before anything else. `eller`/`or` makes the languages
+alternatives; `og`/`and` (and a bare comma list) makes them all requirements.
+Only in a disjunction does English being present make an ad accessible.
+
+**Why it needed deciding.** The pilot exposed the failure in both directions
+across three prompt versions, on the same 44 ads:
+
+| | v4 | v5 | v6 |
+|---|---:|---:|---:|
+| `either_norwegian_or_english` | 3/5 | 5/5 | 5/5 |
+| `scandinavian_accepted` | 8/8 | 7/8 | 7/8 |
+| `conversational` | 2/2 | 1/2 | 2/2 |
+| hidden wrongly (of 13) | 3 | 2 | **1** |
+| shown wrongly (of 31) | 0 | 2 | **1** |
+| pooled | 84.1% | 81.8% | **88.6%** |
+
+v4 under-read disjunctions: "Må beherske skandinavisk **eller** engelsk tale"
+became `scandinavian_accepted`, hiding it from the English speaker who satisfies
+it. The rule was already in the prompt and lost anyway, because the level is
+NAMED `either_norwegian_or_english` and the ad never says "norsk", and because
+the only Nordic few-shot mapped a Nordic sentence to `scandinavian_accepted` —
+a stated rule losing to a demonstrated counter-example.
+
+v5 fixed that and broke the opposite case, because "ask one question first: is
+English in the accepted set?" sat above "OR is not AND" in a list headed *stop
+at the first that matches*. "gjøre deg forstått på norsk **og** engelsk" became
+accessible.
+
+**Measured prevalence — the two classes are nearly the same size:**
+
+| Shape | Ads | Correct reading |
+|---|---:|---|
+| `X eller engelsk` | 781 | accessible |
+| `X og engelsk` | 863 | Norwegian/Scandinavian still required |
+| Nordic-or-English with no "norsk eller engelsk" anywhere | 364 | accessible, and nothing else rescues them |
+
+So v5 traded a 781-ad error for an 863-ad one. Neither direction is an edge
+case, which is why the connective is read first rather than patched afterwards.
+
+**Held-out validation (`probe_connective.py`).** The prompt had by then been
+tuned against the same 44 ads four times, so those numbers stopped being an
+unbiased estimate. The probe scores 40 ads the prompt has never seen, using the
+connective itself as the oracle — no hand-labelling needed. Result after
+auditing every disagreement: **disjunction 18/20, conjunction 20/20, 38/40.**
+
+## D11 — Application-document language is a separate field, and the evidence is the probe's own false positives
+
+**Decision.** `application_language` stays a distinct facet. A statement about
+what language the APPLICATION may be written in is never evidence about the job.
+
+**Why.** The probe's raw disjunction score was 11/20. Seven of the nine
+disagreements were the ORACLE being wrong, and four of those seven were this:
+
+> "Dokumentene må være på norsk/skandinavisk eller engelsk"
+> "All dokumentasjon må foreligge på et skandinavisk språk eller engelsk"
+
+Academic advertisements routinely accept applications in English while requiring
+Norwegian for the work. In the UiA postdoc ad both sentences appear: the model
+returned `scandinavian_accepted` with `working_language: norwegian`, quoting
+"Arbeidsspråket ved Universitetet i Agder er norsk", and ignored the document
+clause. The regex could not, and read the ad as English-accessible.
+
+Three more were school SUBJECTS — "basisfagene (norsk, matematikk eller
+engelsk)" — a list of things taught, not languages demanded.
+
+**Why this matters beyond the probe.** The confusion is concentrated in exactly
+the ads most likely to be English-friendly (universities, research institutes),
+so a system that gets it wrong is wrong where it is most consequential. And it
+is a *live risk for the planned BM25 channel*, which is a keyword surface and
+will make precisely the mistake my regex made. Recorded here so the retrieval
+work inherits the warning rather than rediscovering it.
+
+One genuine model miss stands, unexplained away: `· Behersker norsk eller
+engelsk` returned `unstated` with no spans — the canonical disjunction, and the
+exact sentence few-shot 2 demonstrates.
+
+## D12 — The LLM cache stores the raw answer as well as the validated one
+
+**Decision.** `llm_cache` carries both `response` (validated, the only thing
+ever served) and `response_raw` (the model's own answer). `revalidate_cache()`
+re-judges stored raw answers under the current validator with no API call.
+
+**Why.** The pilot demoted 55% of records on a **validator** bug — the span
+checker destroyed block boundaries — not a prompt bug. The model's answers were
+fine; only the judgement of them was wrong. Re-measuring should have been free,
+but the cache held post-validation records keyed on ad text, so a plain re-run
+served the demoted verdicts straight back and the fix cost a second API run.
+
+The original post-validation-only design answered a real objection: caching the
+raw answer ALONE would serve an unvalidated verdict and skip validation on every
+rerun. Storing both satisfies both constraints — nothing unvalidated is served,
+and a validator change costs nothing to re-evaluate.
+
+At 44 ads the mistake cost $0.06. At 9,823 clusters it is $14.50, and a
+validator bug is the likeliest reason to need a re-run. Migration is additive:
+`ensure_schema()` ALTERs an existing table, and the 172 already-paid-for rows
+were preserved.

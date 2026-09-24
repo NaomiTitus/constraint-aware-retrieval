@@ -53,7 +53,8 @@ DEFAULT_MAX_DEMOTION_RATE = 0.15
 DDL = """
 CREATE TABLE IF NOT EXISTS llm_cache (
     key VARCHAR PRIMARY KEY, model VARCHAR, prompt_version VARCHAR,
-    response VARCHAR, input_tokens INTEGER, output_tokens INTEGER, created_at TIMESTAMPTZ);
+    response VARCHAR, input_tokens INTEGER, output_tokens INTEGER, created_at TIMESTAMPTZ,
+    response_raw VARCHAR);
 CREATE TABLE IF NOT EXISTS ad_facets (
     uuid VARCHAR PRIMARY KEY, facets JSON, english_accessible BOOLEAN,
     demoted BOOLEAN, reasons JSON, prompt_version VARCHAR,
@@ -61,6 +62,21 @@ CREATE TABLE IF NOT EXISTS ad_facets (
 CREATE TABLE IF NOT EXISTS census_failures (
     uuid VARCHAR, reason VARCHAR, detail VARCHAR, failed_at TIMESTAMPTZ);
 """
+
+
+def ensure_schema(con) -> None:
+    """Create the tables, and MIGRATE an existing llm_cache.
+
+    `CREATE TABLE IF NOT EXISTS` does not add a column to a table that already
+    exists, so the corpus database -- which holds a 7-column llm_cache written
+    before response_raw existed -- would fail every INSERT without this. The
+    migration is additive: rows already paid for keep their response and their
+    token counts, and simply carry NULL raw.
+    """
+    con.execute(DDL)
+    cols = {r[0] for r in con.execute("DESCRIBE llm_cache").fetchall()}
+    if "response_raw" not in cols:
+        con.execute("ALTER TABLE llm_cache ADD COLUMN response_raw VARCHAR")
 
 
 class MissingResultError(RuntimeError):
@@ -117,13 +133,72 @@ def cache_get(con, model: str, prompt_version: str, text: str | None):
 
 
 def cache_put(con, model: str, prompt_version: str, text: str | None,
-              facets: Mapping[str, Any], usage: Mapping[str, int]) -> None:
+              facets: Mapping[str, Any], usage: Mapping[str, int],
+              raw_facets: Mapping[str, Any] | None = None) -> None:
+    """Store the VALIDATED record and, separately, the model's RAW answer.
+
+    Only the validated record is ever served (see cache_get). The raw copy
+    exists so that a change to the VALIDATOR can be re-evaluated for $0.
+
+    The pilot is why. It demoted 55% of records on a validator bug, not a
+    prompt bug — the model's answers were fine, only the judgement of them was
+    wrong. But the cache held post-validation records keyed on the ad text, so
+    a plain re-run served the demoted verdicts back and re-measuring meant
+    paying the API again. At 44 ads that was $0.06; at 9,823 clusters it is
+    $14.50, and a validator bug is the likeliest reason to need a re-run.
+
+    Storing both also answers the objection that motivated the original
+    design: caching the raw response ALONE would serve an unvalidated verdict
+    and skip validation on every rerun. Nothing unvalidated is served here.
+    """
     con.execute(
-        "INSERT OR REPLACE INTO llm_cache VALUES (?,?,?,?,?,?,?)",
+        "INSERT OR REPLACE INTO llm_cache (key, model, prompt_version, response, "
+        "input_tokens, output_tokens, created_at, response_raw) VALUES (?,?,?,?,?,?,?,?)",
         [cache_key(model, prompt_version, text), model, prompt_version,
          json.dumps(facets, ensure_ascii=False),
          usage.get("input_tokens", 0), usage.get("output_tokens", 0),
-         datetime.now(timezone.utc)])
+         datetime.now(timezone.utc),
+         None if raw_facets is None else json.dumps(raw_facets, ensure_ascii=False)])
+
+
+def cache_get_raw(con, model: str, prompt_version: str, text: str | None):
+    """The model's unvalidated answer, for re-validation only.
+
+    Never feed this to the pipeline. It exists so revalidate_cache can re-judge
+    paid-for answers under new rules.
+    """
+    row = con.execute("SELECT response_raw FROM llm_cache WHERE key = ?",
+                      [cache_key(model, prompt_version, text)]).fetchone()
+    if not row or row[0] is None:
+        return None
+    try:
+        return json.loads(row[0]) if isinstance(row[0], str) else row[0]
+    except (json.JSONDecodeError, TypeError):
+        return None
+
+
+def revalidate_cache(con, key_to_text: Mapping[str, str]) -> int:
+    """Re-run the CURRENT validator over stored raw answers. Returns the number
+    of rows rewritten. Makes no API call and cannot: no client is passed.
+
+    Rows predating the raw column are skipped, not blanked — losing paid-for
+    work is the failure this whole mechanism exists to prevent.
+    """
+    n = 0
+    for key, text in key_to_text.items():
+        row = con.execute("SELECT response_raw FROM llm_cache WHERE key = ?",
+                          [key]).fetchone()
+        if not row or row[0] is None:
+            continue
+        try:
+            raw = json.loads(row[0]) if isinstance(row[0], str) else row[0]
+        except (json.JSONDecodeError, TypeError):
+            continue
+        checked = validate_mod.validate(dict(raw), text or "")
+        con.execute("UPDATE llm_cache SET response = ? WHERE key = ?",
+                    [json.dumps(checked["facets"], ensure_ascii=False), key])
+        n += 1
+    return n
 
 
 # ── run ──────────────────────────────────────────────────────────────────────
@@ -162,7 +237,7 @@ def run(ads: Iterable[Mapping[str, Any]], client, con, *,
         max_demotion_rate: float = DEFAULT_MAX_DEMOTION_RATE,
         model: str = MODEL,
         poll_seconds: float = 0.0) -> dict:
-    con.execute(DDL)
+    ensure_schema(con)
     ads = list(ads)
     by_uuid = {a["uuid"]: a for a in ads}
 
@@ -220,7 +295,8 @@ def run(ads: Iterable[Mapping[str, Any]], client, con, *,
             demoted += 1
         facets_by_rep[uuid] = checked["facets"]
         facets_by_rep[uuid]["_reasons"] = checked["reasons"]
-        cache_put(con, model, PROMPT_VERSION, text, checked["facets"], usage)
+        cache_put(con, model, PROMPT_VERSION, text, checked["facets"], usage,
+                  raw_facets=facets)
 
     n_new = len(raw)
     rate = demoted / n_new if n_new else 0.0
