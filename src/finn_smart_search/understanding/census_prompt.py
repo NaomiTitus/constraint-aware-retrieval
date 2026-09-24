@@ -203,20 +203,127 @@ TOOL = {
     },
 }
 
-# Few-shot in rough CORPUS PROPORTION. v1 had 3/4 explicit statements and 2/4
-# accessible, against a corpus that is 74.6% silent and 7% accessible.
-FEWSHOT_SPEC = [
-    ("silent Norwegian retail ad",        "unstated",      "no_mention"),
-    ("silent Norwegian kommune ad",       "unstated",      "no_mention"),
-    ("silent Norwegian warehouse ad",     "unstated",      "no_mention"),
-    ("gode norskkunnskaper",              "professional",  "explicit_statement"),
-    ("DISJUNCTION: norsk eller engelsk",  "either_norwegian_or_english", "explicit_statement"),
-    ("nurse: autorisasjon, no language",  "unstated",      "no_mention"),
-    ("norskprøve B2 certification gate",  "certified",     "explicit_statement"),
-    ("nynorsk: må meistre norsk",         "professional",  "explicit_statement"),
-    ("English-written, silent",           "unstated",      "no_mention"),
-    ("explicit: trenger ikke norsk",      "explicitly_not_required", "explicit_statement"),
+def _f(level, basis, strength, spans=(), **kw):
+    """Build a complete facet record; every required field gets a default."""
+    d = dict(
+        evidence_spans=[{"span": s, "section_language": sl} for s, sl in spans],
+        evidence_basis=basis, evidence_strength=strength,
+        norwegian_requirement_level=level, stated_working_language="unstated",
+        application_language="unstated", conflicting_statements=False,
+        implicit_evidence=["none"], authorisation_required=None,
+        security_clearance_required=False, visa_sponsorship="unstated",
+        relocation_support="unstated", seniority="unstated",
+        min_years_experience=None, skills=[],
+    )
+    d.update(kw)
+    return d
+
+
+# Ten examples, all excerpted from REAL ads in the corpus. Ordered so the modal
+# case (silent) comes first and last - recency and primacy both favour it.
+FEWSHOT = [
+    # 1. THE MODAL CASE - silent, Norwegian-written. ~75% of the corpus.
+    ("Ønsker du en nøkkelrolle i utviklingen av Samnanger?",
+     "Samnanger har natur, plass, kraft og kort vei til byen. Samnanger Kommunale "
+     "Utviklingsselskap er opprettet for å koble dette sammen og få mer til å skje. "
+     "Målet er flere arbeidsplasser, flere boliger og en kommune der enda flere vil bo.",
+     "no",
+     _f("unstated", "no_mention", "none")),
+
+    # 2. DISJUNCTION - 304 ads. The single most mishandled construction.
+    ("Produksjonsmedarbeider – søm og tekniske tekstiler",
+     "Kvalifikasjoner: Har gode praktiske ferdigheter. Er selvstendig og "
+     "løsningsorientert. Trives med fysisk og variert arbeid. Behersker norsk eller "
+     "engelsk. Arbeidsoppgaver: Industrisømarbeider søkes til produksjon av tekniske "
+     "tekstiler.",
+     "no",
+     _f("either_norwegian_or_english", "explicit_statement", "explicit_and_unambiguous",
+        spans=[("Behersker norsk eller engelsk.", "no")])),
+
+    # 3. Silent again, different sector - reinforces the mode.
+    ("Lagermedarbeider søkes",
+     "Vi søker en lagermedarbeider til vårt team. Arbeidsoppgaver omfatter plukking, "
+     "pakking og truckkjøring. Truckførerbevis T4 er en fordel. Oppstart etter avtale.",
+     "no",
+     _f("unstated", "no_mention", "none",
+        skills=[{"phrase": "Truckførerbevis T4", "level": "preferred"}])),
+
+    # 4. Standard explicit requirement - the commonest non-silent case.
+    ("Søker helsesekretær/sykepleier til legekontoret",
+     "Erfaring fra arbeid på legekontor. Erfaring med Infodoc journalsystem. Gode "
+     "samarbeidsevner og et godt pasientfokus. Gode norskkunnskaper. Arbeidsoppgaver: "
+     "Pasientmottak og telefon, laboratoriearbeid og prøvetaking.",
+     "no",
+     _f("professional", "explicit_statement", "explicit_and_unambiguous",
+        spans=[("Gode norskkunnskaper.", "no")],
+        implicit_evidence=["kundebehandling"],
+        skills=[{"phrase": "Infodoc journalsystem", "level": "preferred"}])),
+
+    # 5. CERTIFICATION GATE, and hedged ("Helst") - 654 ads carry a cert token.
+    ("Er du en av våre nye bussjåfører i Hamar og Brumunddal?",
+     "Kvalifikasjoner: Førerkort klasse D, YSK og kjøreseddel. God norsk ferdigheter. "
+     "Helst bestått norskprøve B1. Vy bruker bransjens egen Bussnorsktest. Erfaring "
+     "som yrkessjåfør.",
+     "no",
+     _f("certified", "explicit_statement", "explicit_but_hedged",
+        spans=[("Helst bestått norskprøve B1.", "no")],
+        skills=[{"phrase": "Førerkort klasse D", "level": "required"},
+                {"phrase": "YSK", "level": "required"}])),
+
+    # 6. AUTHORISATION + a SEPARATE Nordic-language line. Both present, kept apart.
+    ("Intensivsykepleier til Sørlandet",
+     "Kvalifikasjoner: Norsk autorisasjon. Respiratorkompetanse. 2 års erfaring fra "
+     "intensivavdeling. Oppdatert AHLR-kurs. Beherske et nordisk språk flytende, både "
+     "muntlig og skriftlig.",
+     "no",
+     _f("scandinavian_accepted", "explicit_statement", "explicit_and_unambiguous",
+        spans=[("Beherske et nordisk språk flytende, både muntlig og skriftlig.", "no")],
+        authorisation_required="Norsk autorisasjon",
+        implicit_evidence=["journalforing"], min_years_experience=2)),
+
+    # 7. AUTHORISATION ALONE, no language line anywhere. Must NOT become a
+    #    language verdict - otherwise the model learns the two travel together.
+    ("Sykepleier til nattevakt, sykehjem",
+     "Vi søker sykepleier til faste nattevakter. Krav: Norsk autorisasjon som "
+     "sykepleier. Gyldig politiattest må leveres før oppstart. Turnus med arbeid "
+     "hver tredje helg. Vi oppfordrer alle kvalifiserte til å søke uansett alder, "
+     "kjønn, funksjonsevne, etnisitet, nasjonal opprinnelse eller hull i CV-en.",
+     "no",
+     _f("unstated", "no_mention", "none",
+        authorisation_required="Norsk autorisasjon som sykepleier",
+        implicit_evidence=["journalforing", "brukerkontakt"])),
+
+    # 8. NYNORSK - 762 ads carry markers; a bokmål-only reader misses 21%.
+    ("Fagansvarleg i Eining for Miljø- og velferdstenester",
+     "Kvalifikasjonar: Høgskuleutdanning innan helse. Ønskjeleg med vidareutdanning "
+     "innan pedagogikk eller rettleiing. God kunnskap i norsk, munnleg og skriftleg. "
+     "Førarkort kl. B. Gyldig politiattest må leverast før oppstart.",
+     "no",
+     _f("professional", "explicit_statement", "explicit_and_unambiguous",
+        spans=[("God kunnskap i norsk, munnleg og skriftleg.", "no")],
+        implicit_evidence=["brukerkontakt"])),
+
+    # 9. EXPLICITLY NOT REQUIRED - only ~5 such ads exist; the class is real but rare.
+    ("Er du et nattmenneske? Vi søker tilkallingshjelp på natt",
+     "Du er serviceinnstilt og liker å møte mennesker. Du trenger ikke å snakke norsk, "
+     "men du må kunne kommunisere godt på engelsk. Andre språk er selvfølgelig en "
+     "fordel. Send oss gjerne en kort søknad.",
+     "no",
+     _f("explicitly_not_required", "explicit_statement", "explicit_and_unambiguous",
+        spans=[("Du trenger ikke å snakke norsk, men du må kunne kommunisere godt på "
+                "engelsk.", "no")],
+        stated_working_language="english")),
+
+    # 10. ENGLISH-WRITTEN but SILENT. The verdict is still 'unstated' - accessibility
+    #     is derived downstream from document_language, never asserted here.
+    ("Barista – Oslo S",
+     "We are looking for a friendly barista for our busy coffee bar. Experience with "
+     "espresso machines is a plus. Shifts include weekends and early mornings.",
+     "en",
+     _f("unstated", "no_mention", "none",
+        skills=[{"phrase": "espresso machines", "level": "preferred"}])),
 ]
+
 
 # english_accessible is DERIVED, never asked of the model.
 ACCESSIBLE_LEVELS = {"either_norwegian_or_english", "explicitly_not_required"}

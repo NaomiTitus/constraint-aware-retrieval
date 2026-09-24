@@ -51,7 +51,9 @@ def _span_ok(span: str, sent_text: str) -> tuple[bool, str]:
     n_span, n_text = norm(span), norm(sent_text)
     if n_span not in n_text:
         return False, "not_verbatim"
-    if len(n_span) < 25:
+    # Norwegian ads bullet short complete statements ("Gode norskkunnskaper."),
+    # so length is a weak signal. The BOUNDARY rules below do the real work.
+    if len(n_span) < 15:
         return False, "fragment_too_short"
     if not LANG_TOKEN.search(n_span):
         return False, "no_language_token"
@@ -65,6 +67,15 @@ def _span_ok(span: str, sent_text: str) -> tuple[bool, str]:
             j -= 1
         if j >= 0 and n_text[j] not in BOUNDARY:
             return False, "starts_mid_sentence"
+    # ...and must END at a boundary, so a prefix of a longer sentence is rejected.
+    # The span usually carries its own terminator ("Gode norskkunnskaper."), so
+    # check that first before looking at what follows.
+    if n_span[-1] not in BOUNDARY:
+        k = i + len(n_span)
+        while k < len(n_text) and n_text[k].isspace():
+            k += 1
+        if k < len(n_text) and n_text[k] not in BOUNDARY:
+            return False, "ends_mid_sentence"
     return True, ""
 
 
