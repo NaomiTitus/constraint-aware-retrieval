@@ -31,7 +31,7 @@ REJECTED (measurement refuted the claim):
   * "språkmodell for barna" - 5 ads, not the 727 implied by occupation counts.
 """
 
-PROMPT_VERSION = "census-v2"
+PROMPT_VERSION = "census-v3"
 
 SYSTEM = """You extract language-requirement facts from Norwegian job advertisements for a \
 search engine whose users include people who speak English but no Norwegian.
@@ -54,6 +54,15 @@ industrial, warehouse and cleaning roles. Getting it wrong hides jobs from exact
 people this system serves.
 
 Contrast: "norsk eller et annet skandinavisk språk" still EXCLUDES an English speaker.
+
+### "EN FORDEL" MEANS NOT REQUIRED
+"norsk er en fordel", "ønskelig med norsk", "du trenger ikke å snakke flytende \
+norsk når du starter" all say Norwegian is NOT a requirement — you may apply and \
+learn on the job. Use `desirable`.
+
+Read the clause carefully: in "god formidlingsevne på norsk. Fordel med erfaring \
+fra drift", the "fordel" attaches to EXPERIENCE, not to Norwegian, and Norwegian \
+is required. The advantage must attach to the language itself.
 
 ### SILENCE IS SILENCE
 Three of every four advertisements say nothing whatever about language. That is \
@@ -322,6 +331,27 @@ FEWSHOT = [
      "en",
      _f("unstated", "no_mention", "none",
         skills=[{"phrase": "espresso machines", "level": "preferred"}])),
+
+    # 11. FLUENT — a hard proficiency bar, distinct from `professional`.
+    ("Selger",
+     "Er du klar for en spennende salgskarriere? Hos Verisure er vi stolte av å "
+     "beskytte over 6,4 millioner hjem verden over. Kvalifikasjoner: Flytende "
+     "norsk. Førerkort klasse B. Resultatorientert og engasjert.",
+     "no",
+     _f("fluent", "explicit_statement", "explicit_and_unambiguous",
+        spans=[("Flytende norsk.", "no")],
+        skills=[{"phrase": "Førerkort klasse B", "level": "required"}])),
+
+    # 12. CONVERSATIONAL — a LOW bar, and note "norsk OG engelsk" is a
+    #     conjunction: both are required, so it is NOT a disjunction.
+    ("Burger King Sveberg søker skiftleder 80-100% stilling",
+     "Stillingen krever ikke tidligere ledererfaring, men erfaring innen "
+     "serviceyrket. Grunnleggende norsk og engelsk kunnskaper er nødvendig for å "
+     "kunne utføre rollen.",
+     "no",
+     _f("conversational", "explicit_statement", "explicit_and_unambiguous",
+        spans=[("Grunnleggende norsk og engelsk kunnskaper er nødvendig for å "
+                "kunne utføre rollen.", "no")])),
 ]
 
 

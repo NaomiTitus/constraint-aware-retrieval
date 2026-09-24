@@ -120,10 +120,24 @@ def test_1_4_doc_lang_is_passed_not_inferred():
 
 
 def test_1_5_request_shape():
+    """Derived from FEWSHOT, not hardcoded. A literal 31 breaks the moment an
+    example is added — which is a maintenance cost, not a defect signal."""
+    from finn_smart_search.understanding.census_prompt import FEWSHOT
     p = census.build_request(ad("a"))["params"]
-    assert len(p["messages"]) == 31          # 10 few-shot turns x3 + live ad
+    assert len(p["messages"]) == len(FEWSHOT) * 3 + 1
+    assert p["messages"][-1]["role"] == "user", "the live ad comes last"
     assert p["temperature"] == 0
     assert p["tool_choice"] == {"type": "tool", "name": "record_ad_facets"}
+
+
+def test_1_5b_fewshot_turns_alternate_correctly():
+    """Each example is user(ad) -> assistant(tool_use) -> user(tool_result)."""
+    from finn_smart_search.understanding.census_prompt import FEWSHOT
+    m = census.build_request(ad("a"))["params"]["messages"]
+    for i in range(len(FEWSHOT)):
+        assert m[i * 3]["role"] == "user"
+        assert m[i * 3 + 1]["content"][0]["type"] == "tool_use"
+        assert m[i * 3 + 2]["content"][0]["type"] == "tool_result"
 
 
 def test_1_6_cache_breakpoint_is_on_the_prefix_not_the_live_ad():
