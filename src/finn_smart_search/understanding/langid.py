@@ -112,12 +112,10 @@ def detect(blocks: list[dict]) -> dict:
         return {"doc_lang": "other", "lang_mix": mix, "detected_other": detected_other,
                 "is_bilingual": False, "n_scored": n_scored, "confidence": "high"}
 
-    scand_en = mass["no"] + mass["en"]
-    if scand_en == 0:
-        return {"doc_lang": "unknown", "lang_mix": mix, "detected_other": detected_other,
-                "is_bilingual": False, "n_scored": n_scored, "confidence": "low"}
-
-    share = mass["en"] / scand_en
+    # No `scand_en == 0` guard: if no+en were 0 then other would be the whole
+    # mass, mix["other"] would be 1.0, and the dominance branch above would
+    # already have returned. The branch was unreachable.
+    share = mass["en"] / (mass["no"] + mass["en"])
     if share >= MIXED_HI:
         verdict = "en"
     elif share <= MIXED_LO:
