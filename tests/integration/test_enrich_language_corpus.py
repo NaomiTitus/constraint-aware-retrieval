@@ -35,21 +35,59 @@ def test_3_2_distribution_matches_the_measured_corpus(con):
         assert lo <= share <= hi, f"{lang}: {share:.4f} outside [{lo}, {hi}]"
 
 
+# Frozen ground truth, reviewed by hand against the real corpus. A pinned map
+# rather than a re-derived count: the previous version found these ads by regex
+# and asserted `len(as_other) >= 10` against `len(polish) >= 10`, so with 13 ads
+# and 3 regressed it read 10 >= 10 and PASSED. The historical incident was
+# exactly 10 of 13 hidden — a regression test that permits its own regression.
+POLISH_ADS = {
+    "1760997c": "other",   # Ventilasjonsmontører Haugesund
+    "615dbddf": "other",   # Erfarne malere 2026
+    "d0b49779": "other",   # Taktakkere til Trondheim
+    "377095b8": "other",   # ELEKTRIKERE i Stavanger
+    "6588ea35": "other",   # Elektrikere med DSB til Trondheim
+    "1d3ca7b0": "other",   # VIL DU HA EN TØMRERJOBB
+    "c0df04f0": "other",   # Build, Reinforce, and Shape the Future
+    "cc048ca6": "other",   # VIL DU HA EN TØMRERJOBB (second posting)
+    "1aff4e2b": "other",   # MURER – FAST JOBB | ALL10 AS
+    "8642dd8d": "other",   # Murere 2026 til Trondheim
+    "782181d3": "other",   # Flisleggere 2026 til Trondheim
+    # KNOWN AND ACCEPTED, not overlooked. Both are genuinely Norwegian-dominant
+    # by character mass, so "no" is the honest verdict rather than a failure:
+    "e2bcda12": "no",      # trilingual: "Flisleggere søkes / Job for tilers /
+                           #   Praca dla glazurników" — Norwegian mass wins
+    "51eca9ff": "no",      # blocks detect as Bosnian, so Polish never clears
+                           #   the 0.50 dominance gate
+}
+
+
 def test_3_3_the_polish_ads_are_not_hidden(con):
-    """THE regression test for the bug this module exists to prevent. A
-    restricted detector labelled 10 of 13 Polish ads a confident "no", which
-    under the accessibility fallback means hidden from the people they target."""
-    rows = con.execute("""
-        SELECT a.uuid, a.description_text, l.doc_lang, l.detected_other
-        FROM ads a JOIN ad_language l USING (uuid)""").fetchall()
+    """THE regression test for the bug this module exists to prevent: a
+    restricted detector labelled 10 of these 13 a confident "no", which under
+    the accessibility fallback means hidden from the very people they target.
+
+    Zero tolerance in BOTH directions. An improvement fails this test too —
+    which is correct, because it should be a deliberate decision with the map
+    updated, not a silent drift."""
+    rows = dict(con.execute("""
+        SELECT substr(a.uuid, 1, 8), l.doc_lang
+        FROM ads a JOIN ad_language l USING (uuid)
+        WHERE substr(a.uuid, 1, 8) IN ({})
+    """.format(",".join(f"'{u}'" for u in POLISH_ADS))).fetchall())
+
+    assert set(rows) == set(POLISH_ADS), "the Polish ads must all still be in the corpus"
+    assert rows == POLISH_ADS, (
+        "language verdicts drifted for the Polish ads:\n" +
+        "\n".join(f"  {u}: expected {POLISH_ADS[u]}, got {rows[u]}"
+                  for u in POLISH_ADS if rows.get(u) != POLISH_ADS[u]))
+
+
+def test_3_3b_the_polish_corpus_has_not_shrunk(con):
+    """The denominator must be pinned separately. A regex re-derivation makes it
+    a function of the corpus, which is what let the old assertion be vacuous."""
     pol = re.compile(r"\b(praca|zatrudnimy|poszukujemy|wymagania|oferujemy|umowa)\b", re.I)
-    polish = [(u, d, o) for u, t, d, o in rows if pol.search(t or "")]
-    assert len(polish) >= 10, "the Polish ads must still be in the corpus"
-    as_other = [u for u, d, o in polish if d == "other"]
-    assert len(as_other) >= 10, (
-        f"only {len(as_other)}/{len(polish)} Polish ads are `other` — "
-        "a regression toward hiding them")
-    assert any(o == "pl" for _, _, o in polish)
+    texts = con.execute("SELECT description_text FROM ads").fetchall()
+    assert sum(1 for (t,) in texts if pol.search(t or "")) == len(POLISH_ADS) == 13
 
 
 def test_3_4_no_null_verdicts(con):
