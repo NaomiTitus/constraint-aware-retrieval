@@ -424,11 +424,18 @@ def derive_english_accessible(facets: dict, doc_lang: str) -> bool:
     if working in ("norwegian", "scandinavian"):
         return False
 
-    # Silence: fall back to the language the ad is written in. Anything that is
-    # not positively English (including "unknown", None, "") is inaccessible —
-    # 95.3% of the corpus is Norwegian, and silence correlates negatively with
-    # accessibility in the care and retail roles that dominate it.
-    return doc_lang in ("en", "mixed")
+    # Silence: fall back to the language the ad is WRITTEN in.
+    #
+    # "other" (Polish, Sámi, ...) and "unknown" are ACCESSIBLE. A Polish ad is
+    # not being kept from you by a Norwegian language requirement, and a false
+    # hide is invisible to everyone while a false show costs one click.
+    # Measured: 13 Polish ads exist, and a restricted detector labelled 10 of
+    # them a confident "no".
+    #
+    # Everything else — Norwegian, or a detection we could not place — stays
+    # inaccessible: 95.3% of the corpus is Norwegian, and silence correlates
+    # NEGATIVELY with accessibility in the care and retail roles that dominate.
+    return doc_lang in ("en", "mixed", "other", "unknown")
 
 
 USER_TEMPLATE = (

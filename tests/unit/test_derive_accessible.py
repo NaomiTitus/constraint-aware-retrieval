@@ -60,12 +60,23 @@ def test_scandinavian_is_not_english(doc_lang):
 
 # ── unstated falls back to the ad's own language ─────────────────────────────
 
-@pytest.mark.parametrize("doc_lang", ["unknown", None, "", "NO", "sv"])
-def test_unstated_is_inaccessible_unless_positively_english(doc_lang):
-    """Language ID abstains on very short ads (13 in the corpus). `doc_lang !=
-    "no"` is the refactor someone writes to "handle unknown", and it silently
-    flips every one of them to accessible."""
+@pytest.mark.parametrize("doc_lang", [None, "", "NO", "sv"])
+def test_unstated_is_inaccessible_for_unrecognised_doc_lang(doc_lang):
+    """`doc_lang != "no"` is the refactor someone writes to "handle unknown",
+    and it silently flips every unplaceable ad to accessible. Anything not in
+    the recognised set stays inaccessible."""
     assert derive(f("unstated"), doc_lang) is False
+
+
+@pytest.mark.parametrize("doc_lang", ["other", "unknown"])
+def test_unstated_other_and_unknown_ARE_accessible(doc_lang):
+    """SPEC CHANGE, deliberate — this test previously asserted False for
+    "unknown". Reversed on asymmetric cost: a false hide is invisible to
+    everyone, a false show costs one click. And `other` (13 Polish ads, plus
+    Sámi) must be accessible — a Polish ad is not being kept from an English
+    speaker by a NORWEGIAN language requirement. A restricted detector
+    previously labelled 10 of those 13 a confident "no"."""
+    assert derive(f("unstated"), doc_lang) is True
 
 
 def test_unstated_norwegian_ad_is_not_accessible():
