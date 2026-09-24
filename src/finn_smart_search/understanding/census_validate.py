@@ -14,6 +14,27 @@ from .census_prompt import HEAD_CHARS, TAIL_CHARS
 
 from .text_norm import normalise as norm   # the single shared implementation
 
+# Span matching must preserve BLOCK boundaries. `description_text` joins blocks
+# with "\n", but norm() collapses all whitespace — destroying the newline that
+# separated them. The boundary check then walked back to the PREVIOUS block's
+# last character, and Norwegian ads are bullet lists whose items rarely end in
+# punctuation. The pilot measured the cost: 26 of 28 span rejections were
+# `starts_mid_sentence` on legitimate block quotes, demoting 55% of records.
+_H_SPACE = re.compile(r"[^\S\n]+")      # horizontal whitespace only
+
+
+def norm_keep_blocks(s: str | None) -> str:
+    """Same folding as norm(), but newlines survive as block boundaries."""
+    if not s:
+        return ""
+    return _H_SPACE.sub(" ", norm_chars(s)).strip()
+
+
+def norm_chars(s: str) -> str:
+    import unicodedata
+    from .text_norm import _TRANSLATE
+    return unicodedata.normalize("NFKC", s).translate(_TRANSLATE)
+
 
 LANG_TOKEN = re.compile(
     r"norsk|norwegian|engelsk|english|skandinavisk|scandinavian|spr[åa]k|"
@@ -39,31 +60,45 @@ def prepare(title: str, body: str, doc_lang: str) -> dict:
 
 
 def _span_ok(span: str, sent_text: str) -> tuple[bool, str]:
-    n_span, n_text = norm(span), norm(sent_text)
+    """Is this span defensible evidence?
+
+    Four rules. The boundary rules are what defeat fragment-quoting: 578 corpus
+    ads contain "norsk og engelsk", so "engelsk" lifted out of it is a real
+    substring that supports the OPPOSITE of what the sentence says.
+
+    Newlines are preserved on both sides, because `description_text` joins
+    BLOCKS with "\n" and a block edge is a boundary. Collapsing them made the
+    check walk back to the previous block's last character — and Norwegian ads
+    are bullet lists whose items rarely end in punctuation. The pilot measured
+    the cost: 26 of 28 rejections were `starts_mid_sentence` on legitimate
+    block quotes, demoting 55% of records against a 15% threshold.
+    """
+    n_span = norm(span)
+    n_text = norm_keep_blocks(sent_text)
+
     if n_span not in n_text:
         return False, "not_verbatim"
-    # Norwegian ads bullet short complete statements ("Gode norskkunnskaper."),
-    # so length is a weak signal. The BOUNDARY rules below do the real work.
     if len(n_span) < 15:
         return False, "fragment_too_short"
     if not LANG_TOKEN.search(n_span):
         return False, "no_language_token"
-    # Must begin where a sentence or bullet begins. This is what defeats the
-    # 578-ad trap: "engelsk" lifted out of "du må beherske norsk og engelsk"
-    # is preceded by "...og ", not by a boundary.
+
     i = n_text.find(n_span)
+
+    # Must BEGIN at a sentence or block boundary. Skip horizontal space only —
+    # skipping newlines would discard the very boundary we are looking for.
     if i > 0:
         j = i - 1
-        while j >= 0 and n_text[j].isspace():
+        while j >= 0 and n_text[j] in " \t":
             j -= 1
         if j >= 0 and n_text[j] not in BOUNDARY:
             return False, "starts_mid_sentence"
-    # ...and must END at a boundary, so a prefix of a longer sentence is rejected.
-    # The span usually carries its own terminator ("Gode norskkunnskaper."), so
-    # check that first before looking at what follows.
+
+    # ...and END at one. The span usually carries its own terminator
+    # ("Gode norskkunnskaper."), but a bullet block often does not.
     if n_span[-1] not in BOUNDARY:
         k = i + len(n_span)
-        while k < len(n_text) and n_text[k].isspace():
+        while k < len(n_text) and n_text[k] in " \t":
             k += 1
         if k < len(n_text) and n_text[k] not in BOUNDARY:
             return False, "ends_mid_sentence"
