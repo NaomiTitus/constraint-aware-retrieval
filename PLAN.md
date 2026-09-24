@@ -11,7 +11,8 @@ A5 Bilingual lexicon + corpus measurement ✓
 A6 Census prompt v2: 3 adversarial reviews, findings validated against corpus ✓
 
 ## B. Facet census — NEXT
-B1 Wire cluster_key into the runner (701 templated ads → extract once per cluster)
+B1 Wire dedup.cluster() into the runner — MinHash over body shingles, 395 redundant
+   ads (3.9%), largest cluster 44. Extract once per cluster, fan out results.
 B2 Pilot 50 ads; verify schema adherence, span validity, demotion rate
 B3 Batch census over ~9,500 unique clusters (Haiku 4.5, ~$3, <1h expected)
 B4 Post-validate; track demotion rate as a first-class metric

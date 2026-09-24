@@ -129,17 +129,6 @@ def validate(facets: dict, sent_text: str) -> dict:
             "demoted": any(r.startswith("demoted:") for r in reasons), "reasons": reasons}
 
 
-def cluster_key(title: str, body: str) -> str:
-    """Near-duplicate key. 701 ads (6.9%) share an employer and an identical
-    opening; extracting once per cluster cuts cost and stops one template error
-    becoming 92 rows that look like consistent signal."""
-    t = norm(f"{title} {body}").lower()
-    t = re.sub(r"\d+", "#", t)
-    return hashlib.sha256(t[:400].encode()).hexdigest()[:16]
-
-
-def cluster(ads: list[dict]) -> dict[str, list[str]]:
-    g = defaultdict(list)
-    for a in ads:
-        g[cluster_key(a.get("title", ""), a.get("description_text", ""))].append(a["uuid"])
-    return dict(g)
+# Near-duplicate clustering lives in dedup.py. An earlier cluster_key() here
+# keyed on title + first 400 chars and performed WORSE than exact hashing,
+# because chain stores vary the title per location while the body is identical.
