@@ -1,0 +1,32 @@
+prompt census-v6  |  44 golden ads
+
+
+census: 151s  calls=44  cache_hits=0  demoted=0 (0%)  spend=$0.062
+
+coverage 100%   pooled 88.6% (caveat applies)   invalid_levels=0
+
+PER LEVEL
+  unstated                      9/12    75% ###############
+  scandinavian_accepted         7/ 8    88% #################
+  either_norwegian_or_english   5/ 5   100% ####################
+  professional                  5/ 5   100% ####################
+  certified                     4/ 4   100% ####################
+  desirable                     4/ 4   100% ####################
+  explicitly_not_required       2/ 3    67% #############
+  conversational                2/ 2   100% ####################
+  fluent                        1/ 1   100% ####################
+
+ACCESSIBILITY  (the metric that matters)
+  hidden wrongly   1 of 13 accessible   rate 8%  ci95 [0.01, 0.33]
+  shown wrongly    1 of 31 blocking   rate 3%
+
+EVIDENCE SPANS (of 32 expected)
+  exact 19  different 13  missing 0  fabricated 0  spurious 3
+
+working_language non-default recall 3/4
+authorisation 5/5  spurious 1
+
+MISCLASSIFICATIONS
+  unstated                     -> professional                 x3
+  explicitly_not_required      -> certified                    x1
+  scandinavian_accepted        -> either_norwegian_or_english  x1

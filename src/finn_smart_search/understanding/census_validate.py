@@ -83,16 +83,34 @@ def _span_ok(span: str, sent_text: str) -> tuple[bool, str]:
     if not LANG_TOKEN.search(n_span):
         return False, "no_language_token"
 
+    # A span is defensible if it faithfully quotes SOME sentence or block, so
+    # every occurrence gets a chance. Checking only the first rejected spans on
+    # the strength of an occurrence nobody quoted; `rfind` would be no better.
+    # Measured at 6 of 12,572 language-bearing corpus blocks (0.05%, 5 ads).
+    first_reason = ""
     i = n_text.find(n_span)
+    while i != -1:
+        reason = _boundaries_ok(n_span, n_text, i)
+        if not reason:
+            return True, ""
+        first_reason = first_reason or reason
+        i = n_text.find(n_span, i + 1)
+    return False, first_reason
 
-    # Must BEGIN at a sentence or block boundary. Skip horizontal space only —
-    # skipping newlines would discard the very boundary we are looking for.
+
+def _boundaries_ok(n_span: str, n_text: str, i: int) -> str:
+    """"" if this occurrence begins and ends at a boundary, else the reason.
+
+    Horizontal space is skipped on both sides but newlines never are — the
+    newline IS the boundary being looked for. `_H_SPACE` has already folded
+    tabs, so the "\t" in these classes is defensive only.
+    """
     if i > 0:
         j = i - 1
         while j >= 0 and n_text[j] in " \t":
             j -= 1
         if j >= 0 and n_text[j] not in BOUNDARY:
-            return False, "starts_mid_sentence"
+            return "starts_mid_sentence"
 
     # ...and END at one. The span usually carries its own terminator
     # ("Gode norskkunnskaper."), but a bullet block often does not.
@@ -101,8 +119,8 @@ def _span_ok(span: str, sent_text: str) -> tuple[bool, str]:
         while k < len(n_text) and n_text[k] in " \t":
             k += 1
         if k < len(n_text) and n_text[k] not in BOUNDARY:
-            return False, "ends_mid_sentence"
-    return True, ""
+            return "ends_mid_sentence"
+    return ""
 
 
 # Combinations the schema permits but which are semantically impossible.

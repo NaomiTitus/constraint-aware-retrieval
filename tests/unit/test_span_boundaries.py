@@ -52,9 +52,22 @@ def test_a_fragment_of_a_block_is_still_rejected():
     assert not ok and why == "starts_mid_sentence"
 
 
-def test_a_span_spanning_two_blocks_is_rejected():
-    ok, why = v._span_ok("Gode norskkunnskaper Engelsk er også nyttig", BULLETS)
-    assert not ok and why == "not_verbatim", why
+def test_a_cross_block_span_is_rejected_as_not_verbatim():
+    """DELIBERATE, and it is not a boundary test despite appearances.
+
+    norm() collapses the newline inside the span while norm_keep_blocks() keeps
+    it in the text, so NO cross-block span can ever be a substring — the check
+    exits at the first rule and never reaches the boundary logic. Asserting the
+    reason code is the only thing this test does that the verdict does not.
+
+    Both joinings must report the same code, and that code must not be confused
+    with fabrication when the next pilot's rejections are triaged:
+    `not_verbatim` here means "quoted across a block break", not "invented".
+    A faithful newline-preserving quote of two adjacent blocks lands here too.
+    """
+    for span in ("Gode norskkunnskaper Engelsk er også nyttig i denne stillingen",
+                 "Gode norskkunnskaper\nEngelsk er også nyttig i denne stillingen"):
+        assert v._span_ok(span, BULLETS) == (False, "not_verbatim")
 
 
 def test_sentence_boundaries_still_work_within_a_block():
@@ -72,3 +85,142 @@ def test_mixed_shape_blocks_and_sentences():
             "Gode norskkunnskaper")
     assert v._span_ok("Norsk er arbeidsspråket.", text)[0], "sentence inside a prose block"
     assert v._span_ok("Gode norskkunnskaper", text)[0], "whole bullet block"
+
+
+
+# ── gaps found by external review of this file ───────────────────────────────
+#
+# The review's finding: the END-boundary rule was completely unprotected.
+# Replacing the whole `ends_mid_sentence` block with `pass` left all 7 tests
+# green, and `ends_mid_sentence` was asserted in no test in the repo. The start
+# rule was well guarded (two independent mutations to it die); the end rule had
+# nothing. That asymmetry matters because making a block edge a legitimate START
+# boundary — which is the fix this file exists to pin — leaves the END rule as
+# the only defence against quoting the head of a bullet and dropping its
+# negation.
+
+NEGATED = ("Vi tilbyr opplæring\n"
+           "Gode norskkunnskaper er ikke et krav hos oss\n"
+           "Oppstart snarest")
+
+
+def test_a_bullet_head_with_the_negation_dropped_is_rejected():
+    """THE anti-neutering guard, and the most dangerous span in the corpus.
+
+    "Gode norskkunnskaper" starts at a real block boundary, is verbatim, clears
+    15 chars and carries a language token — it satisfies every other rule. It
+    also asserts the exact OPPOSITE of the sentence it was cut from. Only the
+    end-boundary rule rejects it, so without this test that rule can be deleted
+    silently and the validator's whole purpose goes with it.
+    """
+    assert v._span_ok("Gode norskkunnskaper", NEGATED) == (False, "ends_mid_sentence")
+
+
+def test_trailing_space_before_a_block_break_is_still_a_boundary():
+    """_H_SPACE folds the trailing run to ONE space, so k lands on " " and not
+    on the newline. Deleting the end-side skip loop rejects every span whose
+    block had trailing whitespace — and html_clean cannot be relied on to have
+    stripped it in every path."""
+    text = "Vi søker en medarbeider   \nGode norskkunnskaper   \nOppstart"
+    assert v._span_ok("Gode norskkunnskaper", text) == (True, "")
+
+
+def test_crlf_block_separator_is_a_boundary():
+    """_H_SPACE is `[^\\S\\n]+`, not `[ \\t]+`, and the difference is load-bearing:
+    under `[ \\t]+` a \\r survives into the text, is skipped by neither skip loop
+    and is not in BOUNDARY, so every span before a CRLF break is rejected."""
+    text = "Vi søker en medarbeider\r\nGode norskkunnskaper\r\nOppstart"
+    assert v._span_ok("Gode norskkunnskaper", text) == (True, "")
+
+
+def test_a_blank_line_between_blocks_is_a_boundary():
+    text = "Vi søker en medarbeider\n\nGode norskkunnskaper\n\nOppstart"
+    assert v._span_ok("Gode norskkunnskaper", text) == (True, "")
+
+
+def test_a_span_without_a_language_token_is_rejected_for_that_reason():
+    """Pins the claim this file's own header makes about its fixtures. Weakening
+    or deleting the LANG_TOKEN rule was otherwise free."""
+    text = "Om stillingen\nVi tilbyr fleksibel arbeidstid og godt miljø\nKrav"
+    assert v._span_ok("Vi tilbyr fleksibel arbeidstid og godt miljø", text) == (
+        False, "no_language_token")
+
+
+def test_a_too_short_span_is_rejected_for_that_reason():
+    """`fragment_too_short` was asserted nowhere in the repo, so the 15-char
+    floor could be weakened to 5 undetected."""
+    assert v._span_ok("norsk", "Krav\nnorsk\nOppstart") == (False, "fragment_too_short")
+
+
+def test_norm_keep_blocks_folds_everything_except_newlines():
+    """The function had no direct test at all, so `.strip()` was free to delete
+    and the NFKC/_TRANSLATE folding it re-implements was unchecked. Pinning it
+    against the shared normaliser is what stops the two drifting — the exact
+    class of bug that produced the 55% demotion."""
+    from finn_smart_search.understanding.text_norm import normalise
+
+    assert v.norm_keep_blocks(None) == ""
+    assert v.norm_keep_blocks("") == ""
+    assert v.norm_keep_blocks("  Gode norskkunnskaper  ") == "Gode norskkunnskaper"
+    # newlines survive; horizontal whitespace folds to one space
+    assert v.norm_keep_blocks("a\u00a0 b \t c\n\n  d ") == "a b c\n\n d"
+    # identical folding to the shared normaliser on text with no newline
+    s = "Gode\u00a0norsk\u00adkunnskaper\u2014ja \u201cB1\u201d"
+    assert v.norm_keep_blocks(s) == normalise(s)
+
+
+# ── mutation survivors: two rules the above tests left free ──────────────────
+
+def test_a_span_that_also_occurs_mid_sentence_is_still_accepted():
+    """`find()` inspects only the FIRST occurrence, so a span appearing once
+    inside a prose sentence and once as its own block was rejected on the
+    strength of the occurrence nobody quoted.
+
+    Measured cost before the fix: 6 of 12,572 language-bearing corpus blocks
+    (0.05%), across 5 ads. Small — recorded here rather than inflated. It is
+    fixed because the rule is wrong, not because the number is large: a span is
+    defensible if it faithfully quotes SOME sentence, and `rfind()` is no more
+    correct than `find()`. The mutation `find -> rfind` survived the whole file
+    before this test existed.
+    """
+    span = "Gode norskkunnskaper er et krav"
+    text = ("Vi forventer Gode norskkunnskaper er et krav hos alle nyansatte\n"
+            f"{span}\n"
+            "Oppstart snarest")
+    assert v._span_ok(span, text) == (True, "")
+
+
+def test_a_span_occurring_only_mid_sentence_is_still_rejected():
+    """The other half — the fix must not become "accept if it appears at all"."""
+    span = "Gode norskkunnskaper er et krav"
+    text = ("Vi forventer Gode norskkunnskaper er et krav hos alle nyansatte\n"
+            "Oppstart snarest")
+    assert v._span_ok(span, text) == (False, "starts_mid_sentence")
+
+
+def test_an_inline_colon_is_a_boundary():
+    """Norwegian ads write "Krav: Gode norskkunnskaper" as ONE block when the
+    heading is not separately marked up, so ":" carries the boundary. Removing
+    ":" from BOUNDARY survived every other test in this file."""
+    text = "Om oss\nKrav: Gode norskkunnskaper muntlig og skriftlig\nOppstart"
+    assert v._span_ok("Gode norskkunnskaper muntlig og skriftlig", text) == (True, "")
+
+
+def test_a_semicolon_is_a_boundary():
+    text = "Om oss\nVi tilbyr mye; Gode norskkunnskaper er et krav\nOppstart"
+    assert v._span_ok("Gode norskkunnskaper er et krav", text) == (True, "")
+
+
+def test_the_reported_reason_is_the_first_occurrences():
+    """A deliberate reporting choice, pinned because reason codes are what made
+    the 55%-demotion diagnosis possible: 26 of 28 rejections reading
+    `starts_mid_sentence` is what located the bug. When every occurrence fails,
+    report the FIRST one's reason — the earliest occurrence is the likeliest to
+    be what the model meant to quote. `first_reason = reason` (last wins) is
+    otherwise a free mutation.
+    """
+    span = "Gode norskkunnskaper er et krav"
+    # first occurrence fails on the START rule, second on the END rule
+    text = (f"Vi forventer {span} hos alle nyansatte\n"
+            f"Krav: {span} og god IT-forståelse")
+    assert v._span_ok(span, text) == (False, "starts_mid_sentence")

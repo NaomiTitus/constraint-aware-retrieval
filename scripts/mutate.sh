@@ -24,6 +24,21 @@
 #      fails on a clean tree and every later mutation aborts on the baseline
 #      check. PYTHONDONTWRITEBYTECODE removes the failure mode entirely.
 #
+#   6. NEVER STORE THE PYTEST COMMAND IN A SHELL VARIABLE. The interactive
+#      shell here is ZSH, which does NOT word-split an unquoted parameter
+#      expansion. `CMD="python3 -m pytest ..."; $CMD` therefore looks for a
+#      single executable whose name is the whole string, exits 127, and the
+#      baseline check reads that as "the tests fail". Use a function:
+#      `run () { python3 -m pytest "$@" ...; }`. This one cost a full harness
+#      run that reported BASELINE RED on a green tree.
+#
+#   7. ANCHOR ON SOURCE BYTES, NOT ON RENDERED GLYPHS. census_validate.py
+#      writes its boundary set as `set(".!?:;\u2022...")` — escape TEXT, six
+#      characters, not a bullet. Hand-typing the rendered • in the anchor never
+#      matches, and the harness reports ANCHOR MISS (or worse, silently mutates
+#      nothing and reports SURVIVED). Locate the line positionally
+#      (`s[s.index("BOUNDARY = "):]`) instead of retyping its contents.
+#
 #   3. BASELINE AND MUTATION MUST RUN THE IDENTICAL COMMAND. The fix for (2)
 #      used plain pytest for the baseline and `timeout 120 pytest` for the
 #      mutation. `timeout` is GNU coreutils and absent on macOS, so the
