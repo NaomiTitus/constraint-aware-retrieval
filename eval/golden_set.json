@@ -1,0 +1,618 @@
+[
+ {
+  "n": 2,
+  "uuid": "4ccebbd0-3a19-49d0-8264-eca3d953c9e8",
+  "title": "Barnehagelærer, vikariat i 60% stilling",
+  "stratum": "certified",
+  "expected": {
+   "norwegian_requirement_level": "certified",
+   "english_accessible": false,
+   "evidence_span": "Utenlandske søkere må ha dokumenterte norskkunnskaper på minimum nivå B2",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "CEFR gate, conditional on foreign applicants"
+ },
+ {
+  "n": 3,
+  "uuid": "4f2378c3-49d0-4c21-9b53-a594737ceb97",
+  "title": "Trygg og ansvarsbevisst assistent i vikariat (gjerne helsefagarbeider) søkes til 16-åring",
+  "stratum": "certified",
+  "expected": {
+   "norwegian_requirement_level": "certified",
+   "english_accessible": false,
+   "evidence_span": "Minimum språknivå B2",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "CEFR gate"
+ },
+ {
+  "n": 4,
+  "uuid": "46b3d20b-9287-4819-892d-585cea4346dc",
+  "title": "Produksjonsmedarbeider – søm og tekniske tekstiler",
+  "stratum": "disjunction",
+  "expected": {
+   "norwegian_requirement_level": "either_norwegian_or_english",
+   "english_accessible": true,
+   "evidence_span": "Behersker norsk eller engelsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "disjunction"
+ },
+ {
+  "n": 5,
+  "uuid": "5688bcc1-1391-416a-86b4-1249bcb83fd1",
+  "title": "Sjåfør klasse C1 – innsamling av brukte tekstiler",
+  "stratum": "disjunction",
+  "expected": {
+   "norwegian_requirement_level": "either_norwegian_or_english",
+   "english_accessible": true,
+   "evidence_span": "Behersker norsk eller engelsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "disjunction"
+ },
+ {
+  "n": 6,
+  "uuid": "816a33d7-62e2-4afe-91d7-a981e554bf1e",
+  "title": "Renholder",
+  "stratum": "disjunction",
+  "expected": {
+   "norwegian_requirement_level": "either_norwegian_or_english",
+   "english_accessible": true,
+   "evidence_span": "Kommuniserer godt på norsk eller engelsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "disjunction"
+ },
+ {
+  "n": 7,
+  "uuid": "3dfb11f3-3a96-4b60-8408-c13eaae11975",
+  "title": "GIS-utvikler",
+  "stratum": "fluent",
+  "expected": {
+   "norwegian_requirement_level": "desirable",
+   "english_accessible": true,
+   "evidence_span": "Flytende norsk er en fordel, eller vilje til å lære norsk, da norsk er arbeidsspråket i Statnett",
+   "stated_working_language": "norwegian",
+   "authorisation_required": null
+  },
+  "note": "'vilje til å lære norsk' is a stated alternative to fluency; accessible per the desirable rule"
+ },
+ {
+  "n": 8,
+  "uuid": "858495f7-feb2-4ccf-9857-11ee33c82f4c",
+  "title": "26-år gammel mann søker flere BPA-assistenter i 100% stilling",
+  "stratum": "fluent",
+  "expected": {
+   "norwegian_requirement_level": "fluent",
+   "english_accessible": false,
+   "evidence_span": "flytende norsk, både muntlig og skriftlig",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "TRAP: 'jeg har ikke verbalt språk' is the EMPLOYER's disability; the requirement is separate"
+ },
+ {
+  "n": 9,
+  "uuid": "8ae0f800-2db0-48e2-9862-97300e47b04b",
+  "title": "Salg med mening: Salgskonsulent Loyalty AS - Drammen",
+  "stratum": "fluent",
+  "expected": {
+   "norwegian_requirement_level": "scandinavian_accepted",
+   "english_accessible": false,
+   "evidence_span": "Snakker flytende norsk eller tydelig skandinavisk med god språkforståelse",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "Scandinavian disjunction, still excludes English"
+ },
+ {
+  "n": 10,
+  "uuid": "26399736-1262-4154-bcd6-90293323f5a6",
+  "title": "Er du en dyktig vernepleier? Da ønsker vi deg med på laget.",
+  "stratum": "professional",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "english_accessible": false,
+   "evidence_span": null,
+   "stated_working_language": "unstated",
+   "authorisation_required": "Norsk autorisasjon som vernepleier"
+  },
+  "note": "authorisation only"
+ },
+ {
+  "n": 11,
+  "uuid": "26b60e69-ba34-43e2-a609-aaa717f335c5",
+  "title": "Søker helsesekretær/sykepleier til legekontoret",
+  "stratum": "professional",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "english_accessible": false,
+   "evidence_span": "Gode norskkunnskaper",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": ""
+ },
+ {
+  "n": 12,
+  "uuid": "2ca4d99f-5112-4fe3-90b4-5ef05c45cdb6",
+  "title": "Vernepleier søkes til 100% vikariat i Barnebolig.",
+  "stratum": "professional",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "english_accessible": false,
+   "evidence_span": "Gode norskkunnskaper skriftlig og muntlig",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": ""
+ },
+ {
+  "n": 13,
+  "uuid": "30407462-7b33-4f76-9b77-fcadc5c9e0bd",
+  "title": "Tilkallingsvikarer - lærere - Ålesund sentrum og omegn",
+  "stratum": "prof_muntlig",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "english_accessible": false,
+   "evidence_span": "Søkere må beherske norsk både skriftlig og muntlig",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "teaching job, but the requirement is STATED — no inference needed"
+ },
+ {
+  "n": 14,
+  "uuid": "31e7c9fe-7f49-4c27-a61d-18340b40a030",
+  "title": "Vi søker hvilende nattevakter til å passe på våre fantastiske beboere",
+  "stratum": "prof_muntlig",
+  "expected": {
+   "norwegian_requirement_level": "certified",
+   "english_accessible": false,
+   "evidence_span": "Norsk muntlig og skriftlig ferdigheter tilsvarende nivå 2",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "OWNER RULING: 'tilsvarende nivå 2' is Norskprøve 2 (pre-2014, ~A2/B1) — a named test, so a documentary gate"
+ },
+ {
+  "n": 15,
+  "uuid": "34b34080-ea2e-4a4b-b16d-740572c1002d",
+  "title": "Jurist / saksbehandler / advokatfullmektig ",
+  "stratum": "prof_muntlig",
+  "expected": {
+   "norwegian_requirement_level": "explicitly_not_required",
+   "english_accessible": false,
+   "evidence_span": "Er du polsktallende jurist men norskkunnskapene er under utvikling",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "OWNER RULING: level is explicitly_not_required. Accessibility OVERRIDDEN to False: the ad addresses POLISH speakers with developing Norwegian and never mentions English, so the derivation's True is wrong for an English-only applicant."
+ },
+ {
+  "n": 16,
+  "uuid": "48fab2b2-f0f4-40cf-998c-24ce8b58bad9",
+  "title": "Barnepleier",
+  "stratum": "conversational",
+  "expected": {
+   "norwegian_requirement_level": "scandinavian_accepted",
+   "english_accessible": false,
+   "evidence_span": "Du må kunne gjøre deg forstått på norsk eller annet skandinavisk språk",
+   "stated_working_language": "unstated",
+   "authorisation_required": "Gyldig norsk autorisasjon som helsefagarbeider"
+  },
+  "note": "conversational bar, Scandinavian scope"
+ },
+ {
+  "n": 17,
+  "uuid": "6b4847da-64f9-48fa-b3b7-4a9c53babbdb",
+  "title": "Lagermedarbeider - haster!",
+  "stratum": "conversational",
+  "expected": {
+   "norwegian_requirement_level": "conversational",
+   "english_accessible": false,
+   "evidence_span": "Må kunne kommunisere på norsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": ""
+ },
+ {
+  "n": 18,
+  "uuid": "70a7bd71-f9b8-4b25-bdf8-5bae40e1ad10",
+  "title": "Klar for industrien? Bli operatør!",
+  "stratum": "conversational",
+  "expected": {
+   "norwegian_requirement_level": "conversational",
+   "english_accessible": false,
+   "evidence_span": "Du må kunne gjøre deg forstått på norsk og engelsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "AND not OR — both required"
+ },
+ {
+  "n": 19,
+  "uuid": "71fa1e10-e7aa-4367-b81e-b711aa18014a",
+  "title": "Sakee sushibar søker servitør i fast deltidsstilling",
+  "stratum": "desirable",
+  "expected": {
+   "norwegian_requirement_level": "scandinavian_accepted",
+   "english_accessible": false,
+   "evidence_span": "Gode kommunikasjonsevner, skandinavisk og engelsk(norsk er en fordel)",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "CORRECTED: 'skandinavisk OG engelsk' — Scandinavian is required; only the Norwegian part is a bonus"
+ },
+ {
+  "n": 20,
+  "uuid": "d26961bc-fde0-4003-ab2d-768701443bda",
+  "title": "Formann betong",
+  "stratum": "desirable",
+  "expected": {
+   "norwegian_requirement_level": "explicitly_not_required",
+   "english_accessible": true,
+   "evidence_span": "Norsk er en fordel, men ikke et krav",
+   "stated_working_language": "english",
+   "authorisation_required": null
+  },
+  "note": "English required, Norwegian explicitly not"
+ },
+ {
+  "n": 21,
+  "uuid": "de37e63a-6279-4aea-95e5-26bf6d29277d",
+  "title": "Yum Cha søker Deltid Servitør",
+  "stratum": "desirable",
+  "expected": {
+   "norwegian_requirement_level": "desirable",
+   "english_accessible": true,
+   "evidence_span": "Gode kommunikasjonsevner i engelsk (norsk er en fordel)",
+   "stated_working_language": "english",
+   "authorisation_required": null
+  },
+  "note": "CORRECTED: English is the requirement, Norwegian a parenthetical bonus — an English-only speaker can apply"
+ },
+ {
+  "n": 22,
+  "uuid": "29dd4b57-74e3-4c23-9d47-d85147f41276",
+  "title": "Er du klar for nye utfordringer? Vi søker bulkoperatør til vår avdeling i Mandal!",
+  "stratum": "scandinavian",
+  "expected": {
+   "norwegian_requirement_level": "scandinavian_accepted",
+   "english_accessible": false,
+   "evidence_span": "Gode norske eller skandinaviske språkkunnskaper - både skriftlige og muntlige",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": ""
+ },
+ {
+  "n": 23,
+  "uuid": "2ee163ae-d6a8-4901-817e-bb1713f8ef1b",
+  "title": "Barnepleier",
+  "stratum": "scandinavian",
+  "expected": {
+   "norwegian_requirement_level": "scandinavian_accepted",
+   "english_accessible": false,
+   "evidence_span": "Beherske et skandinavisk språk godt, muntlig og skriftlig",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": ""
+ },
+ {
+  "n": 24,
+  "uuid": "31c2f223-9191-4214-9b77-6471c398ea7d",
+  "title": "Rengjøring av hytter på Skeikampen",
+  "stratum": "scandinavian",
+  "expected": {
+   "norwegian_requirement_level": "either_norwegian_or_english",
+   "english_accessible": true,
+   "evidence_span": "Kandidater bør ha førerkort for bil, og kunne prate engelsk eller ett nordisk språk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "disjunction INCLUDING English"
+ },
+ {
+  "n": 25,
+  "uuid": "c1f5e19f-73ee-4a4c-881e-950ece13aae6",
+  "title": "Er du et nattmenneske? Vi søker tilkallingshjelp på natt 🌙",
+  "stratum": "not_required",
+  "expected": {
+   "norwegian_requirement_level": "explicitly_not_required",
+   "english_accessible": true,
+   "evidence_span": "Du trenger ikke å snakke norsk, men du må kunne kommunisere godt på engelsk",
+   "stated_working_language": "english",
+   "authorisation_required": null
+  },
+  "note": ""
+ },
+ {
+  "n": 26,
+  "uuid": "a64a3996-be11-421b-a78d-6f41173108f0",
+  "title": "Vil du styre din egen arbeidshverdag? Vi søker frisør til vEx Frisør Mosjøen",
+  "stratum": "not_required",
+  "expected": {
+   "norwegian_requirement_level": "desirable",
+   "english_accessible": true,
+   "evidence_span": "Du trenger ikke å snakke flytende norsk når du starter",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "NOT 'no Norwegian' — 'not FLUENT INITIALLY'. Some Norwegian expected."
+ },
+ {
+  "n": 27,
+  "uuid": "fdd26aec-1a86-4381-bc05-cb607c839115",
+  "title": "Frisør søkes – stor frihet, gode vilkår og et arbeidsmiljø du vil trives i ⭐️",
+  "stratum": "not_required",
+  "expected": {
+   "norwegian_requirement_level": "desirable",
+   "english_accessible": true,
+   "evidence_span": "Du trenger ikke å beherske norsk flytende fra første dag",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "same nuance as 26"
+ },
+ {
+  "n": 28,
+  "uuid": "46264590-80d4-491c-9e90-bca977018235",
+  "title": "Fagansvarleg i Eining for Miljø- og velferdstenester",
+  "stratum": "nynorsk",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "english_accessible": false,
+   "evidence_span": "God kunnskap i norsk, munnleg og skriftleg",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "nynorsk"
+ },
+ {
+  "n": 29,
+  "uuid": "51a6ad59-bdc7-4832-b59b-193b715af9d4",
+  "title": "Helsefagarbeider, natt 80 %",
+  "stratum": "nynorsk",
+  "expected": {
+   "norwegian_requirement_level": "certified",
+   "english_accessible": false,
+   "evidence_span": "Krav om norsk språkferdigheit tilsvarande B2 munnleg og skriftleg",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "nynorsk CEFR gate"
+ },
+ {
+  "n": 30,
+  "uuid": "5bc70af0-7b65-4c7d-9d18-3b15c1761279",
+  "title": "100% Miljøterapeut, Kleppevegen",
+  "stratum": "nynorsk",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "english_accessible": false,
+   "evidence_span": "Kunne godt norsk, både munnleg og skriftleg",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "nynorsk"
+ },
+ {
+  "n": 31,
+  "uuid": "47366cc8-6e01-4dcc-9d63-193d5ae9ba95",
+  "title": "Tannlege søkes – overta en etablert pasientportefølje med høy aktivitet",
+  "stratum": "auth_only",
+  "expected": {
+   "norwegian_requirement_level": "scandinavian_accepted",
+   "english_accessible": false,
+   "evidence_span": "kommuniserer svært godt på norsk eller et annet skandinavisk språk",
+   "stated_working_language": "unstated",
+   "authorisation_required": "har norsk autorisasjon som tannlege"
+  },
+  "note": "CORRECTED: I labelled on 'vi legger vekt på språkforståelse' and missed the real requirement"
+ },
+ {
+  "n": 32,
+  "uuid": "502a8ece-024a-466d-8f6f-21c219d94305",
+  "title": "Intensivsykepleier til Sørlandet",
+  "stratum": "auth_only",
+  "expected": {
+   "norwegian_requirement_level": "scandinavian_accepted",
+   "english_accessible": false,
+   "evidence_span": "Beherske et nordisk språk flytende, både muntlig og skriftlig",
+   "stated_working_language": "unstated",
+   "authorisation_required": "Norsk autorisasjon"
+  },
+  "note": "auth AND language, kept apart"
+ },
+ {
+  "n": 33,
+  "uuid": "5a924a5e-1956-4fe7-9a40-090eac8c009a",
+  "title": "Sykepleier/vernepleier - fast helgestilling ",
+  "stratum": "auth_only",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "english_accessible": false,
+   "evidence_span": null,
+   "stated_working_language": "unstated",
+   "authorisation_required": "Norsk autorisasjon som sykepleier eller vernepleier"
+  },
+  "note": "authorisation only"
+ },
+ {
+  "n": 34,
+  "uuid": "2e7551ed-1ad1-4dff-b6aa-24812a1b22f2",
+  "title": "Avdelingsleder Tele, Power Skien",
+  "stratum": "boilerplate_only",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "english_accessible": false,
+   "evidence_span": null,
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "silent"
+ },
+ {
+  "n": 35,
+  "uuid": "3d1cbc89-3df9-4eb1-8881-2e36edebd1c0",
+  "title": "Helsefagarbeider",
+  "stratum": "boilerplate_only",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "english_accessible": false,
+   "evidence_span": null,
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "silent"
+ },
+ {
+  "n": 36,
+  "uuid": "208ba462-3f3a-4491-9ca0-9a6dfcdb0083",
+  "title": "Praktikant",
+  "stratum": "boilerplate_only",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "english_accessible": false,
+   "evidence_span": null,
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "silent"
+ },
+ {
+  "n": 37,
+  "uuid": "3ea17797-38a6-4962-b288-96abd03a1fb2",
+  "title": "Ski- og snowboardinstruktør /Ski and Snowboard Instructor",
+  "stratum": "english_written",
+  "expected": {
+   "norwegian_requirement_level": "scandinavian_accepted",
+   "english_accessible": false,
+   "evidence_span": "Kommuniserer godt på et skandinavisk språk og engelsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "AND — both required, so Scandinavian needed"
+ },
+ {
+  "n": 38,
+  "uuid": "4012c5f7-6a80-4734-8c60-89542fabfd72",
+  "title": "Vi trenger flere elektrikere i Bergen- We need more electricians in Bergen",
+  "stratum": "english_written",
+  "expected": {
+   "norwegian_requirement_level": "either_norwegian_or_english",
+   "english_accessible": true,
+   "evidence_span": "Må beherske skandinavisk eller engelsk tale",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "disjunction INCLUDING English"
+ },
+ {
+  "n": 39,
+  "uuid": "42cb6a0c-5962-409e-abf9-9b679a81b04d",
+  "title": "Regulatory Compliance Specialist",
+  "stratum": "english_written",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "english_accessible": true,
+   "evidence_span": null,
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "English-written, silent"
+ },
+ {
+  "n": 40,
+  "uuid": "25552313-1874-4601-ba07-1f6c7b250481",
+  "title": "Bli med og åpne Egon Narvik!",
+  "stratum": "silent_norwegian",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "english_accessible": false,
+   "evidence_span": null,
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "silent"
+ },
+ {
+  "n": 41,
+  "uuid": "26bd04a1-f59a-4f7c-bf3e-983af55f72fb",
+  "title": "Renholdsmedarbeider ",
+  "stratum": "silent_norwegian",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "english_accessible": false,
+   "evidence_span": null,
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "silent"
+ },
+ {
+  "n": 42,
+  "uuid": "27b09b20-5a9e-4e42-905c-273425598f58",
+  "title": "Har du lyst til å dra på skattejakt etter ressurser i folk?",
+  "stratum": "silent_norwegian",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "english_accessible": false,
+   "evidence_span": null,
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "silent"
+ },
+ {
+  "n": 43,
+  "uuid": "2812642a-45e0-4368-8f99-e302f1f269b6",
+  "title": "ER DU GLAD I Å HJELPE ANDRE MENNESKER?",
+  "stratum": "silent_norwegian",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "english_accessible": false,
+   "evidence_span": null,
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "silent"
+ },
+ {
+  "n": 44,
+  "uuid": "28b383a5-bcea-4fce-bfe7-ee495a099386",
+  "title": "Operativ fengselsførstebetjent - Ringerike fengsel",
+  "stratum": "silent_norwegian",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "english_accessible": false,
+   "evidence_span": null,
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "silent"
+ },
+ {
+  "n": 45,
+  "uuid": "2a2a1e31-76ed-46ae-a71c-bb9edd61d7f1",
+  "title": "Stikningsingeniør",
+  "stratum": "silent_norwegian",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "english_accessible": false,
+   "evidence_span": null,
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": "silent"
+ }
+]

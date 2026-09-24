@@ -326,7 +326,12 @@ FEWSHOT = [
 
 
 # english_accessible is DERIVED, never asked of the model.
-ACCESSIBLE_LEVELS = {"either_norwegian_or_english", "explicitly_not_required"}
+# `desirable` is accessible: "norsk er en fordel" / "trenger ikke flytende norsk
+# når du starter" both say Norwegian is NOT a requirement. Owner ruling: you can
+# learn it on the job, so you can apply. Previously it fell back to document
+# language, which made it behave identically to `unstated` and wasted a level.
+ACCESSIBLE_LEVELS = {"either_norwegian_or_english", "explicitly_not_required",
+                     "desirable"}
 BLOCKING_LEVELS = {"certified", "fluent", "professional", "conversational",
                    "scandinavian_accepted"}
 
@@ -338,8 +343,6 @@ def derive_english_accessible(facets: dict, doc_lang: str) -> bool:
         return False
     if facets.get("stated_working_language") == "english":
         return True
-    if lvl == "desirable":
-        return doc_lang in ("en", "mixed")
     return doc_lang in ("en", "mixed")        # 'unstated' falls back to document language
 
 USER_TEMPLATE = (
