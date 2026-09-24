@@ -154,6 +154,13 @@ in sync, serialisable cluster keys, and **zero false merges by construction**.
 stay in separate clusters. Tested explicitly, so the tradeoff is visible rather
 than forgotten.
 
+*CEFR exception:* digits are masked so one template per location collapses, but
+a digit directly preceded by A/B/C is left alone. `norskprøve B1` and `B2` are
+DIFFERENT language requirements, and merging them would hand two ads one verdict
+on the very attribute this pipeline exists to read. 1,268 corpus ads carry a
+CEFR token; zero clusters currently differ by one, so the guard is latent — which
+is exactly when it is cheapest to add.
+
 *Kept from D6:* clustering is on the body only. Chain stores vary the title per
 location, and a key including the title found only 157 redundant ads — worse
 than plain exact hashing at 320.

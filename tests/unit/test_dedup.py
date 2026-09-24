@@ -38,7 +38,6 @@ def test_b1_identical_body_different_titles_cluster_together():
     """The KIWI case. Chain stores vary the title per location while the body is
     byte-identical; a key including the title found only 157 redundant ads,
     WORSE than plain exact hashing at 320."""
-    assert dedup.signature(BODY) == dedup.signature(BODY)
     g = dedup.cluster([ad("a", BODY, "KIWI Mørkvedvegen"), ad("b", BODY, "KIWI Frognerveien")])
     assert len(g) == 1 and sorted(next(iter(g.values()))) == ["a", "b"]
 
@@ -58,8 +57,13 @@ def test_b4_punctuation_is_collapsed():
 
 
 def test_b5_unicode_variants_are_folded():
-    assert dedup.signature("Gode norskkunnskaper") == dedup.signature("Gode norskkunnskaper")
-    assert dedup.signature("norsk­kunnskaper") == dedup.signature("norskkunnskaper")
+    """Escapes, not literals. Two visually identical strings assert nothing a
+    reviewer can check, and silently degrade to `x == x` if one is ever
+    re-typed. The invisible U+00AD in the previous version also defeated
+    programmatic editing of this very file."""
+    assert dedup.signature("Gode\u00a0norskkunnskaper") == dedup.signature("Gode norskkunnskaper")
+    assert dedup.signature("norsk\u00adkunnskaper") == dedup.signature("norskkunnskaper")
+    assert dedup.signature("O\ufb03siell") == dedup.signature("Offisiell")
 
 
 def test_canonical_preserves_norwegian_letters():
@@ -99,16 +103,19 @@ def test_b8_empty_body_does_not_raise(empty):
 
 def test_b8b_empty_bodies_cluster_together_and_do_not_absorb_real_ads():
     g = dedup.cluster([ad("a", ""), ad("b", "   "), ad("c", BODY)])
-    assert len(g) == 2
+    # len(g) == 2 is also consistent with {"a","c"} + {"b"}. Pin membership.
+    assert sorted(g.values()) == [["a", "b"], ["c"]]
 
 
-def test_b9_signature_is_deterministic_and_a_plain_string():
-    """No RNG, no seed, no permutations — unlike MinHash. A hex digest also
-    means cluster keys are stable across processes and serialisable."""
-    s = dedup.signature(BODY)
-    assert isinstance(s, str) and len(s) == 64
-    assert all(c in "0123456789abcdef" for c in s)
-    assert s == dedup.signature(BODY)
+def test_b9_signature_is_a_stable_golden_value():
+    """A GOLDEN VALUE, not a shape check. `len(s) == 64` plus a hex-alphabet
+    test passes for sha512[:64], latin-1 encoding, or a versioned prefix — none
+    of which change the partition, so no other test notices either. All of them
+    invalidate the entire LLM cache and re-bill the census silently.
+
+    Regenerate this literal DELIBERATELY, never to make a red test green."""
+    assert dedup.signature("Gode norskkunnskaper.") == "2b02f9402c14344b242b98b52e00b097f868c133def2033e5f93207eb2530319"
+    assert dedup.signature(BODY) == dedup.signature(BODY)
 
 
 # ── B11-B12 · representatives and fan-out ────────────────────────────────────
@@ -171,5 +178,79 @@ def test_b13_corpus_clustering():
     ads = [{"uuid": u, "description_text": t} for u, t in rows]
     g = dedup.cluster(ads)
     assert len(g) == EXPECTED_CLUSTERS
-    assert len(ads) - len(g) == EXPECTED_REDUNDANT
     assert max(len(v) for v in g.values()) == EXPECTED_LARGEST
+    # Invariants, not just counts: nothing lost, nothing duplicated.
+    members = [u for v in g.values() for u in v]
+    assert len(members) == len(ads), "clustering must not lose ads"
+    assert len(set(members)) == len(ads), "an ad must appear in exactly one cluster"
+    # Cache stability at corpus scale, not just on three toy ads.
+    assert dedup.representatives(g) == dedup.representatives(dedup.cluster(list(reversed(ads))))
+
+
+# ── gaps found by external review + mutation testing ────────────────────────
+
+def test_canonical_strips_trailing_punctuation_residue():
+    """_NON_WORD.sub(" ", ...) re-introduces a trailing space AFTER normalise
+    has stripped. Without the final .strip(), ads differing only by a closing
+    "." or ":" split into separate clusters — and every signature in the corpus
+    changes, invalidating the whole LLM cache."""
+    assert dedup.canonical("Gode norskkunnskaper.") == "gode norskkunnskaper"
+    assert dedup.canonical("Krav:") == "krav"
+    assert dedup.signature("Gode norskkunnskaper.") == dedup.signature("Gode norskkunnskaper")
+
+
+def test_cefr_levels_survive_digit_masking():
+    """B1 and B2 are DIFFERENT language requirements. A blanket \\d+ mask merges
+    them, handing two ads one verdict on the attribute this pipeline exists to
+    read. 1,268 corpus ads carry a CEFR token."""
+    assert dedup.signature("Krav: bestått norskprøve B1") != dedup.signature("Krav: bestått norskprøve B2")
+    assert dedup.canonical("norskprøve B2, 3 år") == "norskprøve b2 # år"
+
+
+def test_digit_masking_accepted_over_merge():
+    """ACCEPTED TRADE-OFF, pinned so a future widening of the mask is visible.
+    Percentages, salaries and dates ARE merged — two ads identical but for the
+    stillingsprosent share their language requirements, which is what the
+    census reads, so merging them is correct for this purpose."""
+    assert dedup.signature("Stilling 20 % fast") == dedup.signature("Stilling 100 % fast")
+    assert dedup.signature("kr 450 000") == dedup.signature("kr 650 000")
+
+
+def test_long_shared_prefix_does_not_over_merge():
+    """The only unit-level detector of over-eager clustering. Truncating the
+    canonical form ("hash the first 200 chars, for speed") passes every other
+    test — only the integration corpus test notices, and that is skipped in CI."""
+    boiler = "Vi er en stor arbeidsgiver med lang historie i regionen og tilbyr gode " * 5
+    assert len(boiler) > 300
+    g = dedup.cluster([ad("a", boiler + " Vi soker sykepleier."),
+                       ad("b", boiler + " Vi soker tomrer.")])
+    assert len(g) == 2
+
+
+def test_cluster_raises_on_missing_uuid():
+    """A loud KeyError is the feature. `adv.get("uuid")` would make an ad with a
+    renamed field a None-keyed member that silently vanishes from the corpus."""
+    with pytest.raises(KeyError):
+        dedup.cluster([{"description_text": BODY}])
+
+
+def test_representatives_and_fan_out_agree_on_the_representative():
+    """Round-trip. `representatives` using max while `fan_out` uses min raises
+    KeyError for every multi-ad cluster — after the whole census is billed."""
+    ads = [ad("c", BODY), ad("a", BODY), ad("b", "Noe helt annet her")]
+    g = dedup.cluster(ads)
+    dedup.fan_out(g, {r: "ok" for r in dedup.representatives(g)})  # must not raise
+    assert dedup.representatives({"sig": ["c", "a", "b"]}) == ["a"]
+
+
+def test_representatives_tolerates_an_empty_cluster():
+    assert dedup.representatives({"sig": []}) == []
+
+
+def test_fan_out_shares_one_object_across_a_cluster():
+    """Explicit identity. Tests comparing with == pass whether members share the
+    object or hold copies; the distinction decides whether an in-place mutation
+    downstream hits all 44 members or one."""
+    g = {"sig": ["a", "b"]}
+    out = dedup.fan_out(g, {"a": {"level": "professional"}})
+    assert out["a"] is out["b"]

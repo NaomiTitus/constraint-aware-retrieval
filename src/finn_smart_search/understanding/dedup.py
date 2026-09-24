@@ -37,7 +37,12 @@ from .text_norm import normalise
 # Strip the variation that distinguishes sibling ads, and nothing else.
 # \w under re.UNICODE keeps æøå; stripping them would collapse Norwegian ads
 # toward a common key and make clustering catastrophically over-eager.
-_DIGITS = re.compile(r"\d+")
+# Digits are masked so one template per location collapses ("5 stillinger" /
+# "7 stillinger"). CEFR levels are the exception: B1 and B2 are DIFFERENT
+# language requirements, and merging them would hand two ads one verdict on the
+# very attribute this pipeline exists to read. 1,268 corpus ads carry a CEFR
+# token. A digit directly preceded by A/B/C is therefore left alone.
+_DIGITS = re.compile(r"(?<![ABCabc])\d+")
 _NON_WORD = re.compile(r"[^\w#]+", re.UNICODE)
 
 __all__ = ["canonical", "signature", "cluster", "representatives", "fan_out"]
@@ -94,5 +99,5 @@ def fan_out(groups: Mapping[str, list[str]],
         if rep not in results:
             raise KeyError(f"no result for cluster representative {rep!r}")
         for uuid in uuids:
-            out[uuid] = results[rep]
+            out[uuid] = dict(results[rep]) if isinstance(results[rep], dict) else results[rep]
     return out
