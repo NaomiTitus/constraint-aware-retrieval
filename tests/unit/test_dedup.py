@@ -174,9 +174,11 @@ def test_b12b_fan_out_raises_when_a_representative_is_missing():
 def test_b13_corpus_clustering():
     """Pinned against the real corpus. Requires data/ads.duckdb, so it is marked
     integration and excluded from CI."""
-    from finn_smart_search.ingest import store
+    from tests.conftest import open_corpus
 
-    con = store.connect("data/ads.duckdb")
+    # READ-ONLY, lock-tolerant: store.connect() takes an exclusive lock and runs
+    # DDL against the corpus this test is auditing.
+    con = open_corpus()
     rows = con.execute("SELECT uuid, description_text FROM ads WHERE n_chars > 0").fetchall()
     ads = [{"uuid": u, "description_text": t} for u, t in rows]
     g = dedup.cluster(ads)

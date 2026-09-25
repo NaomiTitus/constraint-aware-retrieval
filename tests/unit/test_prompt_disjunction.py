@@ -213,3 +213,114 @@ def test_precedence_puts_the_connective_check_before_the_english_check():
 def test_prompt_version_advanced_past_v5():
     assert cp.PROMPT_VERSION not in ("census-v4", "census-v5"), \
         "bump PROMPT_VERSION or the cache returns the v5 over-calls"
+
+
+# ── v7: the documentation-language clause, and the shape of the few-shots ─────
+#
+# FINDING. 135 corpus ads say "dokumentasjon ... må være på et skandinavisk
+# språk eller engelsk" — a statement about what language your CV may be in, not
+# a demand on you. That is 16.6% of the 813 ads carrying any X-or-English
+# disjunction, and 51 of the 135 contain NO other applicant-directed language
+# wording, so the documentation clause is the only thing a verdict can come
+# from. 14 are in English ("documentation to be considered must be in a
+# Scandinavian language or English").
+#
+# The prompt had no rule for it and no few-shot, while SIX few-shots demonstrate
+# "skandinavisk eller engelsk" as accessible. One of the 169 real outputs
+# already quoted the clause as language evidence (c514de15); the verdict
+# happened to be carried by a different span, which is what made it invisible.
+#
+# This is the same failure the probes found twice in MY OWN regex, recorded in
+# DECISIONS D11 — and it was never carried back into the prompt.
+
+def test_the_documentation_language_clause_is_named_as_a_non_requirement():
+    low = SYSTEM.lower()
+    assert re.search(r"dokumentasjon|vitnem|attest|documentation|diploma|transcript", low), \
+        "the prompt must name the documentation-language clause"
+    assert re.search(r"(dokumentasjon|documentation)[\s\S]{0,400}?"
+                     r"(not a language requirement|never a language requirement|"
+                     r"ikke et språkkrav|unstated)", low), \
+        "and must say it is not a language requirement"
+
+
+def test_no_fewshot_quotes_a_documentation_clause_as_evidence():
+    """A demonstration of the wrong answer beats a stated rule — that is how the
+    census-v4 disjunction bug happened. So no example may quote one."""
+    doc = re.compile(r"dokumentasjon|vitnem[åa]l|documentation|diploma|transcript", re.I)
+    bad = [(f["norwegian_requirement_level"], s["span"])
+           for *_x, f in cp.FEWSHOT for s in f.get("evidence_spans", [])
+           if doc.search(s["span"])]
+    assert bad == [], f"a documentation clause quoted as language evidence: {bad}"
+
+
+def test_a_fewshot_demonstrates_the_documentation_clause_landing_on_unstated():
+    """51 of the 135 have no other language wording, so the model must have seen
+    one worked example that ends in silence."""
+    doc = re.compile(r"dokumentasjon|vitnem[åa]l|documentation", re.I)
+    hits = [f for _t, body, _l, f in cp.FEWSHOT if doc.search(body)]
+    assert hits, "no few-shot body contains a documentation-language clause"
+    assert any(f["norwegian_requirement_level"] == "unstated" and not f.get("evidence_spans")
+               for f in hits), "one must land on `unstated` with no spans"
+
+
+def test_the_rule_names_the_ENGLISH_surface_forms_too():
+    """6.5% of the corpus carries English text and 103 ads word the requirement
+    in English: "Norwegian or English" 31, "fluent in Norwegian" 20,
+    "Scandinavian or English" 12. A Norwegian-only rule is half a rule — and
+    writing the exclusion only in Norwegian is exactly the `dokument` /
+    `documentation` blind spot from D11, at the prompt level."""
+    low = SYSTEM.lower()
+    assert "scandinavian or english" in low
+    assert "norwegian or english" in low
+
+
+def test_a_three_way_comma_disjunction_is_distinguished_from_a_comma_list():
+    """104 ads write "norsk, engelsk eller polsk" — a comma LIST closed by a
+    disjunction, which is accessible. 21 write a bare "norsk, engelsk" with no
+    connective, which is a conjunction. The prompt stated only the second rule,
+    which is actively wrong for the 104."""
+    low = SYSTEM.lower()
+    assert re.search(r"norsk, engelsk eller", low), \
+        "the three-way form must appear verbatim; it is 5x commoner than the bare list"
+
+
+def test_fewshot_bodies_have_the_production_block_shape():
+    """census.build_request sends body = description_text = blocks joined with
+    "\\n" (html_clean.blocks_to_text). Real ads: median 31 blocks, median 2,500
+    chars. The few-shot bodies were single-line prose averaging 201 chars — so
+    every demonstration the model saw was 1/12th the length of a real ad, in a
+    shape no ad has. Same class as STANDARDS § 3.1 row 1.
+
+    NOT held to production LENGTH, deliberately. Real ads are median 31 blocks;
+    matching that across 13 examples would roughly triple a cached prefix that
+    already measures 9,217 tokens, at 0.1x input on every one of 9,823 calls.
+    The load-bearing property is the SHAPE — newline-joined blocks, bullets
+    without terminal punctuation — not the block count. So: at least 3 blocks,
+    and a stated trade-off rather than a silently weakened assertion."""
+    flat = [t for t, body, _l, _f in cp.FEWSHOT if body.count("\n") < 2]
+    assert flat == [], f"few-shot bodies still single-line prose: {flat}"
+    assert sum(b.count("\n") + 1 for _t, b, _l, _f in cp.FEWSHOT) >= 60, \
+        "aggregate block count collapsed; the examples are prose again"
+
+
+def test_fewshot_spans_are_whole_blocks_of_their_own_body():
+    """The model imitates span shape. A demonstration that appends a full stop to
+    a bullet teaches it to quote a string that is not a substring of the ad —
+    which is the 55%-demotion mechanism. Measured: 3 of 9 spans did not occur
+    verbatim in the corpus, each existing only WITHOUT the added period."""
+    bad = []
+    for title, body, _l, f in cp.FEWSHOT:
+        blocks = set(body.split("\n"))
+        for s in f.get("evidence_spans", []):
+            if s["span"] not in blocks:
+                bad.append((title, s["span"]))
+    assert bad == [], f"spans that are not a whole block of their body: {bad}"
+
+
+def test_at_least_one_fewshot_span_is_an_unterminated_bullet():
+    """52% of the 908 real blocks carrying a disjunction have no terminal full
+    stop, and 116 of 169 real emitted spans carry none."""
+    unterminated = [s for lvl in ("either_norwegian_or_english", "professional",
+                                  "certified", "scandinavian_accepted")
+                    for s in spans_of(lvl) if not s.rstrip().endswith((".", "!", "?"))]
+    assert unterminated, "every demonstrated span ends in punctuation; real ones do not"

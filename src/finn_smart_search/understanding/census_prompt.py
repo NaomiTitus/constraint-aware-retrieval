@@ -31,7 +31,7 @@ REJECTED (measurement refuted the claim):
   * "språkmodell for barna" - 5 ads, not the 727 implied by occupation counts.
 """
 
-PROMPT_VERSION = "census-v6"
+PROMPT_VERSION = "census-v7"
 
 SYSTEM = """You extract language-requirement facts from Norwegian job advertisements for a \
 search engine whose users include people who speak English but no Norwegian.
@@ -60,7 +60,13 @@ whether or not the sentence names norsk at all. All of these are \
   "Må beherske skandinavisk eller engelsk tale"
   "kunne prate engelsk eller ett nordisk språk"
   "Scandinavian or English"
+  "Norwegian or English"
   "engelsk eller et skandinavisk språk"
+
+6.5% of advertisements are written in English and 103 state the requirement in \
+English wording — "Norwegian or English" (31), "fluent in Norwegian" (20), \
+"Scandinavian or English" (12), "Norwegian language skills" (9). Every rule \
+here applies to the English phrasing exactly as to the Norwegian.
 An English speaker satisfies every one of them by speaking English. 436 \
 advertisements use this shape and 364 of them never also say "norsk eller \
 engelsk", so no other rule rescues them.
@@ -105,8 +111,13 @@ stop at the first that matches:
      is NOT English-accessible. "skandinavisk språk **og** engelsk" still \
      requires Scandinavian → `scandinavian_accepted`. Do NOT apply rule 3 to a \
      conjunction.
-   A comma-separated list with no connective ("norsk, engelsk") is a \
-   conjunction — treat it as "og".
+   A comma-separated list with NO connective at all ("norsk, engelsk", 21 \
+   advertisements) is a conjunction — treat it as "og". But a comma list \
+   CLOSED by a disjunction is a disjunction: "norsk, engelsk eller polsk" \
+   (104 advertisements) offers three alternatives and is \
+   `either_norwegian_or_english`. Read to the end of the list before deciding; \
+   the closing connective governs the whole list, and the disjunctive form is \
+   five times commoner than the bare one.
 3. **SCOPE BEATS BAR — for alternatives only.** Having established a \
    DISJUNCTION in rule 2, the set of accepted languages decides the level and \
    the proficiency demanded does not. Ask: **is English one of the \
@@ -140,6 +151,23 @@ the work. "Fullført mastergrad ved norsk studieinstitusjon" describes an \
 institution. None is a language requirement. Only a demand made of the applicant \
 counts. A gate that binds only some applicants — "utenlandske søkere må ha \
 dokumenterte norskkunnskaper på nivå B2" — still binds, and is `certified`.
+
+### A CLAUSE ABOUT YOUR APPLICATION IS NOT A REQUIREMENT ON YOU
+135 advertisements say some version of "dokumentasjon som skal vurderes må \
+være på et skandinavisk språk eller engelsk", "vitnemål må vere på eit \
+skandinavisk språk eller engelsk", or in English "documentation to be \
+considered must be in a Scandinavian language or English". This states what \
+language your PAPERWORK may be in. It says nothing about the language of the \
+work, and it is NEVER a language requirement — do not quote it as evidence and \
+do not let it set the level. If the advertisement contains no other language \
+statement, the answer is `unstated`, even though the sentence contains both \
+"skandinavisk" and "engelsk". 51 of those 135 have no other language wording \
+at all, so this is the only sentence a verdict could come from — and the \
+verdict must still be silence.
+
+The same applies to "søknaden må skrives på norsk" and "vi ber om at CV \
+lastes opp på engelsk": record those in `application_language`, never in \
+`norwegian_requirement_level`.
 
 ### SILENCE IS SILENCE
 Three of every four advertisements say nothing whatever about language. That is \
@@ -310,49 +338,60 @@ def _f(level, basis, strength, spans=(), **kw):
 FEWSHOT = [
     # 1. THE MODAL CASE - silent, Norwegian-written. ~75% of the corpus.
     ("Ønsker du en nøkkelrolle i utviklingen av Samnanger?",
-     "Samnanger har natur, plass, kraft og kort vei til byen. Samnanger Kommunale "
-     "Utviklingsselskap er opprettet for å koble dette sammen og få mer til å skje. "
+     "Samnanger har natur, plass, kraft og kort vei til byen.\n"
+     "Samnanger Kommunale Utviklingsselskap er opprettet for å koble dette sammen og få mer til å skje.\n"
      "Målet er flere arbeidsplasser, flere boliger og en kommune der enda flere vil bo.",
      "no",
      _f("unstated", "no_mention", "none")),
 
     # 2. DISJUNCTION - 304 ads. The single most mishandled construction.
     ("Produksjonsmedarbeider – søm og tekniske tekstiler",
-     "Kvalifikasjoner: Har gode praktiske ferdigheter. Er selvstendig og "
-     "løsningsorientert. Trives med fysisk og variert arbeid. Behersker norsk eller "
-     "engelsk. Arbeidsoppgaver: Industrisømarbeider søkes til produksjon av tekniske "
-     "tekstiler.",
+     "Kvalifikasjoner:\n"
+     "Har gode praktiske ferdigheter.\n"
+     "Er selvstendig og løsningsorientert.\n"
+     "Trives med fysisk og variert arbeid.\n"
+     "Behersker norsk eller engelsk\n"
+     "Arbeidsoppgaver:\n"
+     "Industrisømarbeider søkes til produksjon av tekniske tekstiler.",
      "no",
      _f("either_norwegian_or_english", "explicit_statement", "explicit_and_unambiguous",
-        spans=[("Behersker norsk eller engelsk.", "no")])),
+        spans=[("Behersker norsk eller engelsk", "no")])),
 
     # 3. Silent again, different sector - reinforces the mode.
     ("Lagermedarbeider søkes",
-     "Vi søker en lagermedarbeider til vårt team. Arbeidsoppgaver omfatter plukking, "
-     "pakking og truckkjøring. Truckførerbevis T4 er en fordel. Oppstart etter avtale.",
+     "Vi søker en lagermedarbeider til vårt team.\n"
+     "Arbeidsoppgaver omfatter plukking, pakking og truckkjøring.\n"
+     "Truckførerbevis T4 er en fordel.\n"
+     "Oppstart etter avtale.",
      "no",
      _f("unstated", "no_mention", "none",
         skills=[{"phrase": "Truckførerbevis T4", "level": "preferred"}])),
 
     # 4. Standard explicit requirement - the commonest non-silent case.
     ("Søker helsesekretær/sykepleier til legekontoret",
-     "Erfaring fra arbeid på legekontor. Erfaring med Infodoc journalsystem. Gode "
-     "samarbeidsevner og et godt pasientfokus. Gode norskkunnskaper. Arbeidsoppgaver: "
+     "Erfaring fra arbeid på legekontor.\n"
+     "Erfaring med Infodoc journalsystem.\n"
+     "Gode samarbeidsevner og et godt pasientfokus.\n"
+     "Gode norskkunnskaper\n"
+     "Arbeidsoppgaver:\n"
      "Pasientmottak og telefon, laboratoriearbeid og prøvetaking.",
      "no",
      _f("professional", "explicit_statement", "explicit_and_unambiguous",
-        spans=[("Gode norskkunnskaper.", "no")],
+        spans=[("Gode norskkunnskaper", "no")],
         implicit_evidence=["kundebehandling"],
         skills=[{"phrase": "Infodoc journalsystem", "level": "preferred"}])),
 
     # 5. CERTIFICATION GATE, and hedged ("Helst") - 654 ads carry a cert token.
     ("Er du en av våre nye bussjåfører i Hamar og Brumunddal?",
-     "Kvalifikasjoner: Førerkort klasse D, YSK og kjøreseddel. God norsk ferdigheter. "
-     "Helst bestått norskprøve B1. Vy bruker bransjens egen Bussnorsktest. Erfaring "
-     "som yrkessjåfør.",
+     "Kvalifikasjoner:\n"
+     "Førerkort klasse D, YSK og kjøreseddel.\n"
+     "God norsk ferdigheter.\n"
+     "Helst bestått norskprøve B1\n"
+     "Vy bruker bransjens egen Bussnorsktest.\n"
+     "Erfaring som yrkessjåfør.",
      "no",
      _f("certified", "explicit_statement", "explicit_but_hedged",
-        spans=[("Helst bestått norskprøve B1.", "no")],
+        spans=[("Helst bestått norskprøve B1", "no")],
         skills=[{"phrase": "Førerkort klasse D", "level": "required"},
                 {"phrase": "YSK", "level": "required"}])),
 
@@ -361,32 +400,57 @@ FEWSHOT = [
     # the only other Nordic demonstration. The contrast is the point - keep them
     # adjacent so the discriminating word ("eller engelsk") is what differs.
     ("Vi trenger flere elektrikere i Bergen",
-     "Vi søker erfarne elektrikere til oppdrag i Bergen. Krav: Fagbrev som "
-     "elektriker. Minimum 1 års erfaring. Må beherske skandinavisk eller engelsk "
-     "tale. Vi tilbyr hjelp til å finne bolig.",
+     "Vi søker erfarne elektrikere til oppdrag i Bergen.\n"
+     "Krav:\n"
+     "Fagbrev som elektriker.\n"
+     "Minimum 1 års erfaring.\n"
+     "Må beherske skandinavisk eller engelsk tale\n"
+     "Vi tilbyr hjelp til å finne bolig.",
      "no",
      _f("either_norwegian_or_english", "explicit_statement", "explicit_and_unambiguous",
-        spans=[("Må beherske skandinavisk eller engelsk tale.", "no")],
+        spans=[("Må beherske skandinavisk eller engelsk tale", "no")],
         min_years_experience=1)),
+
+    # 5c. DOCUMENTATION-LANGUAGE CLAUSE ONLY -> unstated. 135 ads carry one and
+    # 51 have no other language wording, so this sentence is all a verdict could
+    # rest on. It contains both "skandinavisk" and "engelsk" and is still not a
+    # language requirement: it is about the paperwork. One of the first 169 real
+    # outputs quoted it as evidence, which is what put this example here.
+    ("Stipendiat innan marin biologi",
+     "Om stillinga\n"
+     "Vi har ledig ei treårig stipendiatstilling ved instituttet\n"
+     "Kvalifikasjonar\n"
+     "Mastergrad i biologi eller tilsvarande\n"
+     "Erfaring med feltarbeid er ein fordel\n"
+     "Søknad og vedlegg\n"
+     "All dokumentasjon som skal vurderast må vere på eit skandinavisk språk eller engelsk\n"
+     "Søknadsfrist 1. desember",
+     "no",
+     _f("unstated", "no_mention", "none")),
 
     # 6. AUTHORISATION + a SEPARATE Nordic-language line. Both present, kept apart.
     ("Intensivsykepleier til Sørlandet",
-     "Kvalifikasjoner: Norsk autorisasjon. Respiratorkompetanse. 2 års erfaring fra "
-     "intensivavdeling. Oppdatert AHLR-kurs. Beherske et nordisk språk flytende, både "
-     "muntlig og skriftlig.",
+     "Kvalifikasjoner:\n"
+     "Norsk autorisasjon.\n"
+     "Respiratorkompetanse.\n"
+     "2 års erfaring fra intensivavdeling.\n"
+     "Oppdatert AHLR-kurs.\n"
+     "Beherske et nordisk språk flytende, både muntlig og skriftlig",
      "no",
      _f("scandinavian_accepted", "explicit_statement", "explicit_and_unambiguous",
-        spans=[("Beherske et nordisk språk flytende, både muntlig og skriftlig.", "no")],
+        spans=[("Beherske et nordisk språk flytende, både muntlig og skriftlig", "no")],
         authorisation_required="Norsk autorisasjon",
         implicit_evidence=["journalforing"], min_years_experience=2)),
 
     # 7. AUTHORISATION ALONE, no language line anywhere. Must NOT become a
     #    language verdict - otherwise the model learns the two travel together.
     ("Sykepleier til nattevakt, sykehjem",
-     "Vi søker sykepleier til faste nattevakter. Krav: Norsk autorisasjon som "
-     "sykepleier. Gyldig politiattest må leveres før oppstart. Turnus med arbeid "
-     "hver tredje helg. Vi oppfordrer alle kvalifiserte til å søke uansett alder, "
-     "kjønn, funksjonsevne, etnisitet, nasjonal opprinnelse eller hull i CV-en.",
+     "Vi søker sykepleier til faste nattevakter.\n"
+     "Krav:\n"
+     "Norsk autorisasjon som sykepleier.\n"
+     "Gyldig politiattest må leveres før oppstart.\n"
+     "Turnus med arbeid hver tredje helg.\n"
+     "Vi oppfordrer alle kvalifiserte til å søke uansett alder, kjønn, funksjonsevne, etnisitet, nasjonal opprinnelse eller hull i CV-en.",
      "no",
      _f("unstated", "no_mention", "none",
         authorisation_required="Norsk autorisasjon som sykepleier",
@@ -394,19 +458,23 @@ FEWSHOT = [
 
     # 8. NYNORSK - 762 ads carry markers; a bokmål-only reader misses 21%.
     ("Fagansvarleg i Eining for Miljø- og velferdstenester",
-     "Kvalifikasjonar: Høgskuleutdanning innan helse. Ønskjeleg med vidareutdanning "
-     "innan pedagogikk eller rettleiing. God kunnskap i norsk, munnleg og skriftleg. "
-     "Førarkort kl. B. Gyldig politiattest må leverast før oppstart.",
+     "Kvalifikasjonar: Høgskuleutdanning innan helse.\n"
+     "Ønskjeleg med vidareutdanning innan pedagogikk eller rettleiing.\n"
+     "God kunnskap i norsk, munnleg og skriftleg\n"
+     "Førarkort kl.\n"
+     "B.\n"
+     "Gyldig politiattest må leverast før oppstart.",
      "no",
      _f("professional", "explicit_statement", "explicit_and_unambiguous",
-        spans=[("God kunnskap i norsk, munnleg og skriftleg.", "no")],
+        spans=[("God kunnskap i norsk, munnleg og skriftleg", "no")],
         implicit_evidence=["brukerkontakt"])),
 
     # 9. EXPLICITLY NOT REQUIRED - only ~5 such ads exist; the class is real but rare.
     ("Er du et nattmenneske? Vi søker tilkallingshjelp på natt",
-     "Du er serviceinnstilt og liker å møte mennesker. Du trenger ikke å snakke norsk, "
-     "men du må kunne kommunisere godt på engelsk. Andre språk er selvfølgelig en "
-     "fordel. Send oss gjerne en kort søknad.",
+     "Du er serviceinnstilt og liker å møte mennesker.\n"
+     "Du trenger ikke å snakke norsk, men du må kunne kommunisere godt på engelsk.\n"
+     "Andre språk er selvfølgelig en fordel.\n"
+     "Send oss gjerne en kort søknad.",
      "no",
      _f("explicitly_not_required", "explicit_statement", "explicit_and_unambiguous",
         spans=[("Du trenger ikke å snakke norsk, men du må kunne kommunisere godt på "
@@ -416,28 +484,33 @@ FEWSHOT = [
     # 10. ENGLISH-WRITTEN but SILENT. The verdict is still 'unstated' - accessibility
     #     is derived downstream from document_language, never asserted here.
     ("Barista – Oslo S",
-     "We are looking for a friendly barista for our busy coffee bar. Experience with "
-     "espresso machines is a plus. Shifts include weekends and early mornings.",
+     "We are looking for a friendly barista for our busy coffee bar.\n"
+     "Experience with espresso machines is a plus.\n"
+     "Shifts include weekends and early mornings.",
      "en",
      _f("unstated", "no_mention", "none",
         skills=[{"phrase": "espresso machines", "level": "preferred"}])),
 
     # 11. FLUENT — a hard proficiency bar, distinct from `professional`.
     ("Selger",
-     "Er du klar for en spennende salgskarriere? Hos Verisure er vi stolte av å "
-     "beskytte over 6,4 millioner hjem verden over. Kvalifikasjoner: Flytende "
-     "norsk. Førerkort klasse B. Resultatorientert og engasjert.",
+     "Er du klar for en spennende salgskarriere?\n"
+     "Hos Verisure er vi stolte av å beskytte over 6,4 millioner hjem verden over.\n"
+     "Kvalifikasjoner:\n"
+     "Flytende norsk\n"
+     "Førerkort klasse B.\n"
+     "Resultatorientert og engasjert.",
      "no",
      _f("fluent", "explicit_statement", "explicit_and_unambiguous",
-        spans=[("Flytende norsk.", "no")],
+        spans=[("Flytende norsk", "no")],
         skills=[{"phrase": "Førerkort klasse B", "level": "required"}])),
 
     # 12. CONVERSATIONAL — a LOW bar, and note "norsk OG engelsk" is a
     #     conjunction: both are required, so it is NOT a disjunction.
     ("Burger King Sveberg søker skiftleder 80-100% stilling",
-     "Stillingen krever ikke tidligere ledererfaring, men erfaring innen "
-     "serviceyrket. Grunnleggende norsk og engelsk kunnskaper er nødvendig for å "
-     "kunne utføre rollen.",
+     "Om stillingen\n"
+     "Vi søker skiftleder til Burger King Sveberg\n"
+     "Stillingen krever ikke tidligere ledererfaring, men erfaring innen serviceyrket\n"
+     "Grunnleggende norsk og engelsk kunnskaper er nødvendig for å kunne utføre rollen.",
      "no",
      _f("conversational", "explicit_statement", "explicit_and_unambiguous",
         spans=[("Grunnleggende norsk og engelsk kunnskaper er nødvendig for å "

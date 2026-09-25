@@ -15,11 +15,18 @@ EXPECTED_SHARE = {"no": (0.93, 0.97), "en": (0.03, 0.05),
 
 @pytest.fixture(scope="module")
 def con():
-    from finn_smart_search.ingest import store
-    from tests.conftest import CORPUS
-    if not CORPUS.exists():
-        pytest.skip(f"needs {CORPUS.name} (gitignored; run `make ingest`)")
-    return store.connect("data/ads.duckdb")
+    """READ-ONLY, via the shared helper.
+
+    This used `store.connect("data/ads.duckdb")`, which opens read-WRITE, runs
+    BRONZE_DDL (`CREATE TABLE IF NOT EXISTS ...`) against the artifact under
+    audit, and takes duckdb's exclusive lock — so this test blocked every other
+    reader and errored whenever an ingest or probe was running. It also used a
+    RELATIVE path while the skip-guard checked the absolute one, so from any
+    other working directory the guard passed and the connect created a fresh
+    empty database that every assertion then ran against.
+    """
+    from tests.conftest import open_corpus
+    return open_corpus()
 
 
 def test_3_1_every_ad_has_exactly_one_language_row(con):

@@ -43,7 +43,35 @@ MIXED_LO, MIXED_HI = 0.20, 0.80
 # location line; that must not flip the verdict.
 OTHER_DOMINANCE = 0.50
 
+# A GENUINELY FOREIGN minority at or above this share makes the ad bilingual.
+# Same number as MIXED_LO deliberately: "a second language is a substantial
+# minority" is one threshold, not two. The corpus supports it — 206 ads carry
+# 10-20% foreign mass (monolingual ads with a contact line) and only 15 carry
+# 20-30%, a 14x drop right at the bound.
+#
+# Without this, three ads carrying a FULL parallel translation were classified
+# `no` and hidden from the seekers they target: 4b35916f (pl 0.376),
+# 510aa5d9 (pl 0.331), 11fd761e (lt 0.445). `mixed` was en/(no+en), which
+# cannot see a third language at all.
+OTHER_MINORITY = MIXED_LO
+
 NORWEGIAN = {Language.BOKMAL, Language.NYNORSK}
+
+# Danish, Swedish, Icelandic and Faroese are NOT a foreign language here.
+#
+# Two reasons, and the second is the one that matters. A Norwegian speaker reads
+# Danish and Swedish, and this project already treats them as one group
+# (`scandinavian_accepted`). And lingua confuses them with bokmål: of the ads
+# with >=10% "other" mass, 211 are detected Danish and 18 Swedish against 13
+# Polish — and the Danish ones are plainly Norwegian text ("Pepper søker
+# ekstrahjelp!", "SPAR Bygdøy søker Ekstrahjelp/Deltid").
+#
+# So a blanket threshold on "other" would have reclassified ~24 monolingual
+# Norwegian ads as bilingual to rescue 3 genuinely multilingual ones. Folding
+# the Nordic set into the Scandinavian mass fixes both directions: it also
+# stops the 12 Swedish/Danish ads currently classified `other` — which derives
+# as English-ACCESSIBLE — from being shown to English-only seekers.
+NORDIC_ADJACENT = {Language.DANISH, Language.SWEDISH, Language.ICELANDIC}
 
 # English legal/ATS furniture appended to otherwise Norwegian ads (104 corpus
 # ads). Stripped BEFORE aggregating rather than absorbed by widening the band:
@@ -77,6 +105,9 @@ def _classify(text: str) -> tuple[str, str | None]:
         return None, None
     if lang in NORWEGIAN:
         return "no", "no"
+    if lang in NORDIC_ADJACENT:
+        # Scandinavian mass, not foreign. See NORDIC_ADJACENT above.
+        return "no", lang.iso_code_639_1.name.lower()
     if lang == Language.ENGLISH:
         return "en", "en"
     return "other", lang.iso_code_639_1.name.lower()
@@ -86,6 +117,10 @@ def detect(blocks: list[dict]) -> dict:
     """Char-weighted document verdict over already-cleaned blocks."""
     mass = {"no": 0, "en": 0, "other": 0}
     other_langs: dict[str, int] = {}
+    # Nordic detections count as Scandinavian mass but are RECORDED, so the
+    # information that an ad is Danish rather than Norwegian survives for the
+    # Scandinavian-seeker matrix. Losing it was the real risk in folding them.
+    nordic_langs: dict[str, int] = {}
     n_scored = 0
 
     for b in blocks:
@@ -99,18 +134,31 @@ def detect(blocks: list[dict]) -> dict:
         n_scored += 1
         if cls == "other":
             other_langs[iso] = other_langs.get(iso, 0) + b["n_chars"]
+        elif iso not in ("no",):
+            nordic_langs[iso] = nordic_langs.get(iso, 0) + b["n_chars"]
 
     total = sum(mass.values())
     if total == 0:
         return {"doc_lang": "unknown", "lang_mix": {}, "detected_other": None,
-                "is_bilingual": False, "n_scored": 0, "confidence": "low"}
+                "is_bilingual": False, "n_scored": 0, "confidence": "low",
+                "detected_nordic": None}
 
     mix = {k: v / total for k, v in mass.items()}
     detected_other = max(other_langs, key=other_langs.get) if other_langs else None
+    detected_nordic = max(nordic_langs, key=nordic_langs.get) if nordic_langs else None
 
     if mix["other"] > OTHER_DOMINANCE:
         return {"doc_lang": "other", "lang_mix": mix, "detected_other": detected_other,
-                "is_bilingual": False, "n_scored": n_scored, "confidence": "high"}
+                "is_bilingual": False, "n_scored": n_scored, "confidence": "high",
+                "detected_nordic": detected_nordic}
+
+    # A genuinely foreign minority: the ad carries a parallel translation and is
+    # bilingual, whatever the Norwegian/English split of the rest says.
+    if mix["other"] >= OTHER_MINORITY:
+        return {"doc_lang": "mixed", "lang_mix": mix, "detected_other": detected_other,
+                "is_bilingual": True, "n_scored": n_scored,
+                "confidence": "high" if n_scored >= 2 else "low",
+                "detected_nordic": detected_nordic}
 
     # No `scand_en == 0` guard: if no+en were 0 then other would be the whole
     # mass, mix["other"] would be 1.0, and the dominance branch above would
@@ -125,4 +173,5 @@ def detect(blocks: list[dict]) -> dict:
 
     return {"doc_lang": verdict, "lang_mix": mix, "detected_other": detected_other,
             "is_bilingual": verdict == "mixed", "n_scored": n_scored,
-            "confidence": "high" if n_scored >= 2 else "low"}
+            "confidence": "high" if n_scored >= 2 else "low",
+            "detected_nordic": detected_nordic}

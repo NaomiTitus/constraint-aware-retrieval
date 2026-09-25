@@ -69,9 +69,11 @@ def test_every_level_in_the_enum_is_represented(golden):
 def test_expected_spans_are_verbatim_in_their_ads(golden):
     """A golden label quoting a sentence the ad does not contain would make that
     ad permanently unwinnable."""
-    from finn_smart_search.ingest import store
     from finn_smart_search.understanding.text_norm import normalise
-    con = store.connect("data/ads.duckdb")
+    from tests.conftest import open_corpus
+    # READ-ONLY: store.connect opens read-write, runs DDL against the artifact
+    # under audit, and takes duckdb's exclusive lock.
+    con = open_corpus()
     bad = []
     for g in golden:
         span = g["expected"]["evidence_span"]

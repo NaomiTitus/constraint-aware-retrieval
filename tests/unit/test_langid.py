@@ -102,9 +102,27 @@ def test_1_5_bilingual_is_mixed():
 
 
 def test_1_6_empty_is_unknown():
+    """Exact dict equality, deliberately: it is the only assertion that notices a
+    field being ADDED to the verdict. It caught `detected_nordic` on the way in
+    (2026-09-25), which is the behaviour to keep — a consumer reading a key that
+    sometimes exists is the shape of bug this repo keeps finding."""
     r = detect([])
     assert r == {"doc_lang": "unknown", "lang_mix": {}, "detected_other": None,
-                 "is_bilingual": False, "n_scored": 0, "confidence": "low"}
+                 "is_bilingual": False, "n_scored": 0, "confidence": "low",
+                 "detected_nordic": None}
+
+
+def test_every_verdict_path_returns_the_same_key_set():
+    """Five return statements in detect(); a field added to one and not the
+    others gives a key that sometimes exists. Pinned across all of them."""
+    keys = None
+    for blocks in ([], [blk(NO, 500)], [blk(NO, 500), blk(EN, 500)],
+                   [blk(EN, 900)], [blk(NO, 100), blk(PL, 900)],
+                   [blk(NO, 600), blk(PL, 300)]):
+        r = detect(blocks)
+        if keys is None:
+            keys = set(r)
+        assert set(r) == keys, f"key set differs for {blocks!r}"
 
 
 # ── 2 · thresholds, with forged weights so the arithmetic is exact ──────────
@@ -128,11 +146,15 @@ def test_2_2_band_edges(en_chars, expected):
     assert detect([blk(EN, en_chars), blk(NO, 1000 - en_chars)])["doc_lang"] == expected
 
 
-@pytest.mark.parametrize("other_chars,expected", [(500, "no"), (501, "other")])
+@pytest.mark.parametrize("other_chars,expected", [(500, "mixed"), (501, "other")])
 def test_2_3_other_dominance_boundary(other_chars, expected):
     """OTHER_DOMINANCE = 0.50, strictly greater. At 0.0 a single foreign block
     would make a whole Norwegian ad `other`; at 0.99 the Polish ads come back
-    as Norwegian."""
+    as Norwegian.
+
+    At exactly 0.50 the verdict is now `mixed`, not `no`: OTHER_MINORITY (0.20)
+    catches it, and an ad half in Polish is bilingual by any reading. Updated
+    2026-09-25 with the OTHER_MINORITY change."""
     assert detect([blk(PL, other_chars),
                    blk(NO, 1000 - other_chars)])["doc_lang"] == expected
 
@@ -241,13 +263,34 @@ def test_4_6_unclassifiable_blocks_are_not_counted_as_norwegian(monkeypatch):
     assert r["doc_lang"] == "unknown" and r["n_scored"] == 0
 
 
-def test_4_7_danish_is_other_not_norwegian():
-    """Bokmål DESCENDS from Danish, so folding Danish into NORWEGIAN is a
-    tempting "they're the same anyway" edit. No Danish fixture existed, so it
-    passed every test while silently hiding real Danish ads."""
+def test_4_7_danish_is_scandinavian_mass_but_stays_identifiable():
+    """SUPERSEDES "danish_is_other_not_norwegian" (2026-09-24), which asserted
+    `_classify(da)[0] == "other"`. Its CONCERN was right and is kept: folding
+    Danish into Norwegian must not lose the fact that the ad is Danish. Its
+    MECHANISM was wrong — `other` derives as English-ACCESSIBLE, so routing
+    Danish there showed 12 Scandinavian-language ads to English-only seekers.
+
+    Measured: of the 26 ads classified `other`, 11 were Swedish and 1 Danish.
+    And of ads with >=10% foreign mass, 211 were detected Danish against 13
+    Polish, nearly all on plainly Norwegian text.
+
+    So Danish counts as Scandinavian mass AND is recorded in
+    `detected_nordic`, which is what the Scandinavian-seeker matrix will read.
+    """
     da = ("Vi søger en dygtig medarbejder til vores team i København. Du kommer "
           "til at arbejde med daglig drift og opfølgning på kunder.")
-    assert langid._classify(da)[0] == "other"
+    cls, iso = langid._classify(da)
+    assert cls == "no", "Danish is Scandinavian mass, not foreign"
+    assert iso == "da", "but it must remain identifiable as Danish"
+
+    r = detect([blk(da, 400)])
+    assert r["detected_nordic"] == "da", "the information must survive to the verdict"
+    assert r["doc_lang"] == "no"
+    # the guard that matters: a Danish ad is NOT readable by an English speaker
+    from finn_smart_search.understanding.census_prompt import derive_english_accessible
+    assert derive_english_accessible(
+        {"norwegian_requirement_level": "unstated",
+         "stated_working_language": "unstated"}, r["doc_lang"]) is False
 
 
 # ── 5 · the accessibility contract ──────────────────────────────────────────
@@ -272,3 +315,81 @@ def test_5_2_a_requirement_blocks_regardless_of_doc_lang():
         assert derive_english_accessible(
             {"norwegian_requirement_level": "professional",
              "stated_working_language": "unstated"}, dl) is False
+
+
+# ── Nordic-adjacent detections are not a foreign language ────────────────────
+#
+# THE BUG. Three ads carrying a FULL parallel Polish or Lithuanian translation
+# were classified `no` and therefore hidden from the seekers they target:
+#
+#   4b35916f  Murpussere til Trondheim              other 0.376 (pl)
+#   510aa5d9  Erfarne steinleggere til Trondheim    other 0.331 (pl)
+#   11fd761e  tømrerarbeid / ieškome stalių         other 0.445 (lt)
+#
+# They sit below OTHER_DOMINANCE (0.50), and `mixed` was computed as
+# en/(no+en), which ignores a third language entirely. So doc_lang = "no" ->
+# derive_english_accessible(unstated, "no") is False.
+#
+# WHY A BLANKET THRESHOLD IS THE WRONG FIX, measured. Of the ads with >=10%
+# "other" mass: da 211, sv 18, pl 13, es 3, sw 3, lt 2. Lowering
+# OTHER_DOMINANCE to 0.20 would reclassify 28 ads, and ~24 of them are Danish
+# or Swedish false positives on plainly Norwegian text — "Pepper søker
+# ekstrahjelp!", "SPAR Bygdøy søker Ekstrahjelp/Deltid". Danish and bokmål are
+# the confusion set the whole project flagged as the hard part.
+#
+# THE FIX. A Nordic-adjacent detection is not a foreign language: a Norwegian
+# speaker reads Danish and Swedish, the project already treats them as a group
+# (`scandinavian_accepted`), and lingua confuses them with bokmål. They count
+# toward the Scandinavian mass. `other` then means genuinely foreign, and a
+# foreign minority at or above MIXED_LO makes the ad bilingual.
+#
+# It corrects BOTH directions. Of the 26 currently-`other` ads, 11 are Swedish
+# and 1 Danish — and `other` derives as English-accessible, so a dozen
+# Scandinavian-language ads were being shown to English-only seekers.
+
+def test_a_danish_detection_counts_as_scandinavian_not_foreign():
+    """211 ads carry >=10% Danish-detected mass; the overwhelming majority are
+    Norwegian text. A Danish block must not push an ad toward `other`."""
+    blocks = [blk(NO, 400), blk("Vi søger en dygtig medarbejder til vores team "
+                                "i København med gode kommunikationsevner", 200)]
+    r = detect(blocks)
+    assert r["lang_mix"]["other"] == 0, "Danish must not land in the foreign mass"
+    assert r["doc_lang"] == "no"
+
+
+def test_a_swedish_detection_counts_as_scandinavian_not_foreign():
+    blocks = [blk(NO, 400), blk("Vi söker en duktig medarbetare till vårt team "
+                                "i Stockholm med goda kommunikationsfärdigheter", 200)]
+    assert detect(blocks)["lang_mix"]["other"] == 0
+
+
+def test_a_genuinely_foreign_minority_makes_the_ad_mixed():
+    """The three hidden ads' shape: a Norwegian block list followed by a full
+    parallel translation. At 0.33-0.45 foreign mass the ad IS bilingual."""
+    blocks = [blk(NO, 600), blk(PL, 300)]
+    r = detect(blocks)
+    assert r["lang_mix"]["other"] >= langid.OTHER_MINORITY
+    assert r["doc_lang"] == "mixed"
+    assert r["is_bilingual"] is True
+    assert r["detected_other"] == "pl"
+
+
+def test_a_small_foreign_footer_does_not_flip_the_verdict():
+    """The reason OTHER_MINORITY is not lower: 206 ads carry 10-20% foreign mass
+    and are monolingual Norwegian ads with a contact or location line."""
+    blocks = [blk(NO, 1200), blk(PL, 150)]
+    r = detect(blocks)
+    assert r["lang_mix"]["other"] < langid.OTHER_MINORITY
+    assert r["doc_lang"] == "no"
+
+
+def test_a_foreign_dominant_ad_is_still_other():
+    blocks = [blk(NO, 100), blk(PL, 900)]
+    assert detect(blocks)["doc_lang"] == "other"
+
+
+def test_other_minority_matches_mixed_lo():
+    """Symmetry, pinned: the threshold for "a second language is a substantial
+    minority" is one number, not two. Measured discontinuity supports it —
+    206 ads sit in 0.10-0.20 foreign mass and only 15 in 0.20-0.30."""
+    assert langid.OTHER_MINORITY == langid.MIXED_LO
