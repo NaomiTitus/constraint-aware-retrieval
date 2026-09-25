@@ -4,7 +4,7 @@
  "unscored": [],
  "extra_predictions": 0,
  "coverage": 1.0,
- "pooled_accuracy": 0.9090909090909091,
+ "pooled_accuracy": 0.8636363636363636,
  "pooled_accuracy_caveat": "Pooled accuracy is dominated by the golden set's level mix, which is a stratified sampling artifact: `desirable` is over-represented ~200x relative to the corpus. Read per_level instead.",
  "per_level": {
   "certified": {
@@ -19,8 +19,8 @@
   },
   "desirable": {
    "n": 4,
-   "correct": 4,
-   "accuracy": 1.0
+   "correct": 3,
+   "accuracy": 0.75
   },
   "fluent": {
    "n": 1,
@@ -49,22 +49,22 @@
   },
   "explicitly_not_required": {
    "n": 2,
-   "correct": 2,
-   "accuracy": 1.0
+   "correct": 1,
+   "accuracy": 0.5
   }
  },
  "invalid_levels": 0,
  "taxonomy_gap": [],
  "accessibility": {
-  "hidden_wrongly": 0,
+  "hidden_wrongly": 1,
   "shown_wrongly": 1,
   "n_accessible": 12,
   "n_blocking": 32,
-  "hidden_wrongly_rate": 0.0,
+  "hidden_wrongly_rate": 0.08333333333333333,
   "shown_wrongly_rate": 0.03125,
   "hidden_wrongly_ci95": [
-   0.0,
-   0.2425007574992425
+   0.014864709450773478,
+   0.35388592179859524
   ],
   "shown_wrongly_ci95": [
    0.005537717362550945,
@@ -73,24 +73,24 @@
  },
  "evidence": {
   "n_expected": 32,
-  "exact": 20,
+  "exact": 19,
   "different": 12,
-  "missing": 0,
+  "missing": 1,
   "spurious": 3,
   "fabricated": 0,
   "fabrication_checked": true,
   "agreement": {
-   "strict": 20,
-   "trailing_punct_only": 5,
-   "containment": 7,
+   "strict": 19,
+   "trailing_punct_only": 4,
+   "containment": 8,
    "disjoint": 0
   }
  },
  "working_language": {
   "non_default_total": 4,
-  "non_default_correct": 3,
-  "non_default_recall": 0.75,
-  "correct": 43
+  "non_default_correct": 4,
+  "non_default_recall": 1.0,
+  "correct": 44
  },
  "authorisation": {
   "n_expected": 5,
@@ -100,13 +100,15 @@
  "confusion": {
   "certified->certified": 5,
   "either_norwegian_or_english->either_norwegian_or_english": 5,
-  "desirable->desirable": 4,
+  "desirable->unstated": 1,
   "fluent->fluent": 1,
   "scandinavian_accepted->scandinavian_accepted": 7,
   "unstated->professional": 3,
   "professional->professional": 5,
   "conversational->conversational": 2,
-  "explicitly_not_required->explicitly_not_required": 2,
+  "explicitly_not_required->desirable": 1,
+  "desirable->desirable": 3,
+  "explicitly_not_required->explicitly_not_required": 1,
   "unstated->unstated": 9,
   "scandinavian_accepted->either_norwegian_or_english": 1
  }

@@ -324,3 +324,57 @@ def test_at_least_one_fewshot_span_is_an_unterminated_bullet():
                                   "certified", "scandinavian_accepted")
                     for s in spans_of(lvl) if not s.rstrip().endswith((".", "!", "?"))]
     assert unterminated, "every demonstrated span ends in punctuation; real ones do not"
+
+
+# ── v8: the prompt must state the span contract the validator enforces ────────
+#
+# census-v7 REGRESSED the metric that matters: hidden-wrongly 0 of 12 -> 2 of 12.
+# Both were span-validation demotions on ads whose LEVEL the model got right.
+#
+#   #7  quoted "...arbeidsspåket i Statnett" where the ad says "arbeidsspråket"
+#       — one missing `r`. `not_verbatim`, correctly rejected.
+#   #24 quoted "kunne prate engelsk eller ett nordisk språk", a sub-clause of
+#       "Kandidater bør ha førerkort for bil, og kunne prate engelsk eller ett
+#       nordisk språk." It starts after ", og" → starts_mid_sentence.
+#
+# #24 is MY regression. Reshaping the few-shots stripped terminal periods from
+# bullet-length spans, which taught the model to quote tighter fragments. In v6 it
+# quoted from "Kandidater" — preceded by ". ", a valid boundary — and passed.
+# Same shape as the census-v5 lesson: a plausible improvement that degraded output.
+#
+# The gap underneath is that THE PROMPT NEVER STATED WHAT MAKES A SPAN VALID.
+# census_validate demands verbatim text, >=15 characters, a language word, and a
+# sentence-or-block boundary at BOTH ends — and none of that was ever told to the
+# model. It was left implicit in the examples, so changing the examples changed
+# the behaviour. Stating the contract is strictly better than hoping it is
+# inferred.
+
+def test_the_prompt_states_the_span_must_be_verbatim():
+    low = SYSTEM.lower()
+    assert re.search(r"character for character|exactly as written|copy .{0,20}exactly", low), \
+        "the prompt must demand a character-exact quote; a one-letter slip demotes the record"
+
+
+def test_the_prompt_forbids_quoting_a_sub_clause():
+    """The #24 fix. A span must begin where a sentence or bullet begins."""
+    low = SYSTEM.lower()
+    assert re.search(r"complete sentence|whole sentence|hele setningen", low)
+    assert re.search(r"(sub-?clause|mid-sentence|midt i en setning|part of a sentence)", low), \
+        "the prompt must forbid starting a quote mid-sentence"
+
+
+def test_the_prompt_says_no_span_beats_an_approximate_one():
+    """The trade the validator already makes: a demoted record is better than a
+    falsified one. If the model cannot quote exactly it should return nothing."""
+    low = SYSTEM.lower()
+    assert re.search(r"no span|empty list|ingen sitat|rather than .{0,30}approximat"
+                     r"|better .{0,30}no quote", low)
+
+
+def test_the_prompt_states_the_minimum_span_length():
+    assert re.search(r"15 characters|15 tegn", SYSTEM.lower())
+
+
+def test_prompt_version_advanced_past_v7():
+    assert cp.PROMPT_VERSION not in ("census-v5", "census-v6", "census-v7"), \
+        "bump PROMPT_VERSION or the cache returns the v7 demotions"

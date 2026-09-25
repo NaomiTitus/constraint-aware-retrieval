@@ -1,0 +1,334 @@
+<title>Sealed Set Labelling</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Light palette on bare :root. Cool institutional neutrals — the corpus is
+     Norwegian public-sector — with one deep Nordic green for "decided".
+     Three type roles, each doing a job: serif for text being JUDGED, sans for
+     chrome being OPERATED, mono for the span that must be copied EXACTLY. */
+  :root{
+    --ink:#14181d; --paper:#f6f7f6; --card:#fff; --rule:#dadedb;
+    --accent:#1c6a58; --accent-soft:#e6efeb; --warn:#9c4f28;
+    --warn-soft:#f6ece6; --muted:#69727c; --hit:#fff9e3; --hit-edge:#e8d9a0;
+    --serif:"Source Serif 4",Georgia,serif;
+    --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --ink:#e6e9e7; --paper:#14171a; --card:#1b1f22; --rule:#2e3438;
+    --accent:#5fbfa4; --accent-soft:#1d2e29; --warn:#d98a5e;
+    --warn-soft:#2d211a; --muted:#98a1a9; --hit:#2b2718; --hit-edge:#4d452a;
+  }}
+  :root[data-theme="dark"]{
+    --ink:#e6e9e7; --paper:#14171a; --card:#1b1f22; --rule:#2e3438;
+    --accent:#5fbfa4; --accent-soft:#1d2e29; --warn:#d98a5e;
+    --warn-soft:#2d211a; --muted:#98a1a9; --hit:#2b2718; --hit-edge:#4d452a;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);
+       font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{text-wrap:balance;margin:0}
+  a{color:var(--accent)}
+
+  header{position:sticky;top:0;z-index:20;background:var(--paper);
+         border-bottom:1px solid var(--rule);padding:14px 20px}
+  .hrow{display:flex;gap:16px;align-items:baseline;flex-wrap:wrap;
+        max-width:1180px;margin:0 auto}
+  h1{font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:-.01em}
+  .warnbar{font-size:12.5px;color:var(--warn);background:var(--warn-soft);
+           border:1px solid var(--warn);border-radius:4px;padding:3px 9px}
+  .prog{margin-left:auto;display:flex;gap:10px;align-items:center;
+        font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
+  .bar{width:150px;height:6px;background:var(--rule);border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--accent);width:0;
+         transition:width .25s ease}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:20px;
+        display:grid;grid-template-columns:250px 1fr;gap:22px;align-items:start}
+  @media (max-width:880px){.wrap{grid-template-columns:1fr}}
+
+  nav{position:sticky;top:76px;max-height:calc(100vh - 100px);overflow-y:auto;
+      background:var(--card);border:1px solid var(--rule);border-radius:7px}
+  nav ol{list-style:none;margin:0;padding:5px}
+  nav li{margin:0}
+  nav button{width:100%;text-align:left;background:none;border:0;color:var(--ink);
+             font:inherit;font-size:12.5px;padding:6px 8px;border-radius:5px;
+             cursor:pointer;display:flex;gap:7px;align-items:center}
+  nav button:hover{background:var(--paper)}
+  nav button[aria-current="true"]{background:var(--accent-soft);
+             box-shadow:inset 2px 0 0 var(--accent)}
+  .dot{width:7px;height:7px;border-radius:99px;background:var(--rule);flex:none}
+  .dot.done{background:var(--accent)}
+  nav .nm{color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
+  nav .st{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:7px;
+        padding:20px 22px;margin-bottom:16px}
+  .strat{display:inline-block;font-family:var(--mono);font-size:11.5px;
+         letter-spacing:.02em;color:var(--accent);background:var(--accent-soft);
+         padding:2px 7px;border-radius:4px}
+  .adtitle{font-family:var(--serif);font-size:22px;font-weight:600;
+           margin:9px 0 6px;letter-spacing:-.01em}
+  .why{font-size:12.5px;color:var(--muted);border-left:2px solid var(--rule);
+       padding-left:10px;margin:10px 0 0}
+  .meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);
+        margin-top:12px;padding-top:11px;border-top:1px solid var(--rule)}
+  .meta b{color:var(--ink);font-weight:500}
+  .trunc{color:var(--warn);font-weight:500}
+
+  h3{font-size:12px;text-transform:uppercase;letter-spacing:.07em;
+     color:var(--muted);font-weight:600;margin:0 0 9px}
+  .hintline{font-size:12.5px;color:var(--muted);margin:-4px 0 11px}
+
+  .blk{display:block;width:100%;text-align:left;font-family:var(--serif);
+       font-size:15px;line-height:1.55;background:var(--paper);color:var(--ink);
+       border:1px solid var(--rule);border-left:3px solid var(--rule);
+       border-radius:5px;padding:9px 12px;margin-bottom:7px;cursor:pointer}
+  .blk:hover{border-color:var(--accent);border-left-color:var(--accent)}
+  .blk.hit{background:var(--hit);border-left-color:var(--hit-edge)}
+  .blk.chosen{border-color:var(--accent);border-left-width:3px;
+              border-left-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+  .blk small{display:block;font-family:var(--sans);font-size:11px;
+             color:var(--muted);margin-top:4px}
+
+  .levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:7px}
+  .lv{display:flex;gap:9px;align-items:baseline;background:var(--paper);
+      border:1px solid var(--rule);border-radius:5px;padding:8px 10px;
+      cursor:pointer;font-size:13.5px;text-align:left;color:var(--ink);
+      font-family:inherit}
+  .lv:hover{border-color:var(--accent)}
+  .lv[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);
+      box-shadow:inset 0 0 0 1px var(--accent)}
+  .lv kbd{font-family:var(--mono);font-size:10.5px;color:var(--muted);
+      border:1px solid var(--rule);border-radius:3px;padding:0 4px;flex:none}
+  .lv span{display:block}
+  .lv em{display:block;font-style:normal;font-size:11.5px;color:var(--muted)}
+
+  label.f{display:block;font-size:12px;text-transform:uppercase;
+          letter-spacing:.06em;color:var(--muted);font-weight:600;margin:14px 0 5px}
+  textarea,input,select{width:100%;font-family:var(--mono);font-size:13px;
+          background:var(--paper);color:var(--ink);border:1px solid var(--rule);
+          border-radius:5px;padding:8px 10px}
+  textarea{min-height:58px;resize:vertical;line-height:1.45}
+  select{font-family:var(--sans)}
+  .spanok{font-size:12px;margin-top:5px;font-family:var(--mono)}
+  .spanok.y{color:var(--accent)} .spanok.n{color:var(--warn)}
+
+  .navbtns{display:flex;gap:9px;margin-top:18px}
+  button.act{font:inherit;font-size:13.5px;font-weight:500;cursor:pointer;
+       border-radius:5px;padding:8px 15px;border:1px solid var(--rule);
+       background:var(--card);color:var(--ink)}
+  button.act.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  :root[data-theme="dark"] button.act.primary,
+  @media (prefers-color-scheme:dark){button.act.primary{color:#0e1412}}
+  button.act:hover{border-color:var(--accent)}
+
+  .pf{font-size:12.5px;background:var(--warn-soft);border:1px solid var(--warn);
+      border-radius:5px;padding:9px 11px;margin-bottom:12px}
+  .pf b{color:var(--warn)}
+  .pf code{font-family:var(--mono);font-size:12px}
+
+  #out{font-family:var(--mono);font-size:11.5px;min-height:150px}
+  .kbd-help{font-size:12px;color:var(--muted);margin-top:8px}
+  .kbd-help kbd{font-family:var(--mono);border:1px solid var(--rule);
+      border-radius:3px;padding:0 4px}
+</style>
+
+<header>
+  <div class="hrow">
+    <h1>Sealed set — labelling</h1>
+    <span class="warnbar">HELD OUT · never tune the prompt against these</span>
+    <div class="prog">
+      <span id="ptext">0 / 0</span>
+      <span class="bar"><i id="pbar"></i></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav><ol id="list"></ol></nav>
+  <main id="main"></main>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const KEY = "sealed-labels-v1";
+let labels = {}, cur = 0;
+try { labels = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { labels = {}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(labels)); } catch (e) {} };
+const esc = s => String(s == null ? "" : s);
+const rec = n => (labels[n] = labels[n] || {level:null, span:"", worklang:"", auth:"", note:""});
+const done = n => !!(labels[n] && labels[n].level);
+
+function renderList(){
+  const ol = document.getElementById("list");
+  ol.innerHTML = "";
+  DATA.ads.forEach((a, i) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.setAttribute("aria-current", i === cur ? "true" : "false");
+    b.innerHTML = `<span class="dot ${done(a.n) ? "done" : ""}"></span>
+      <span class="nm">${a.n}</span><span class="st">${esc(a.stratum)}</span>`;
+    b.onclick = () => { cur = i; render(); };
+    li.appendChild(b); ol.appendChild(li);
+  });
+  const n = DATA.ads.filter(a => done(a.n)).length;
+  document.getElementById("ptext").textContent = `${n} / ${DATA.ads.length}`;
+  document.getElementById("pbar").style.width = (100 * n / DATA.ads.length) + "%";
+}
+
+function render(){
+  const a = DATA.ads[cur], r = rec(a.n);
+  const m = document.getElementById("main");
+  m.innerHTML = `
+    <div class="card">
+      <span class="strat">${esc(a.stratum)}</span>
+      <div class="adtitle">${esc(a.title)}</div>
+      <p class="why">Why this ad is in the set — ${esc(DATA.why[a.stratum] || "")}</p>
+      <div class="meta">
+        <span><b>${esc(a.nav || "?")}</b> occupation</span>
+        <span>role_family <b>${esc(a.family || "?")}</b></span>
+        <span>title <b>${esc(a.std || "?")}</b></span>
+        <span>doc_lang <b>${esc(a.doc_lang)}</b></span>
+        <span>${a.n_chars} chars ${a.truncated
+          ? '<span class="trunc">· TRUNCATED at 3500+2500, the cut lands mid-block</span>' : ""}</span>
+      </div>
+    </div>
+
+    ${a.prefill && a.prefill.norwegian_requirement_level ? `
+      <div class="pf"><b>Opus suggestion — unconfirmed, not gold.</b>
+        level <code>${esc(a.prefill.norwegian_requirement_level)}</code>,
+        working language <code>${esc(a.prefill.stated_working_language)}</code>.
+        <div style="margin-top:5px">${esc(a.prefill.reasoning)}</div>
+        <button class="act" style="margin-top:8px" id="takepf">Accept as my label</button>
+      </div>` : ""}
+
+    <div class="card">
+      <h3>The advertisement's language lines</h3>
+      <p class="hintline">Highlighted lines carry a language word; the line above each is
+        shown because whether a quote starts at a boundary depends on its neighbour.
+        <strong>Click a line to set it as the evidence span</strong> — that guarantees the
+        character-exact copy the validator requires.</p>
+      <div id="blocks"></div>
+    </div>
+
+    <div class="card">
+      <h3>Your label</h3>
+      <div class="levels" id="levels"></div>
+
+      <label class="f" for="span">evidence_span — must be verbatim, a complete sentence or bullet</label>
+      <textarea id="span" spellcheck="false">${esc(r.span)}</textarea>
+      <div class="spanok" id="spanok"></div>
+
+      <label class="f" for="wl">stated_working_language</label>
+      <select id="wl">${DATA.worklang.map(w =>
+        `<option value="${w}"${r.worklang === w ? " selected" : ""}>${w}</option>`).join("")}</select>
+
+      <label class="f" for="auth">authorisation_required — a licence to practise, not a language rule</label>
+      <input id="auth" spellcheck="false" placeholder="e.g. Norsk autorisasjon som sykepleier — or leave blank"
+             value="${esc(r.auth).replace(/"/g, "&quot;")}">
+
+      <label class="f" for="note">note — anything a reader would need to follow your reasoning</label>
+      <textarea id="note">${esc(r.note)}</textarea>
+
+      <div class="navbtns">
+        <button class="act" id="prev">← previous</button>
+        <button class="act primary" id="next">next ad →</button>
+        <button class="act" id="exp" style="margin-left:auto">Show JSON to copy</button>
+      </div>
+      <p class="kbd-help"><kbd>1</kbd>–<kbd>9</kbd> pick a level ·
+        <kbd>j</kbd>/<kbd>k</kbd> next / previous ad</p>
+    </div>
+
+    <div class="card" id="expcard" hidden>
+      <h3>Paste this back into the repo</h3>
+      <p class="hintline">Save as <code>data/worksheet/sealed_labels.json</code>. Downloads are
+        blocked inside the artifact viewer, so copy from here.</p>
+      <textarea id="out" spellcheck="false"></textarea>
+      <div class="navbtns"><button class="act" id="copy">Copy to clipboard</button></div>
+    </div>`;
+
+  const bl = document.getElementById("blocks");
+  a.blocks.forEach(b => {
+    const el = document.createElement("button");
+    el.className = "blk" + (b.hit ? " hit" : "") + (r.span === b.text ? " chosen" : "");
+    el.innerHTML = esc(b.text) + (b.hit ? "<small>carries a language word</small>" : "");
+    el.onclick = () => { r.span = b.text; save(); render(); };
+    bl.appendChild(el);
+  });
+
+  const lv = document.getElementById("levels");
+  DATA.levels.forEach((L, i) => {
+    const el = document.createElement("button");
+    el.className = "lv"; el.type = "button";
+    el.setAttribute("aria-pressed", r.level === L ? "true" : "false");
+    el.innerHTML = `<kbd>${i + 1}</kbd><span>${L}<em>${esc(DATA.hint[L] || "")}</em></span>`;
+    el.onclick = () => { r.level = L; save(); renderList(); render(); };
+    lv.appendChild(el);
+  });
+
+  const checkSpan = () => {
+    const t = document.getElementById("span").value.trim();
+    const ok = document.getElementById("spanok");
+    if (!t) { ok.className = "spanok"; ok.textContent = "empty — valid if the ad states nothing"; return; }
+    const exact = a.blocks.some(b => b.text === t);
+    const inside = a.blocks.some(b => b.text.indexOf(t) >= 0);
+    ok.className = "spanok " + (exact ? "y" : "n");
+    ok.textContent = exact ? "✓ matches a whole line exactly"
+      : inside ? "⚠ part of a line — the validator rejects a quote that starts mid-sentence"
+      : "⚠ not found in the lines above — retype it or click the line instead";
+  };
+  const sp = document.getElementById("span");
+  sp.oninput = () => { r.span = sp.value; save(); checkSpan(); };
+  checkSpan();
+
+  document.getElementById("wl").onchange = e => { r.worklang = e.target.value; save(); };
+  document.getElementById("auth").oninput = e => { r.auth = e.target.value; save(); };
+  document.getElementById("note").oninput = e => { r.note = e.target.value; save(); };
+  document.getElementById("prev").onclick = () => go(-1);
+  document.getElementById("next").onclick = () => go(1);
+  const pf = document.getElementById("takepf");
+  if (pf) pf.onclick = () => {
+    r.level = a.prefill.norwegian_requirement_level;
+    r.worklang = a.prefill.stated_working_language || "";
+    r.span = a.prefill.evidence_span || "";
+    r.auth = a.prefill.authorisation_required || "";
+    save(); renderList(); render();
+  };
+  document.getElementById("exp").onclick = () => {
+    const c = document.getElementById("expcard");
+    c.hidden = false;
+    document.getElementById("out").value = JSON.stringify(
+      DATA.ads.map(x => ({
+        n: x.n, uuid: x.uuid, stratum: x.stratum, title: x.title,
+        doc_lang: x.doc_lang, nav_category: x.nav,
+        expected: {
+          norwegian_requirement_level: (labels[x.n] || {}).level || null,
+          evidence_span: ((labels[x.n] || {}).span || "").trim() || null,
+          stated_working_language: (labels[x.n] || {}).worklang || null,
+          authorisation_required: ((labels[x.n] || {}).auth || "").trim() || null
+        },
+        note: ((labels[x.n] || {}).note || "").trim() || null,
+        labelled_by: "human", confirmed: !!(labels[x.n] || {}).level
+      })), null, 1);
+    c.scrollIntoView({behavior: "smooth"});
+    document.getElementById("copy").onclick = async () => {
+      try { await navigator.clipboard.writeText(document.getElementById("out").value);
+            document.getElementById("copy").textContent = "Copied"; } catch (e) {}
+    };
+  };
+  renderList();
+  window.scrollTo({top: 0});
+}
+
+function go(d){ cur = Math.max(0, Math.min(DATA.ads.length - 1, cur + d)); render(); }
+document.addEventListener("keydown", e => {
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if (e.key === "j") go(1);
+  if (e.key === "k") go(-1);
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= DATA.levels.length) {
+    rec(DATA.ads[cur].n).level = DATA.levels[n - 1]; save(); renderList(); render();
+  }
+});
+render();
+</script>

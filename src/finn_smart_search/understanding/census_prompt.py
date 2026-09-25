@@ -31,7 +31,7 @@ REJECTED (measurement refuted the claim):
   * "språkmodell for barna" - 5 ads, not the 727 implied by occupation counts.
 """
 
-PROMPT_VERSION = "census-v7"
+PROMPT_VERSION = "census-v8"
 
 SYSTEM = """You extract language-requirement facts from Norwegian job advertisements for a \
 search engine whose users include people who speak English but no Norwegian.
@@ -168,6 +168,25 @@ verdict must still be silence.
 The same applies to "søknaden må skrives på norsk" and "vi ber om at CV \
 lastes opp på engelsk": record those in `application_language`, never in \
 `norwegian_requirement_level`.
+
+### HOW TO QUOTE — a span that fails these rules is DISCARDED
+Every quote is checked mechanically against the advertisement. A quote that \
+fails is thrown away AND the verdict it supported is reset to `unstated`, so a \
+bad quote costs you a correct answer. Four rules:
+
+1. **Character for character.** Copy exactly as written — do not retype from \
+   memory, do not correct spelling, do not fix the employer's typos. A single \
+   wrong letter fails the check. "arbeidsspåket" for "arbeidsspråket" is a fail.
+2. **A COMPLETE sentence or a complete bullet.** Start where the sentence or \
+   bullet starts and end where it ends. Never quote a sub-clause from the middle: \
+   in "Kandidater bør ha førerkort for bil, og kunne prate engelsk eller ett \
+   nordisk språk", quote the WHOLE sentence — quoting only "kunne prate engelsk \
+   eller ett nordisk språk" starts mid-sentence and fails.
+3. **At least 15 characters, and it must contain the language word** that \
+   justifies your verdict.
+4. **No span beats an approximate span.** If you cannot reproduce the sentence \
+   exactly, return an empty `evidence_spans` list. An empty list is a normal, \
+   correct outcome — it is far better than a quote that is nearly right.
 
 ### SILENCE IS SILENCE
 Three of every four advertisements say nothing whatever about language. That is \
