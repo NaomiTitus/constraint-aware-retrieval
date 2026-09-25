@@ -16,6 +16,8 @@ signal and survive random-sample evaluation.
 """
 import pytest
 
+from tests.conftest import requires_corpus
+
 from finn_smart_search.understanding import dedup
 
 pytestmark = pytest.mark.unit
@@ -168,6 +170,7 @@ def test_b12b_fan_out_raises_when_a_representative_is_missing():
 # ── B13 · corpus characterisation ────────────────────────────────────────────
 
 @pytest.mark.integration
+@requires_corpus
 def test_b13_corpus_clustering():
     """Pinned against the real corpus. Requires data/ads.duckdb, so it is marked
     integration and excluded from CI."""

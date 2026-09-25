@@ -38,4 +38,10 @@ markers = [
 # corpus or an API key, so they are deselected by default and opted into with
 # `-m integration`. Without this, `pytest tests/unit` picked up an
 # integration-marked corpus test and failed whenever the database was locked.
-addopts = "-q --strict-markers -m 'not integration and not golden and not slow'"
+# Integration tests RUN BY DEFAULT. They were excluded, and on 2026-09-25 that
+# let golden #15's relabelling be committed with the golden-drift guards red --
+# `make test` never executed them, so they read as coverage while enforcing
+# nothing. Corpus-dependent tests skip with a reason when data/ is absent
+# (tests/conftest.py: requires_corpus), so a fresh clone still runs clean.
+# `golden` needs an API key and `slow` is opt-in; those stay excluded.
+addopts = "-q --strict-markers -m 'not golden and not slow'"

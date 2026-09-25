@@ -3,18 +3,37 @@
 Golden drift is the classic route to a flattering number: relabel the hard ads
 and every metric improves. These assertions make that a visible, deliberate act
 rather than a quiet edit.
+
+WHY MOST OF THIS FILE IS NOW `unit`. It was entirely `integration`, and
+`addopts` carries `-m "not integration"`, so none of it ran in the default
+suite. The consequence was demonstrated on 2026-09-25: golden #15's level was
+revised by owner ruling and COMMITTED with the drift guards red, because
+`make test` never executed them. A guard that does not run is worse than no
+guard, because it reads as coverage.
+
+Every assertion here except the span check is a pure read of a JSON file with no
+I/O, so there was never a reason for it to be integration-marked. Only
+`test_expected_spans_are_verbatim_in_their_ads` needs data/ads.duckdb and stays
+integration.
 """
 import json
 from collections import Counter
 
 import pytest
 
-pytestmark = [pytest.mark.integration]
+from tests.conftest import requires_corpus
 
+# Drift guards run BY DEFAULT. See the module docstring: these are JSON reads.
+pytestmark = [pytest.mark.unit]
+
+# Regenerate ONLY on a recorded owner ruling, never to make a red test green.
+#   2026-09-25  #15 explicitly_not_required -> certified (D15, owner ruling):
+#               certified 4->5, explicitly_not_required 3->2, accessible 13->12.
 EXPECTED_MIX = {"unstated": 12, "scandinavian_accepted": 8,
                 "either_norwegian_or_english": 5, "professional": 5,
-                "certified": 4, "desirable": 4, "explicitly_not_required": 3,
+                "certified": 5, "desirable": 4, "explicitly_not_required": 2,
                 "conversational": 2, "fluent": 1}
+N_ACCESSIBLE = 12
 
 
 @pytest.fixture(scope="module")
@@ -32,8 +51,11 @@ def test_the_level_mix_has_not_drifted(golden):
     assert dict(mix) == EXPECTED_MIX
 
 
-def test_thirteen_ads_derive_as_accessible(golden):
-    assert sum(1 for g in golden if g["derived_accessible"]) == 13
+def test_the_accessible_count_has_not_drifted(golden):
+    """Renamed off the literal: `test_thirteen_...` had to be renamed as well as
+    edited when the count changed, which is friction that encourages editing the
+    number and leaving the stale name."""
+    assert sum(1 for g in golden if g["derived_accessible"]) == N_ACCESSIBLE
 
 
 def test_every_level_in_the_enum_is_represented(golden):
@@ -42,6 +64,8 @@ def test_every_level_in_the_enum_is_represented(golden):
     assert set(EXPECTED_MIX) == enum, "a level with no golden example cannot be measured"
 
 
+@pytest.mark.integration
+@requires_corpus
 def test_expected_spans_are_verbatim_in_their_ads(golden):
     """A golden label quoting a sentence the ad does not contain would make that
     ad permanently unwinnable."""

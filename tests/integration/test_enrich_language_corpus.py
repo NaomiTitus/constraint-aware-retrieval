@@ -16,6 +16,9 @@ EXPECTED_SHARE = {"no": (0.93, 0.97), "en": (0.03, 0.05),
 @pytest.fixture(scope="module")
 def con():
     from finn_smart_search.ingest import store
+    from tests.conftest import CORPUS
+    if not CORPUS.exists():
+        pytest.skip(f"needs {CORPUS.name} (gitignored; run `make ingest`)")
     return store.connect("data/ads.duckdb")
 
 
