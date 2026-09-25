@@ -3,3 +3,41 @@ silver: transforming 10166 ads
 silver: {'ads': 10166, 'locations': 12003, 'categories': 34742}  51s
 
 === language enrichment (NORDIC_ADJACENT + OTHER_MINORITY) ===
+language: 10166 ads to process
+  500/10166
+  1000/10166
+  1500/10166
+  2000/10166
+  2500/10166
+  3000/10166
+  3500/10166
+  4000/10166
+  4500/10166
+  5000/10166
+  5500/10166
+  6000/10166
+  6500/10166
+  7000/10166
+  7500/10166
+  8000/10166
+  8500/10166
+  9000/10166
+  9500/10166
+  10000/10166
+langid: {'processed': 10166, 'distribution': {'no': 9695, 'en': 380, 'mixed': 80, 'other': 11}}  885s
+
+=== doc_lang distribution ===
+  no       9695
+  en       380
+  mixed    80
+  other    11
+
+=== the three previously hidden ads ===
+Traceback (most recent call last):
+  File "<stdin>", line 14, in <module>
+_duckdb.BinderException: Binder Error: Table "l" does not have a column named "detected_nordic"
+
+Candidate bindings: : "detected_other"
+
+LINE 1: SELECT l.doc_lang, l.detected_other, l.detected_nordic
+                                             ^

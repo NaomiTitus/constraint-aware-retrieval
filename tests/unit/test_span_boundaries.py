@@ -392,3 +392,111 @@ def test_a_bullet_glyph_still_opens_a_span_via_furniture():
     for glyph in ("-", "•", "*", "–"):
         text = f"Om oss\n{glyph} Gode norskkunnskaper er et krav\nOppstart"
         assert v._span_ok("Gode norskkunnskaper er et krav", text) == (True, ""), glyph
+
+
+# ── truncation must not manufacture a boundary ────────────────────────────────
+#
+# validate() receives `sent_text` from prepare(), which for a long ad is
+# body[:HEAD_CHARS] + "\n[...]\n" + body[-TAIL_CHARS:]. 528 ads (5.2%) are
+# truncated, and the head cut lands MID-BLOCK in 519 of them. The inserted
+# newline then turns an arbitrary mid-sentence cut into a block edge, so a
+# sentence-truncated fragment ending exactly at the cut passes every rule.
+#
+# Measured: 28 of the 528 truncated ads accept such a fragment today. Real case
+# bca7d941 accepts "...kommunikasjonsevner på norsk eller et annet skandinavisk
+# språk, samt p" — where the cut removed "å engelsk.", the ENGLISH HALF of the
+# disjunction. The span supports `either_norwegian_or_english` on evidence whose
+# second half was deleted by our own truncation.
+
+def _truncated_head_fixture():
+    """A body whose HEAD cut lands INSIDE a language sentence.
+
+    Built arithmetically rather than guessed: prepare() truncates only above
+    HEAD_CHARS + TAIL_CHARS (6,000), and the cut must fall mid-sentence for this
+    to test anything. The first draft used a 3,446-char body, which is not
+    truncated at all — so the test passed while asserting nothing."""
+    from finn_smart_search.understanding.census_prompt import HEAD_CHARS, TAIL_CHARS
+    sentence = "Gode norskkunnskaper og god engelsk er et krav for denne stillingen"
+    filler = "Vi er en stor arbeidsgiver i regionen. " * 200
+    pad = HEAD_CHARS - 30 - len("Krav til stillingen\n")
+    body = ("Krav til stillingen\n" + filler[:pad] + "\n" + sentence + "\n"
+            + "Vi tilbyr gode betingelser. " * 120)
+    assert len(body) > HEAD_CHARS + TAIL_CHARS, len(body)
+    return body
+
+
+def test_a_fragment_ending_at_the_truncation_cut_is_rejected():
+    body = _truncated_head_fixture()
+    sent = v.prepare("t", body, "no")["sent_text"]
+    assert "[...]" in sent, "fixture must actually be truncated"
+    head = sent[:sent.index("\n[...]")]
+    frag = head[head.rfind("\n") + 1:]
+    assert len(frag) >= 15 and v.LANG_TOKEN.search(frag), \
+        f"fixture must put a language fragment at the cut, got {frag[-50:]!r}"
+    ok, why = v._span_ok(frag, sent)
+    assert not ok, f"a fragment cut by our own truncation was accepted: {frag[-40:]!r}"
+    assert why == "truncated_fragment", why
+
+
+def test_a_fragment_starting_at_the_truncation_cut_is_rejected():
+    from finn_smart_search.understanding.census_prompt import HEAD_CHARS, TAIL_CHARS
+    sentence = "norsk og engelsk kreves begge steder i denne stillingen"
+    body = ("Krav\n" + "Vi er en stor arbeidsgiver. " * 200 + "\n"
+            + "Vi tilbyr gode vilkår. " * 90 + sentence + "\nSlutt")
+    assert len(body) > HEAD_CHARS + TAIL_CHARS
+    sent = v.prepare("t", body, "no")["sent_text"]
+    tail = sent[sent.index("[...]") + 5:].lstrip("\n")
+    frag = tail.split("\n")[0]
+    if len(frag) >= 15 and v.LANG_TOKEN.search(frag):
+        ok, why = v._span_ok(frag, sent)
+        assert not ok, f"accepted a fragment starting at the cut: {frag[:40]!r}"
+        assert why == "truncated_fragment", why
+
+
+def test_an_untruncated_ad_is_unaffected():
+    """The guard must not cost anything on the 94.8% of ads that are not cut."""
+    body = "Krav til stillingen\nGode norskkunnskaper er et krav\nOppstart"
+    sent = v.prepare("t", body, "no")["sent_text"]
+    assert "[...]" not in sent
+    assert v._span_ok("Gode norskkunnskaper er et krav", sent) == (True, "")
+
+
+# ── non-bokmål evidence (measured) ───────────────────────────────────────────
+#
+# Every fixture in this file was bokmål. Corpus: 385 ads are doc_lang=en (3.8%),
+# 66 mixed, 642 carry nynorsk markers, 144 mention samisk, 106 bergenstest. And
+# of the 169 real emitted spans, 4 are English ("Language: Scandinavian or
+# English", "Excellent written and spoken English...") and several nynorsk.
+#
+# Blocks whose ONLY language token is a given alternative: `norwegian` 574,
+# `english` 354, `språk` 702, `samisk` 68, `bergenstest` 39, `munnleg`/`skriftleg`
+# 33, `bokmål` 8, `scandinavian` 12. Deleting the English half of LANG_TOKEN
+# survived all 34 tests in this file — 940 blocks would lose their only token,
+# every span quoting them becomes `no_language_token`, and the verdict demotes to
+# `unstated`. That is the 55%-demotion mechanism restricted to the English and
+# mixed ads. Same class as the `dokument`/`documentation` blind spot in D11.
+
+ENGLISH_AD = ("About the role\n"
+              "Excellent written and spoken English is required for this position\n"
+              "Norwegian is an advantage but not a requirement")
+NYNORSK_AD = ("Om stillinga\n"
+              "Du må ha god kunnskap i norsk, munnleg og skriftleg framstilling\n"
+              "Oppstart etter avtale")
+SAMISK_AD = ("Om stillingen\n"
+             "Kunnskap i samisk språk og kultur er et krav for stillingen\n"
+             "Oppstart snarest")
+BERGENSTEST_AD = ("Krav til stillingen\n"
+                  "Bestått Bergenstesten eller tilsvarande dokumentasjon\n"
+                  "Oppstart etter avtale")
+
+
+@pytest.mark.parametrize("span,text", [
+    ("Excellent written and spoken English is required for this position", ENGLISH_AD),
+    ("Norwegian is an advantage but not a requirement", ENGLISH_AD),
+    ("Du må ha god kunnskap i norsk, munnleg og skriftleg framstilling", NYNORSK_AD),
+    ("Kunnskap i samisk språk og kultur er et krav for stillingen", SAMISK_AD),
+    ("Bestått Bergenstesten eller tilsvarande dokumentasjon", BERGENSTEST_AD),
+])
+def test_non_bokmal_evidence_is_accepted(span, text):
+    ok, why = v._span_ok(span, text)
+    assert ok, f"rejected legitimate non-bokmål evidence: {why}"

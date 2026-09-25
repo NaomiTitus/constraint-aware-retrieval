@@ -25,8 +25,23 @@ DDL = """
 CREATE TABLE IF NOT EXISTS ad_language (
     uuid VARCHAR PRIMARY KEY, doc_lang VARCHAR, lang_mix JSON,
     detected_other VARCHAR, is_bilingual BOOLEAN, n_scored INTEGER,
-    confidence VARCHAR, langid_version VARCHAR, detected_at TIMESTAMPTZ);
+    confidence VARCHAR, langid_version VARCHAR, detected_at TIMESTAMPTZ,
+    detected_nordic VARCHAR);
 """
+
+
+def ensure_schema(con) -> None:
+    """Create the table, and MIGRATE one that predates `detected_nordic`.
+
+    `CREATE TABLE IF NOT EXISTS` does not add a column to an existing table, so
+    the corpus database -- written before the field existed -- would keep
+    failing every INSERT. Additive: existing rows keep their verdicts and carry
+    NULL until the next enrichment.
+    """
+    con.execute(DDL)
+    cols = {r[0] for r in con.execute("DESCRIBE ad_language").fetchall()}
+    if "detected_nordic" not in cols:
+        con.execute("ALTER TABLE ad_language ADD COLUMN detected_nordic VARCHAR")
 
 
 def _todo(con, force: bool) -> list[tuple[str, str]]:
@@ -48,14 +63,17 @@ def _flush(con, buf: list) -> int:
     never replaced on a version bump — went undetected."""
     if not buf:
         return 0
-    con.executemany("INSERT OR REPLACE INTO ad_language VALUES (?,?,?,?,?,?,?,?,?)", buf)
+    con.executemany(
+        "INSERT OR REPLACE INTO ad_language (uuid, doc_lang, lang_mix, "
+        "detected_other, is_bilingual, n_scored, confidence, langid_version, "
+        "detected_at, detected_nordic) VALUES (?,?,?,?,?,?,?,?,?,?)", buf)
     n = len(buf)
     buf.clear()
     return n
 
 
 def run(con, *, force: bool = False, log=print, batch: int = 500) -> dict:
-    con.execute(DDL)
+    ensure_schema(con)
     todo = _todo(con, force)
     log(f"language: {len(todo)} ads to process")
 
@@ -65,7 +83,8 @@ def run(con, *, force: bool = False, log=print, batch: int = 500) -> dict:
         dist[r["doc_lang"]] += 1
         buf.append([uuid, r["doc_lang"], json.dumps(r["lang_mix"]),
                     r["detected_other"], r["is_bilingual"], r["n_scored"],
-                    r["confidence"], LANGID_VERSION, datetime.now(timezone.utc)])
+                    r["confidence"], LANGID_VERSION, datetime.now(timezone.utc),
+                    r["detected_nordic"]])
         if len(buf) >= batch:
             done += _flush(con, buf)
             log(f"  {done}/{len(todo)}")

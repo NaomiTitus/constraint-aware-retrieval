@@ -81,6 +81,22 @@ def prepare(title: str, body: str, doc_lang: str) -> dict:
             "truncated": truncated, "sent_text": sent}
 
 
+# The marker prepare() inserts at a truncation cut. The cut lands MID-BLOCK in
+# 519 of the 528 truncated ads, and the surrounding newlines make it look like a
+# block edge — so a sentence cut in half by US passed every boundary rule.
+# Measured: 28 truncated ads accepted such a fragment, one of them quoting a
+# disjunction whose "å engelsk." half our own truncation had deleted.
+TRUNCATION_MARKER = "[...]"
+
+
+def _touches_truncation(n_span: str, n_text: str, i: int) -> bool:
+    """True if this occurrence begins or ends flush against a truncation cut."""
+    before = n_text[:i]
+    after = n_text[i + len(n_span):]
+    return (before.rstrip(" \t\n").endswith(TRUNCATION_MARKER)
+            or after.lstrip(" \t\n").startswith(TRUNCATION_MARKER))
+
+
 def _span_ok(span: str, sent_text: str) -> tuple[bool, str]:
     """Is this span defensible evidence?
 
@@ -113,6 +129,8 @@ def _span_ok(span: str, sent_text: str) -> tuple[bool, str]:
     i = n_text.find(n_span)
     while i != -1:
         reason = _boundaries_ok(n_span, n_text, i)
+        if not reason and _touches_truncation(n_span, n_text, i):
+            reason = "truncated_fragment"
         if not reason:
             return True, ""
         first_reason = first_reason or reason

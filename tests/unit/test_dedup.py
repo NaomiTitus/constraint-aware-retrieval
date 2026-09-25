@@ -259,3 +259,46 @@ def test_fan_out_shares_one_object_across_a_cluster():
     g = {"sig": ["a", "b"]}
     out = dedup.fan_out(g, {"a": {"level": "professional"}})
     assert out["a"] is out["b"]
+
+
+
+def test_bare_digit_language_levels_are_also_distinguished():
+    """68 corpus ads state the language level as a BARE DIGIT, which `_DIGITS`
+    masked to "#": "norskprøve 3" (13 ads), "nivå 2".."nivå 5" (33), "trinn N"
+    (37). Two different requirements then shared one signature and therefore ONE
+    LLM verdict — the failure the CEFR lookbehind exists to prevent, for the form
+    it did not cover.
+
+    That the model reads this form is confirmed by a real emitted span:
+    "Norsk muntlig og skriftlige ferdigheter tilsvarende nivå 2".
+    """
+    assert dedup.signature("Krav: bestått norskprøve 2") != \
+        dedup.signature("Krav: bestått norskprøve 3")
+    assert dedup.signature("Norsk på nivå 2") != dedup.signature("Norsk på nivå 3")
+    assert dedup.signature("Norskprøve trinn 3") != dedup.signature("Norskprøve trinn 4")
+
+
+def test_digits_not_after_a_level_word_are_still_masked():
+    """The masking must stay narrow: stillingsprosent, salary and dates are still
+    merged, which is the documented trade-off (two ads identical but for the
+    percentage share their language requirements)."""
+    assert dedup.signature("Stilling 20 % fast") == dedup.signature("Stilling 100 % fast")
+    assert dedup.signature("kr 450 000") == dedup.signature("kr 650 000")
+    assert dedup.canonical("Vi søker 3 personer") == "vi søker # personer"
+
+
+def test_b9b_signature_golden_over_a_realistic_multi_block_body():
+    """A SECOND golden, over the shape 99.6% of the corpus has: æøå, digits and
+    newlines. The existing golden is pure-ASCII single-line text, and a
+    `latin-1` encoding mutation in signature() — named in that test's own
+    docstring as a thing it catches — survived all 28 tests in this file while
+    changing 9,914 of 10,166 corpus signatures.
+
+    Regenerate DELIBERATELY, never to make a red test green.
+    """
+    body = ("Sykepleier søkes til Ålesund\n"
+            "Vi har 3 ledige stillinger\n"
+            "Krav: bestått norskprøve B2")
+    assert dedup.signature(body) == dedup.signature(body)      # deterministic
+    assert dedup.signature(body) == \
+        "ddc106af9499314f87bc2fbdd56ed4e74aed162221755b9817c879dc22e4eef7"

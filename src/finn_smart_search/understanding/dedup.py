@@ -42,7 +42,26 @@ from .text_norm import normalise
 # language requirements, and merging them would hand two ads one verdict on the
 # very attribute this pipeline exists to read. 1,268 corpus ads carry a CEFR
 # token. A digit directly preceded by A/B/C is therefore left alone.
+# Digits are masked so that two ads differing only by stillingsprosent, salary
+# or a date share a signature -- they share their LANGUAGE requirement, which is
+# what the census reads. Two exceptions, both measured:
+#
+#   CEFR letter+digit  B1 vs B2 are different requirements (1,268 ads carry one)
+#   BARE DIGIT after a level word  "norskprøve 3", "nivå 2", "trinn 4" -- 68 ads
+#       state the level this way, and masking merged two different requirements
+#       into one LLM verdict. Confirmed as load-bearing by a real emitted span:
+#       "Norsk muntlig og skriftlige ferdigheter tilsvarende nivå 2".
+#
+# The bare-digit case needs preceding CONTEXT, which a fixed-width lookbehind
+# cannot express, so the substitution is a function.
+_LEVEL_WORD = re.compile(
+    r"(?:niv[åa]|norskpr[øo]ve|trinn|spr[åa]kniv[åa]|level|grade)\W{0,3}$", re.I)
 _DIGITS = re.compile(r"(?<![ABCabc])\d+")
+
+
+def _mask_digit(m: "re.Match") -> str:
+    """Keep a digit that states a language level; mask every other."""
+    return m.group(0) if _LEVEL_WORD.search(m.string[:m.start()]) else "#"
 _NON_WORD = re.compile(r"[^\w#]+", re.UNICODE)
 
 __all__ = ["canonical", "signature", "cluster", "representatives", "fan_out"]
@@ -51,7 +70,7 @@ __all__ = ["canonical", "signature", "cluster", "representatives", "fan_out"]
 def canonical(body: str | None) -> str:
     """The comparison form: shared normaliser, case-folded, digits masked."""
     text = normalise(body).lower()
-    text = _DIGITS.sub("#", text)
+    text = _DIGITS.sub(_mask_digit, text)
     return _NON_WORD.sub(" ", text).strip()
 
 

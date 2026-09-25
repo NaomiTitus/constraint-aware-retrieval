@@ -229,3 +229,73 @@ def test_2_6_all_rows_are_written_across_batch_boundaries(con, batch):
     assert out["processed"] == 5
     assert con.execute("SELECT count(*) FROM ad_language").fetchone()[0] == 5
     assert sum(out["distribution"].values()) == out["processed"]
+
+
+# ── every verdict field must be persisted ────────────────────────────────────
+#
+# WHY. `detected_nordic` was added to langid.detect() and to no table. It was
+# computed on all 10,166 ads during an 885-second enrichment run and thrown
+# away, and the only reason it surfaced was a query that happened to select it.
+# That is the "field nothing writes" pattern in the other direction — and the
+# third instance this session, after `annotated_accessible` (read, never
+# written) and `_reasons` (written, then erased by revalidation).
+#
+# So the guard is on the CONTRACT, not on the field: any key detect() returns
+# must have a column, forever.
+
+def test_every_detect_field_has_a_column(tmp_con):
+    """A verdict key with no column is silently discarded. Compares the real
+    return shape against the real DDL rather than a hand-written list of either."""
+    from finn_smart_search.understanding import enrich_language as el
+    from finn_smart_search.understanding.langid import detect
+
+    el.ensure_schema(tmp_con)
+    cols = {r[0] for r in tmp_con.execute("DESCRIBE ad_language").fetchall()}
+    verdict = detect([{"index": 0, "tag": "p", "n_chars": 41,
+                       "text": "Vi søker en dyktig medarbeider til teamet"}])
+    missing = set(verdict) - cols
+    assert missing == set(), f"detect() returns {missing} with nowhere to store it"
+
+
+def test_the_writer_round_trips_every_field(tmp_con):
+    """Columns existing is not enough — the INSERT must name them. The previous
+    INSERT used positional VALUES, so a new column was accepted by the schema and
+    left NULL by the writer."""
+    from finn_smart_search.understanding import enrich_language as el
+
+    el.ensure_schema(tmp_con)
+    tmp_con.execute("CREATE TABLE IF NOT EXISTS ads_raw (uuid VARCHAR, ad_content JSON)")
+    tmp_con.execute("""CREATE TABLE IF NOT EXISTS ads (
+        uuid VARCHAR PRIMARY KEY, description_html VARCHAR, n_chars INTEGER)""")
+    # a Norwegian body with a Danish block: detected_nordic must survive the write
+    html = ("<p>Vi søker en dyktig medarbeider til vårt team i Oslo nå</p>"
+            "<p>Vi søger en dygtig medarbejder til vores afdeling i København</p>")
+    tmp_con.execute("INSERT INTO ads VALUES (?,?,?)", ["a", html, len(html)])
+    el.run(tmp_con, force=True, log=lambda *_: None)
+    row = tmp_con.execute("SELECT doc_lang, detected_nordic FROM ad_language "
+                          "WHERE uuid='a'").fetchone()
+    assert row[0] == "no"
+    assert row[1] == "da", "detected_nordic was computed and then dropped by the writer"
+
+
+def test_ensure_schema_migrates_a_table_without_detected_nordic(tmp_con):
+    """The corpus table predates the field. CREATE TABLE IF NOT EXISTS does not
+    add a column, so without an ALTER every INSERT would fail — and rows already
+    paid for (885 seconds of lingua) must survive the migration."""
+    from finn_smart_search.understanding import enrich_language as el
+    from datetime import datetime, timezone
+
+    tmp_con.execute("DROP TABLE IF EXISTS ad_language")
+    tmp_con.execute("""CREATE TABLE ad_language (
+        uuid VARCHAR PRIMARY KEY, doc_lang VARCHAR, lang_mix JSON,
+        detected_other VARCHAR, is_bilingual BOOLEAN, n_scored INTEGER,
+        confidence VARCHAR, langid_version VARCHAR, detected_at TIMESTAMPTZ)""")
+    tmp_con.execute("INSERT INTO ad_language VALUES (?,?,?,?,?,?,?,?,?)",
+                    ["keep", "no", "{}", None, False, 3, "high", "v1",
+                     datetime.now(timezone.utc)])
+    el.ensure_schema(tmp_con)
+    cols = {r[0] for r in tmp_con.execute("DESCRIBE ad_language").fetchall()}
+    assert "detected_nordic" in cols
+    kept = tmp_con.execute("SELECT doc_lang, n_scored, detected_nordic "
+                           "FROM ad_language WHERE uuid='keep'").fetchone()
+    assert kept == ("no", 3, None), "the existing verdict must survive the migration"
