@@ -21,6 +21,8 @@ Two rules, both established by measurement:
 """
 from __future__ import annotations
 
+import re
+
 from selectolax.lexbor import LexborHTMLParser
 
 from .text_norm import normalise
@@ -30,6 +32,21 @@ _SELECTOR = ", ".join(BLOCK_TAGS)
 
 MIN_BLOCK_CHARS = 2      # a block must carry at least this much text
 MIN_OWN_CHARS = 3        # mixed-content own text must carry at least this much
+
+# `<br>` ENDS A BLOCK. It appears in 7,107 ads (69.9%), and in 5,340 (52.5%) it
+# sits INSIDE an emitted block, where `node.text(separator=" ")` folded 27,096
+# line breaks into spaces. The raw-text fallback split on them, so identical
+# markup produced different shapes depending on which path ran. Measured cost:
+# 266 language-bearing lines in 216 ads were quoted by the model and rejected as
+# `starts_mid_sentence`, because the preceding line shared their block.
+#
+# A sentinel rather than "\n" because normalise() collapses all whitespace: the
+# marker has to survive normalisation and be split on afterwards.
+# U+E000, private use area: survives HTML parsing (lexbor strips NUL per the
+# HTML spec), is NFKC-stable, is not whitespace so normalise() keeps it, and
+# occurs in 0 of 10,166 corpus ads.
+_BR = "\ue000"
+_BR_TAG = re.compile(r"<\s*br\s*/?\s*>", re.I)
 
 __all__ = ["BLOCK_TAGS", "normalise", "to_blocks", "blocks_to_text", "clean"]
 
@@ -81,6 +98,12 @@ def to_blocks(html: str | None) -> list[dict]:
     if not html or not html.strip():
         return []
 
+    # Substituted in the SOURCE, before parsing: selectolax's
+    # `br.replace_with("\x00")` reports success and drops the text, so the
+    # marker never reaches node.text(). Script and style bodies are removed
+    # below, so a <br> inside one cannot leak into a block either way.
+    html = _BR_TAG.sub(_BR, html)
+
     tree = LexborHTMLParser(html)
     for bad in tree.css("script, style, noscript"):
         bad.decompose()
@@ -88,9 +111,17 @@ def to_blocks(html: str | None) -> list[dict]:
     blocks: list[dict] = []
 
     def emit(tag: str, text: str) -> None:
-        if len(text) >= MIN_BLOCK_CHARS:
-            blocks.append({"index": len(blocks), "tag": tag, "text": text,
-                           "n_chars": len(text)})
+        """One block per `<br>`-delimited piece, each keeping the parent tag.
+
+        Splitting here rather than at the call sites means every path -- leaf
+        blocks, mixed-content own text, and the raw-text fallback -- gets the
+        same treatment, which is what stopped the two paths disagreeing.
+        """
+        for piece in text.split(_BR):
+            piece = piece.strip()
+            if len(piece) >= MIN_BLOCK_CHARS:
+                blocks.append({"index": len(blocks), "tag": tag, "text": piece,
+                               "n_chars": len(piece)})
 
     for node in tree.css(_SELECTOR):
         if _has_block_descendant(node):

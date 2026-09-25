@@ -1,0 +1,5 @@
+=== silver rebuild (<br> now a block boundary) ===
+silver: transforming 10166 ads
+silver: {'ads': 10166, 'locations': 12003, 'categories': 34742}  51s
+
+=== language enrichment (NORDIC_ADJACENT + OTHER_MINORITY) ===

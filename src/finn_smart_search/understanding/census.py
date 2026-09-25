@@ -103,8 +103,23 @@ class BatchFailedError(RuntimeError):
     """The batch reached a terminal state that is not success."""
 
 
-OK_STATES = ("ended", "completed")
-DEAD_STATES = ("canceled", "cancelled", "errored", "expired", "failed")
+# The Batch API's `processing_status` vocabulary is exactly three values:
+# `in_progress` | `canceling` | `ended`. A cancelled batch reports "canceling"
+# and then ENDS, carrying per-request `result.type == "canceled"`.
+#
+# The previous tuples mixed the two vocabularies: canceled/errored/expired/
+# failed are RESULT types (handled in parse_result), and "completed" is emitted
+# by neither. The cost was real — fed the actual "canceling", run() treated it
+# as unrecognised and polled to its 5,000 bound, which at the default
+# poll_seconds=0.0 is a busy loop.
+OK_STATES = ("ended",)
+DEAD_STATES = ("canceling", "cancelling")
+# The ONLY status that means "keep waiting". Anything outside these three sets is
+# unknown and raises at once rather than polling to the bound: an unrecognised
+# status used to spin 5,000 times, and with the default poll_seconds=0.0 that is
+# a busy loop. Failing loud on an unknown value also means a future API status
+# surfaces as an error instead of a hang.
+IN_PROGRESS_STATES = ("in_progress",)
 
 
 # ── requests ─────────────────────────────────────────────────────────────────
@@ -233,6 +248,10 @@ def _collect(client, batch_id, expected: set[str], poll_seconds: float,
             break
         if status in DEAD_STATES:
             raise BatchFailedError(f"batch {batch_id} reached terminal state {status!r}")
+        if status not in IN_PROGRESS_STATES:
+            raise BatchFailedError(
+                f"batch {batch_id} reported unknown processing_status {status!r}; "
+                f"expected one of {OK_STATES + DEAD_STATES + IN_PROGRESS_STATES}")
         time.sleep(poll_seconds)
     else:
         raise BatchFailedError(f"batch {batch_id} did not terminate after {max_polls} polls")

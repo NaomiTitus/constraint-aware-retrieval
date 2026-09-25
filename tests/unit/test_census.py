@@ -411,7 +411,15 @@ def test_cache_key_components_cannot_collide(tmp_con):
 
 
 def test_poll_accepts_completed_as_well_as_ended(tmp_con):
-    census.run([ad("a")], FakeClient(statuses=["completed"]), tmp_con)
+    """SUPERSEDED 2026-09-25 and kept as a tombstone. "completed" is emitted by
+    neither Batch API vocabulary — `processing_status` is in_progress |
+    canceling | ended, and completed is not a result type either. This test
+    pinned dead code in OK_STATES while the real "canceling" spun 5,000 polls.
+    See test_canceling_is_terminal_and_does_not_spin."""
+    c = FakeClient(statuses=["completed"])
+    with pytest.raises(census.BatchFailedError, match="unknown processing_status"):
+        census.run([ad("a")], c, tmp_con)
+    assert c.polls <= 2, "an unknown status must fail fast, not poll to the bound"
 
 
 def test_poll_waits_for_a_terminal_state(tmp_con):
@@ -424,7 +432,9 @@ def test_terminal_failure_state_raises_instead_of_hanging(tmp_con):
     """"canceled" is terminal but not successful. The first version looped while
     status not in ("ended","completed"), so it span forever — a busy loop at
     100% CPU with poll_seconds=0.0, no timeout, no error."""
-    c = FakeClient(statuses=["canceled"])
+    # "canceled" is a RESULT type, not a processing_status; the status the API
+    # sends is "canceling", covered by test_canceling_is_terminal_and_does_not_spin.
+    c = FakeClient(statuses=["canceling"])
     with pytest.raises(census.BatchFailedError):
         census.run([ad("a")], c, tmp_con)
     # Must fail FAST. Without the DEAD_STATES check it still raises, but only
@@ -758,3 +768,158 @@ def test_revalidate_preserves_the_demotion_flag(tmp_con):
     after = tmp_con.execute("SELECT demoted, reasons FROM ad_facets WHERE uuid='a'").fetchone()
     assert after[0] is True, "revalidation cleared the demotion flag while the demotion stands"
     assert after[1], "revalidation cleared the demotion reasons"
+
+
+# ── the real Batch API status vocabulary ─────────────────────────────────────
+#
+# `processing_status` is `in_progress` | `canceling` | `ended` — those three.
+# Cancellation returns "canceling", and the batch then ENDS with per-request
+# `result.type == "canceled"`. So DEAD_STATES was a mix of two different
+# vocabularies: `canceled`/`errored`/`expired`/`failed` are RESULT types, not
+# statuses, and `completed` is emitted by neither.
+#
+# The consequence was not cosmetic. Fed the value the API really sends,
+# run() treated "canceling" as unrecognised and polled to its 5,000 bound —
+# and since run() defaults poll_seconds=0.0, that is a 100%-CPU busy loop.
+# `test_terminal_failure_state_raises_instead_of_hanging` asserts `polls == 1`
+# and passed, because it used the invented "canceled" as a status.
+#
+# No recorded batch-object body exists in tests/fixtures, which is why this went
+# unnoticed: the shape was never grounded in a real response.
+
+def test_canceling_is_terminal_and_does_not_spin(tmp_con):
+    """The value the API actually sends. Before this, it polled 5,000 times."""
+    c = FakeClient(statuses=["canceling"])
+    with pytest.raises(census.BatchFailedError):
+        census.run([ad("a")], c, tmp_con)
+    assert c.polls <= 2, f"polled {c.polls} times on a terminal status"
+
+
+def test_in_progress_then_ended_is_the_normal_path(tmp_con):
+    """`in_progress` is the only non-terminal status the API emits."""
+    c = FakeClient(statuses=["in_progress", "in_progress", "ended"])
+    census.run([ad("a")], c, tmp_con)
+    assert c.polls == 3
+
+
+def test_the_status_vocabulary_matches_the_api():
+    """Pinned so the two vocabularies cannot be re-mixed. Result types belong in
+    parse_result, not in a status tuple."""
+    assert set(census.OK_STATES) == {"ended"}
+    assert "canceling" in census.DEAD_STATES
+    assert "completed" not in census.OK_STATES + census.DEAD_STATES, \
+        "`completed` is emitted by neither vocabulary"
+
+
+def test_an_unknown_status_fails_fast_rather_than_spinning(tmp_con):
+    """Generalises the "completed" case: ANY status outside the three real values
+    raises at once. Previously anything unrecognised polled to the 5,000 bound,
+    which at the default poll_seconds=0.0 is a busy loop — so a future API status
+    would present as a hang rather than an error."""
+    c = FakeClient(statuses=["some_future_status"])
+    with pytest.raises(census.BatchFailedError, match="unknown processing_status"):
+        census.run([ad("a")], c, tmp_con)
+    assert c.polls <= 2
+
+
+# ── real text shape (STANDARDS § 3.0), grounded in the corpus ─────────────────
+#
+# WHY. Every ad body above is single-line ASCII prose with spans ending in ".".
+# An external review reverted each of the two span fixes via a pytest plugin,
+# changing no file, and measured:
+#
+#   revert the newline/block-boundary fix  -> 71 tests PASS; 57 of 85 real
+#       recorded model answers demote (67%), which trips DemotionRateError and
+#       aborts a $17 run
+#   revert furniture -> enumerated glyphs  -> 71 tests PASS; 10 of 85 demote
+#       (11.8%), UNDER the 15% abort threshold, so the run completes and
+#       silently demotes 10 correct records
+#
+# The second is the dangerous one, and neither is visible to this file. Measured
+# against the corpus: 10,126 of 10,166 ads (99.6%) contain "\n"; median 31
+# blocks; 59.3% of blocks do not end in .!?; 97.3% contain æøå. And of the 169
+# real evidence spans, 134 (79%) are preceded by a NEWLINE and only 30 by a
+# space — while every fixture span here is preceded by a space.
+#
+# `real_text()` has existed in conftest since the grounding standard landed and
+# was used by no test in this file.
+
+from tests.conftest import real_text
+
+
+def _real_multiblock_body() -> str:
+    """A real ad body: blocks joined with "\\n", bullets without terminators."""
+    return next(t for t in real_text() if t.count("\n") >= 6)
+
+
+def test_a_whole_block_of_a_REAL_body_validates_as_evidence(tmp_con):
+    """The shape 99.6% of the corpus has, end to end through run().
+
+    Reverting the newline fix makes this red; with a single-line fixture it stays
+    green, which is how a 55% demotion reached a live pilot."""
+    body = _real_multiblock_body()
+    block = next(b for b in body.split("\n")
+                 if len(b) >= 20 and validate_mod_lang_token(b))
+    facets = dict(SILENT, norwegian_requirement_level="professional",
+                  evidence_basis="explicit_statement",
+                  evidence_strength="explicit_and_unambiguous",
+                  evidence_spans=[{"span": block, "section_language": "no"}])
+    a = dict(ad("a"), description_text=body)
+    res = {"a": {"custom_id": "a", "type": "succeeded", "facets": facets,
+                 "usage": {"input_tokens": 1, "output_tokens": 1}}}
+    out = census.run([a], FakeClient(results=res), tmp_con, max_demotion_rate=1.0)
+    assert out["demoted"] == 0, (
+        f"a whole block of a real ad was demoted: "
+        f"{out['facets']['a'].get('_reasons')}")
+    assert out["facets"]["a"]["norwegian_requirement_level"] == "professional"
+
+
+@pytest.mark.parametrize("glyph", ["•", "·", "●", "​", "⁠", "",
+                                   "📍", "-", "*"])
+def test_a_bullet_quoted_without_its_glyph_validates(tmp_con, glyph):
+    """Corpus block leads: • 2,883 · 1,930 - 1,437 * 401 ● 141 📍 130
+    U+200B 106 U+F0B7 29. The model quotes the TEXT, so the character before the
+    span is the glyph. Reverting furniture-skipping makes this red; nothing in
+    this file reached the back-walk with anything but a space before."""
+    span = "Gode norskkunnskaper muntlig og skriftlig"
+    body = f"Om stillingen\n{glyph} {span}\n{glyph} Oppstart snarest"
+    facets = dict(SILENT, norwegian_requirement_level="professional",
+                  evidence_basis="explicit_statement",
+                  evidence_strength="explicit_and_unambiguous",
+                  evidence_spans=[{"span": span, "section_language": "no"}])
+    a = dict(ad("a"), description_text=body)
+    res = {"a": {"custom_id": "a", "type": "succeeded", "facets": facets,
+                 "usage": {"input_tokens": 1, "output_tokens": 1}}}
+    out = census.run([a], FakeClient(results=res), tmp_con, max_demotion_rate=1.0)
+    assert out["demoted"] == 0, f"{glyph!r}: {out['facets']['a'].get('_reasons')}"
+
+
+def test_an_unterminated_bullet_span_is_accepted_and_a_truncated_one_is_not(tmp_con):
+    """116 of 169 real spans carry NO terminal punctuation, so the forward walk
+    was never entered by this file (measured: 0 of 15 span validations). Both
+    directions in one test: the whole bullet passes, a head cut out of it does
+    not."""
+    whole = "Gode norskkunnskaper og god engelsk er påkrevd"
+    head = "Gode norskkunnskaper og god"
+    # DIFFERENT bodies per case: identical text normalises to the same cache key,
+    # so the second run would be served the first's record and assert nothing.
+    # (The first draft of this test did exactly that.)
+    for span, expect_demoted, town in ((whole, 0, "Bergen"), (head, 1, "Trondheim")):
+        body = (f"Krav til stillingen i {town}\n"
+                "Gode norskkunnskaper og god engelsk er påkrevd\n"
+                "Oppstart snarest")
+        facets = dict(SILENT, norwegian_requirement_level="professional",
+                      evidence_basis="explicit_statement",
+                      evidence_strength="explicit_and_unambiguous",
+                      evidence_spans=[{"span": span, "section_language": "no"}])
+        a = dict(ad(f"u{len(span)}"), description_text=body)
+        res = {a["uuid"]: {"custom_id": a["uuid"], "type": "succeeded",
+                           "facets": facets,
+                           "usage": {"input_tokens": 1, "output_tokens": 1}}}
+        out = census.run([a], FakeClient(results=res), tmp_con, max_demotion_rate=1.0)
+        assert out["demoted"] == expect_demoted, f"{span!r}"
+
+
+def validate_mod_lang_token(text: str) -> bool:
+    from finn_smart_search.understanding import census_validate as v
+    return bool(v.LANG_TOKEN.search(text))

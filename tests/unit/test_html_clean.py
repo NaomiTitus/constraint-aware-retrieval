@@ -28,7 +28,11 @@ pytestmark = pytest.mark.unit
 # Pinned goldens for the 71-ad fixture. Regenerate DELIBERATELY when behaviour
 # changes: a range wide enough to feel safe is a range too wide to catch the
 # bugs this module exists to fix.
-EXPECTED_TOTAL_BLOCKS = 2317
+# Regenerate ONLY with a recorded reason, never to make a red test green.
+#   2026-09-25  <br> became a block boundary: blocks 2317 -> 2385 (+68).
+#               CHARS ARE UNCHANGED at 189,023, which is the check that matters:
+#               the fix SPLITS text, it does not add or lose any.
+EXPECTED_TOTAL_BLOCKS = 2385
 EXPECTED_TOTAL_CHARS = 189_023
 
 
@@ -254,3 +258,78 @@ def test_a14_corpus_characterisation():
     html = " ".join(a.get("description") or "" for a in ads)
     assert "<li><p>" in html.replace(" ", ""), "fixture must contain an li>p ad"
     assert any(any(x["tag"] == "li" for x in b) for b, _ in res), "fixture must yield li blocks"
+
+
+# ── <br> is a block boundary (external review, measured) ─────────────────────
+#
+# THE GAP. `<br>` appears in 7,107 corpus ads (69.9%) and in ZERO tests. Every
+# one of the 31 HTML fixtures above is built from block tags only, so the
+# assumption "a line break is always carried by a block tag" was never tested.
+#
+# It is false. 5,340 ads (52.5%) have a `<br>` INSIDE an emitted block, and
+# 27,096 line breaks were being swallowed into a space by
+# `node.text(separator=" ")`. The raw-text fallback, meanwhile, splits on "\n"
+# and DOES treat it as a boundary — so the same markup produced two different
+# shapes depending on which path ran.
+#
+# This is the 55%-demotion bug a third time: a lost block boundary, reached
+# through html_clean instead of through the normaliser. Measured cost before the
+# fix: 266 language-bearing lines in 216 ads are quoted by the model and
+# rejected as `starts_mid_sentence`, because the preceding line sits in the same
+# block. Real case 34645fac: "God muntlig og skriftlig framstillingsevne på
+# norsk" preceded in-block by "...vers av språk, bakgrunn og livssituasjon".
+#
+# Fixing it CHANGES description_text, so it invalidates dedup signatures and
+# every LLM cache key. That is precisely why it lands before the census and not
+# after: today it costs the 169 censused ads, after the full run it costs $16.
+
+def test_br_inside_a_block_is_a_block_boundary():
+    assert texts("<p>Gode norskkunnskaper<br />Engelsk er en fordel</p>") == [
+        "Gode norskkunnskaper", "Engelsk er en fordel"]
+    assert texts("<ul><li>Norsk kreves<br>Engelsk er en fordel</li></ul>") == [
+        "Norsk kreves", "Engelsk er en fordel"]
+
+
+def test_br_variants_all_split():
+    for tag in ("<br>", "<br/>", "<br />", "<BR>"):
+        assert texts(f"<p>Norsk kreves{tag}Engelsk er nyttig</p>") == [
+            "Norsk kreves", "Engelsk er nyttig"], tag
+
+
+def test_consecutive_br_does_not_emit_empty_blocks():
+    assert texts("<p>Norsk kreves<br><br />Engelsk er nyttig</p>") == [
+        "Norsk kreves", "Engelsk er nyttig"]
+
+
+def test_br_at_the_edges_of_a_block_emits_no_empty_block():
+    assert texts("<p><br>Norsk kreves<br></p>") == ["Norsk kreves"]
+
+
+def test_br_split_pieces_keep_the_parent_tag_and_contiguous_indices():
+    b = to_blocks("<li>Norsk kreves<br>Engelsk er nyttig</li>")
+    assert [x["tag"] for x in b] == ["li", "li"]
+    assert [x["index"] for x in b] == [0, 1]
+    assert [x["n_chars"] for x in b] == [len("Norsk kreves"), len("Engelsk er nyttig")]
+
+
+def test_br_in_mixed_content_own_text_also_splits():
+    """A node with its own text AND block children: the own text may itself
+    carry a <br>. 272 ads have mixed content and 69.9% carry a <br>."""
+    b = to_blocks("<li>Krav til stillingen<br>Norsk kreves<p>Oppstart snarest</p></li>")
+    assert [x["text"] for x in b] == ["Krav til stillingen", "Norsk kreves",
+                                      "Oppstart snarest"]
+
+
+def test_br_split_survives_into_description_text():
+    """The property that matters downstream: blocks_to_text joins with "\\n", so
+    a <br> must become a real newline in the stored text the validator sees."""
+    _b, text = clean("<p>Gode norskkunnskaper<br />Engelsk er en fordel</p>")
+    assert text == "Gode norskkunnskaper\nEngelsk er en fordel"
+
+
+def test_a_br_only_ad_no_longer_depends_on_the_fallback_path():
+    """7 corpus ads reach the raw-text fallback and every one is <br>-only
+    markup. They used to get their boundaries from a different code path than
+    every other ad; now both paths agree."""
+    assert texts("Norsk kreves<br />Engelsk er nyttig") == ["Norsk kreves",
+                                                            "Engelsk er nyttig"]
