@@ -8,7 +8,7 @@
   :root{
     --ink:#14181d; --paper:#f6f7f6; --card:#fff; --rule:#dadedb;
     --accent:#1c6a58; --accent-soft:#e6efeb; --warn:#9c4f28;
-    --warn-soft:#f6ece6; --muted:#69727c; --hit:#fff9e3; --hit-edge:#e8d9a0;
+    --warn-soft:#f6ece6; --muted:#69727c; --hit:#fff9e3; --hit-edge:#e8d9a0; --on-accent:#ffffff;
     --serif:"Source Serif 4",Georgia,serif;
     --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
@@ -16,12 +16,12 @@
   @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
     --ink:#e6e9e7; --paper:#14171a; --card:#1b1f22; --rule:#2e3438;
     --accent:#5fbfa4; --accent-soft:#1d2e29; --warn:#d98a5e;
-    --warn-soft:#2d211a; --muted:#98a1a9; --hit:#2b2718; --hit-edge:#4d452a;
+    --warn-soft:#2d211a; --muted:#98a1a9; --hit:#2b2718; --hit-edge:#4d452a; --on-accent:#0e1412;
   }}
   :root[data-theme="dark"]{
     --ink:#e6e9e7; --paper:#14171a; --card:#1b1f22; --rule:#2e3438;
     --accent:#5fbfa4; --accent-soft:#1d2e29; --warn:#d98a5e;
-    --warn-soft:#2d211a; --muted:#98a1a9; --hit:#2b2718; --hit-edge:#4d452a;
+    --warn-soft:#2d211a; --muted:#98a1a9; --hit:#2b2718; --hit-edge:#4d452a; --on-accent:#0e1412;
   }
   *{box-sizing:border-box}
   body{background:var(--paper);color:var(--ink);font-family:var(--sans);
@@ -89,6 +89,11 @@
               border-left-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
   .blk small{display:block;font-family:var(--sans);font-size:11px;
              color:var(--muted);margin-top:4px}
+  /* Literal gloss, not a fluent translation: må/bør/er en fordel and eller/og
+     must survive intact because those distinctions ARE the label. */
+  .blk .gloss{display:block;font-family:var(--sans);font-size:13px;
+             color:var(--muted);margin-top:6px;padding-top:6px;
+             border-top:1px dashed var(--rule)}
 
   .levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:7px}
   .lv{display:flex;gap:9px;align-items:baseline;background:var(--paper);
@@ -117,9 +122,12 @@
   button.act{font:inherit;font-size:13.5px;font-weight:500;cursor:pointer;
        border-radius:5px;padding:8px 15px;border:1px solid var(--rule);
        background:var(--card);color:var(--ink)}
-  button.act.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-  :root[data-theme="dark"] button.act.primary,
-  @media (prefers-color-scheme:dark){button.act.primary{color:#0e1412}}
+  /* Primary button text is a TOKEN, not a literal: a hardcoded #fff is
+     unreadable on the light-mode accent's dark-mode counterpart. The previous
+     version comma-joined a selector to an @media block, which is invalid CSS and
+     silently dropped the whole rule. */
+  button.act.primary{background:var(--accent);border-color:var(--accent);
+       color:var(--on-accent)}
   button.act:hover{border-color:var(--accent)}
 
   .pf{font-size:12.5px;background:var(--warn-soft);border:1px solid var(--warn);
@@ -207,7 +215,12 @@ function render(){
       <p class="hintline">Highlighted lines carry a language word; the line above each is
         shown because whether a quote starts at a boundary depends on its neighbour.
         <strong>Click a line to set it as the evidence span</strong> — that guarantees the
-        character-exact copy the validator requires.</p>
+        character-exact copy the validator requires. Grey text is a <strong>literal</strong>
+        English gloss: <code>må</code>=must, <code>bør</code>=should,
+        <code>ønskelig</code>/<code>er en fordel</code>=desirable,
+        <code>ikke et krav</code>=not a requirement,
+        <code>eller</code>=<strong>or</strong>, <code>og</code>=<strong>and</strong>.
+        The span you record is always the Norwegian original.</p>
       <div id="blocks"></div>
     </div>
 
@@ -251,7 +264,9 @@ function render(){
   a.blocks.forEach(b => {
     const el = document.createElement("button");
     el.className = "blk" + (b.hit ? " hit" : "") + (r.span === b.text ? " chosen" : "");
-    el.innerHTML = esc(b.text) + (b.hit ? "<small>carries a language word</small>" : "");
+    el.innerHTML = esc(b.text)
+      + (b.en ? `<span class="gloss">${esc(b.en)}</span>` : "")
+      + (b.hit ? "<small>carries a language word</small>" : "");
     el.onclick = () => { r.span = b.text; save(); render(); };
     bl.appendChild(el);
   });

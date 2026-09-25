@@ -1,0 +1,142 @@
+# Ten personas, five of them paired -> 15 query instances.
+#
+# Written first-person, as someone would actually type into a job search. Paired
+# variants differ ONLY in the language sentence, linked by `pair_id` — that is
+# what makes the negation stress-test a controlled comparison rather than two
+# unrelated queries.
+#
+# FROZEN before any measurement. Changing a query after seeing results would make
+# the comparison meaningless; record a problem in `notes` and change it afterwards
+# in git.
+
+personas:
+  # ── paired: the five that carry the argument ──────────────────────────────
+  - id: p1_sykepleier_norsk
+    pair_id: p1
+    vertical: Healthcare
+    why: >
+      The `norsk autorisasjon` precision trap. Norwegian professional
+      authorisation is a LICENSING requirement, not a language one — an extractor
+      that conflates them fails this persona in the direction nobody notices.
+    query: >
+      Jeg er sykepleier med erfaring fra sykehus og sykehjem. Jeg snakker
+      flytende norsk. Jeg ser etter fast stilling, gjerne dagvakt.
+
+  - id: p1_sykepleier_no_norsk
+    pair_id: p1
+    vertical: Healthcare
+    query: >
+      I am a nurse with hospital and nursing-home experience. I do not speak
+      Norwegian. I am looking for a permanent position, preferably day shifts.
+
+  - id: p2_tomrer_norsk
+    pair_id: p2
+    vertical: Trades
+    why: >
+      A low-English vertical, and 787 corpus ads. Håndverkere had ONE golden ad
+      before the sealed set was built, so accuracy here was essentially unmeasured.
+    query: >
+      Jeg er tømrer med fagbrev og ti års erfaring med både nybygg og
+      rehabilitering. Jeg snakker norsk. Jeg har førerkort klasse B.
+
+  - id: p2_tomrer_no_norsk
+    pair_id: p2
+    vertical: Trades
+    query: >
+      I am a carpenter with a trade certificate and ten years of experience in
+      both new builds and renovation. I do not speak Norwegian. I hold a category
+      B driving licence.
+
+  - id: p3_kokk_norsk
+    pair_id: p3
+    vertical: Hospitality
+    why: >
+      Genuinely English-friendly in practice, so a system that hides everything
+      when Norwegian is absent is visibly wrong here rather than arguably wrong.
+    query: >
+      Jeg er kokk med erfaring fra à la carte og storkjøkken. Jeg snakker norsk
+      og engelsk. Jeg kan jobbe kveld og helg.
+
+  - id: p3_kokk_no_norsk
+    pair_id: p3
+    vertical: Hospitality
+    query: >
+      I am a chef with à la carte and large-scale kitchen experience. I do not
+      speak Norwegian but I speak fluent English. I can work evenings and weekends.
+
+  - id: p4_backend_norsk
+    pair_id: p4
+    vertical: Software
+    why: The English-friendliest vertical; the easiest case the baseline should win.
+    query: >
+      Jeg er backend-utvikler med Python, PostgreSQL og Kubernetes. Jeg snakker
+      norsk. Jeg ser etter fast stilling i Oslo eller hybrid.
+
+  - id: p4_backend_no_norsk
+    pair_id: p4
+    vertical: Software
+    query: >
+      I am a backend developer working with Python, PostgreSQL and Kubernetes.
+      I do not speak Norwegian. I am looking for a permanent role in Oslo or hybrid.
+
+  - id: p5_data_scientist_norsk
+    pair_id: p5
+    vertical: Data
+    why: >
+      THE ORIGINATING BUG. This is the query that returned Norwegian-requiring ads
+      after the seeker stated they do not speak Norwegian. IT had ZERO golden ads
+      before the sealed set, which is why this persona's accuracy was unmeasured.
+    query: >
+      Jeg er data scientist med erfaring innen maskinlæring, Python og SQL. Jeg
+      snakker norsk. Jeg ser etter stilling innen AI eller analyse.
+
+  - id: p5_data_scientist_no_norsk
+    pair_id: p5
+    vertical: Data
+    query: >
+      I am a data scientist with experience in machine learning, Python and SQL.
+      I do not speak Norwegian. I am looking for a role in AI or analytics.
+
+  # ── unpaired ──────────────────────────────────────────────────────────────
+  - id: p6_grunnskolelaerer
+    vertical: Education
+    why: >
+      A DESIGNED NEGATIVE CONTROL, and it must not be dropped when it scores
+      badly. Norwegian genuinely IS required to teach in a Norwegian primary
+      school. A good system returns few results and says so; a system that
+      manufactures matches here is worse than one that returns nothing.
+    query: >
+      I am a qualified primary school teacher. I do not speak Norwegian. I would
+      like to teach in Norway.
+
+  - id: p7_lagermedarbeider
+    vertical: Logistics
+    why: Low-text-volume ads — tests behaviour when there is little to extract from.
+    query: >
+      I am looking for warehouse work. I have a forklift certificate. I do not
+      speak Norwegian yet but I am learning.
+
+  - id: p8_regnskapsforer
+    vertical: Finance
+    why: >
+      Norwegian-regulation-bound, so it tests the authorisation-versus-language
+      distinction a second time in a different vertical.
+    query: >
+      I am an accountant with experience in Norwegian GAAP and payroll. I do not
+      speak Norwegian. I am looking for a permanent position.
+
+  - id: p9_multilingual_support
+    vertical: Customer service
+    why: >
+      The one persona where NOT speaking Norwegian is an ASSET. A system that only
+      ever penalises the absence of Norwegian will get this backwards.
+    query: >
+      I speak Polish, English and Lithuanian fluently. I do not speak Norwegian.
+      I am looking for customer service or support work.
+
+  - id: p10_civil_engineer
+    vertical: Engineering
+    why: Large-employer bilingual-ad regime — many ads are half Norwegian, half English.
+    query: >
+      I am a civil engineer with experience in structural design and Eurocode.
+      I do not speak Norwegian. I am open to roles anywhere in Norway.

@@ -28,7 +28,7 @@ LEVELS = TOOL["input_schema"]["properties"]["norwegian_requirement_level"]["enum
 WORKLANG = TOOL["input_schema"]["properties"]["stated_working_language"]["enum"]
 
 WHY = {
-    "comma_disjunction": "120 corpus ads · 0 golden. A census-v7 rule with no test at all.",
+    "comma_disjunction": "104 corpus ads · 0 golden. The census-v7 rule's PRESENCE is tested; its BEHAVIOUR is not. Note the selecting pattern is looser than the prompt's, so some ads here match a mother-tongue clause (“annet morsmål enn norsk, svensk eller dansk”) rather than a list of accepted working languages — judge what the ad demands, not why it was selected.",
     "bullet_glyph": "419 corpus ads · 0 golden. The glyph bug demoted 9 ads that had correct evidence.",
     "truncated": "528 ads (5.2%) · 0 golden. prepare() cuts mid-block on 519 of them.",
     "doc_clause": "254 corpus ads · 1 golden. census-v7 rule, thin coverage.",
@@ -94,6 +94,18 @@ def main() -> None:
 
     data = {"ads": ads, "levels": LEVELS, "worklang": WORKLANG,
             "why": WHY, "hint": LEVEL_HINT}
+    # English glosses, if scripts/translate_worksheet.py has run. Literal and
+    # modality-preserving by construction: the labeller does not read Norwegian,
+    # so må/bør/er en fordel and eller/og must survive translation intact — those
+    # distinctions ARE the label. The span stays the Norwegian original.
+    gl_path = OUT / "glosses.json"
+    if gl_path.exists():
+        gl = json.loads(gl_path.read_text(encoding="utf-8"))
+        for a in ads:
+            for i, b in enumerate(a["blocks"]):
+                g = gl.get(a["uuid"]) or []
+                b["en"] = g[i] if i < len(g) else None
+
     tpl = (ROOT / "scripts" / "worksheet_template.html").read_text(encoding="utf-8")
     out = tpl.replace("/*__DATA__*/null",
                       json.dumps(data, ensure_ascii=False))
