@@ -20,10 +20,21 @@ WHAT IS AND IS NOT PATTERN-DETECTABLE
                  passes through rather than being guessed at; a guessing name
                  redactor would eat ordinary words.
 
-THE FALSE POSITIVE THAT MATTERS. A naive 8-digit rule matches NORWEGIAN DATES.
-Over 2,000 bodies a first draft returned 639 hits whose len-8 bucket was
-dominated by application deadlines: 28.10.2026, 30.01.2027, 16.10.2026. Every ad
-carries a deadline, so excluding dd.mm.yyyy is load-bearing.
+THE FALSE POSITIVE THAT MATTERS — and it is NOT what I first thought.
+
+A naive 8-digit rule matches Norwegian dates, which is what a first draft did.
+The FINAL pattern does not: 28.10.2026, 1.12.2026, 2026-10-28 and 28-10-2026 all
+fail it, because its grouped alternatives need four 2-digit runs and a date has
+three. Verified for six date forms.
+
+What the masking actually earns its place against is WORKING-HOURS RANGES.
+`08.00-16.00` is four 2-digit groups with separators and matches the phone
+pattern exactly. Measured over 4,000 real bodies: masking suppresses 92 matches,
+every one of them a shift time — 08.00-16.00, 07.30-16.00, 06.00-16.00,
+08.00-12.00. Redacting those would delete the working hours from every shift
+advertisement, which is 14.8% of the corpus.
+
+So the guard is real and the reason is different from the one first recorded.
 """
 from __future__ import annotations
 
@@ -43,7 +54,11 @@ EMAIL = re.compile(r"\b[\w.+-]+@[\w-]+(?:\.[\w-]+)+\b")
 # Norwegian numbers are 8 digits, optionally +47, optionally grouped 2-2-2-2 or
 # 3-2-3. Formats taken from 2,810 real contactList values:
 #   +4797940668 · 48157761 · 950 27 028 · +47 55 58 85 95 · 78 97 76 00
-_DATE = re.compile(r"\b\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\b")
+# Dotted numeric runs that are NOT phone numbers: dates (28.10.2026) and, the
+# case that actually bites, working-hours ranges (08.00-16.00). Parked behind a
+# placeholder before the phone pattern runs. Named for what it matches, not for
+# what I assumed it matched.
+_NOT_A_PHONE = re.compile(r"\b\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\b")
 # Boundaries are DIGIT-only, not \w or "." — a trailing "." is usually the end of
 # the sentence ("...på 950 27 028."), and blocking on it silently skipped every
 # phone that ends a sentence. Dates are masked before this runs, so "." needs no
@@ -57,15 +72,15 @@ PHONE = re.compile(
 )
 
 
-def _mask_dates(text: str) -> tuple[str, list[str]]:
-    """Park dates behind a placeholder so the phone pattern cannot see them."""
+def _mask_non_phones(text: str) -> tuple[str, list[str]]:
+    """Park dates and working-hours ranges so the phone pattern cannot see them."""
     found: list[str] = []
 
     def take(m: re.Match) -> str:
         found.append(m.group(0))
         return f"{len(found) - 1}"
 
-    return _DATE.sub(take, text), found
+    return _NOT_A_PHONE.sub(take, text), found
 
 
 def _restore(text: str, dates: list[str]) -> str:
@@ -90,7 +105,7 @@ def contains_pii(text: str | None,
     this ad's contact list."""
     if not text:
         return False
-    masked, _ = _mask_dates(text)
+    masked, _ = _mask_non_phones(text)
     if EMAIL.search(masked) or PHONE.search(masked):
         return True
     return any(n in text for n in _name_targets(contacts))
@@ -104,7 +119,7 @@ def scrub(text: str | None,
     """
     if not text:
         return ""
-    masked, dates = _mask_dates(text)
+    masked, dates = _mask_non_phones(text)
     masked = EMAIL.sub(EMAIL_REDACTION, masked)
     masked = PHONE.sub(PHONE_REDACTION, masked)
     out = _restore(masked, dates)

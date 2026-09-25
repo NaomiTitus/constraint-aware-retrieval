@@ -47,6 +47,16 @@ def test_role_family_is_the_isco_sub_major(code, expected):
     assert taxonomy.role_family(code) == expected
 
 
+@pytest.mark.parametrize("bad", ["223", "22", "22345", "2.23", " 2223x"])
+def test_role_family_requires_exactly_four_digits(bad):
+    """A 3-digit code would silently yield a plausible 2-character family that
+    traces back to nothing. Every corpus code is length 4, so this guards the
+    public function's contract rather than an observed input — and without it,
+    widening the pattern to ^\\d{3,}$ survived every other test."""
+    assert taxonomy.role_family(bad) is None, bad
+    assert taxonomy.skill_level(bad) is None, bad
+
+
 def test_role_family_rejects_a_code_it_cannot_read():
     """Loud rather than silent: a short or non-numeric code returning a plausible
     2 characters would create a family nobody can trace back."""
@@ -117,6 +127,33 @@ def test_role_family_covers_every_ad_with_a_styrk_code(corpus_con):
           count(DISTINCT role_family) FROM ad_taxonomy""").fetchone()
     assert r[0] == 10161, f"role_family coverage {r[0]}"
     assert 30 <= r[1] <= 60, f"{r[1]} distinct sub-majors"
+
+
+def test_the_styrk_tie_break_is_pinned_because_it_is_arbitrary(tmp_con):
+    """1,486 corpus ads carry more than one STYRK code, and for 958 of them
+    (9.4%) min() and max() give a DIFFERENT role_family. `score` cannot
+    adjudicate (1.0 on 99.6% of rows), so the choice is arbitrary — which makes
+    pinning it the only way it stays reproducible.
+
+    Switching to max() survived every other test in this file."""
+    tmp_con.execute("CREATE TABLE ads (uuid VARCHAR PRIMARY KEY, jobtitle VARCHAR)")
+    tmp_con.execute("CREATE TABLE ads_raw (uuid VARCHAR, ad_content JSON)")
+    tmp_con.execute("""CREATE TABLE ad_categories (uuid VARCHAR, category_type VARCHAR,
+                       code VARCHAR, name VARCHAR, score DOUBLE)""")
+    tmp_con.execute("CREATE TABLE esco_occupation (uri VARCHAR, lang VARCHAR, title VARCHAR)")
+    tmp_con.execute("INSERT INTO ads VALUES ('m','Miljøterapeut / sykepleier')")
+    tmp_con.execute("INSERT INTO ads_raw VALUES ('m','{}')")
+    # two codes in DIFFERENT sub-majors, both score 1.0 — the real shape
+    tmp_con.execute("""INSERT INTO ad_categories VALUES
+        ('m','STYRK08','2223','Sykepleiere',1.0),
+        ('m','STYRK08','3412','Miljøarbeidere',1.0)""")
+    taxonomy.build(tmp_con, log=lambda *_: None)
+    got = tmp_con.execute(
+        "SELECT styrk_code, role_family FROM ad_taxonomy WHERE uuid='m'").fetchone()
+    assert got == ("2223", "22"), (
+        f"tie-break drifted to {got}; min(code) is the pinned choice and 958 ads "
+        "change role_family if it moves"
+    )
 
 
 def test_build_is_idempotent_and_derives_from_bronze(tmp_con):

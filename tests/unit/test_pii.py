@@ -33,8 +33,16 @@ REAL_PHONES = ["+4797940668", "48157761", "950 27 028", "+47 55 58 85 95",
                "47632395", "75 54 22 20", "+47 46912415", "78 97 76 00"]
 REAL_EMAILS = ["paul@utelivpartner.no", "renate.bjergene@eidsvoll.kommune.no",
                "renhold@trondervask.no", "line.saglien@horten.kommune.no"]
-# Norwegian application deadlines, measured as the dominant naive-match class.
+# Numeric runs that must NOT be read as phone numbers.
+# Dates: these do NOT match the final pattern anyway (its grouped alternatives
+# need four 2-digit runs; a date has three), so they are a weak guard — kept, but
+# not the reason the masking exists.
 REAL_DATES = ["28.10.2026", "30.01.2027", "16.10.2026", "01.12.2026"]
+# WORKING-HOURS RANGES are the real case: `08.00-16.00` IS four 2-digit groups
+# with separators and matches exactly. Measured over 4,000 real bodies, masking
+# suppresses 92 such matches and every one is a shift time. Redacting them would
+# delete the hours from every shift ad — 14.8% of the corpus.
+REAL_HOURS = ["08.00-16.00", "07.30-16.00", "06.00-16.00", "08.00-12.00"]
 
 
 @pytest.mark.parametrize("phone", REAL_PHONES)
@@ -42,13 +50,27 @@ def test_real_contact_phones_are_detected(phone):
     assert pii.contains_pii(f"Ring oss på {phone} for mer informasjon"), phone
 
 
+@pytest.mark.parametrize("hours", REAL_HOURS)
+def test_working_hour_ranges_are_NOT_treated_as_phone_numbers(hours):
+    """THE load-bearing exclusion, and it is not the one I first wrote a test for.
+
+    `08.00-16.00` is four 2-digit groups with separators — the phone pattern
+    matches it exactly. Removing the masking survived every other test in this
+    file, so this assertion is what makes the guard real."""
+    text = f"Arbeidstid er {hours} mandag til fredag"
+    assert not pii.contains_pii(text), f"{hours} was read as a phone number"
+    assert pii.scrub(text) == text, "working hours must survive scrubbing"
+
+
 @pytest.mark.parametrize("date", REAL_DATES)
 def test_norwegian_dates_are_NOT_treated_as_phone_numbers(date):
-    """The load-bearing exclusion. Every ad carries a deadline; treating those as
-    phone numbers would redact the one date the seeker needs."""
+    """A weaker guard than it looks: verified that none of these match the final
+    pattern even with masking removed, because its grouped alternatives need four
+    2-digit runs and a date has three. Kept as a boundary record, not as the
+    justification for the masking."""
     text = f"Søknadsfrist {date} og vi behandler søknader fortløpende"
     assert not pii.contains_pii(text), f"{date} was read as a phone number"
-    assert pii.scrub(text) == text, "a date must survive scrubbing untouched"
+    assert pii.scrub(text) == text
 
 
 @pytest.mark.parametrize("email", REAL_EMAILS)
@@ -82,9 +104,25 @@ def test_a_contact_NAME_is_only_removable_with_that_ads_contact_list():
 
 def test_a_short_contact_name_is_not_used_as_a_redaction_target():
     """A one- or two-character name would redact fragments of ordinary words.
-    Guard the target, not just the output."""
-    text = "Vi søker en person som kan norsk og engelsk godt"
+
+    The fixture must contain the short name AS A SUBSTRING or the test passes
+    whatever the floor is — my first version used "Ka" against text containing
+    only lowercase "kan", so lowering MIN_NAME_CHARS to 1 survived it."""
+    text = "Kan du norsk og engelsk, og har du fagbrev?"
+    assert "Ka" in text, "fixture must actually contain the short name"
     assert pii.scrub(text, contacts=[{"name": "Ka"}]) == text
+
+
+def test_a_full_name_is_redacted_before_any_part_of_it():
+    """Targets are applied longest-first. Shortest-first leaves an orphan: with
+    contacts [Renate, Renate Bjergene], redacting "Renate" first turns the text
+    into "[navn fjernet] Bjergene" and the surname survives. Two entries are
+    needed to detect it — one name cannot."""
+    text = "Kontakt Renate Bjergene for spørsmål om stillingen"
+    out = pii.scrub(text, contacts=[{"name": "Renate"},
+                                    {"name": "Renate Bjergene"}])
+    assert "Bjergene" not in out, f"surname survived: {out!r}"
+    assert out.count(pii.NAME_REDACTION) == 1
 
 
 def test_scrub_is_idempotent():

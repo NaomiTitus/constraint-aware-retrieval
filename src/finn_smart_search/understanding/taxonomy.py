@@ -91,15 +91,27 @@ def build(con, log=print) -> dict:
         con.executemany("INSERT INTO _nav VALUES (?,?,?)",
                         [[u, a, b] for u, (a, b) in nav.items()])
 
-    # One STYRK code per ad, chosen deterministically. `score` cannot break ties:
-    # it is 1.0 on 99.6% of rows, so min(code) is the honest tie-break.
+    # One STYRK code per ad. THE TIE-BREAK IS ARBITRARY AND IT MATTERS:
+    # 1,486 ads carry more than one distinct STYRK code, and for 958 of them
+    # (9.4% of the corpus) min() and max() give a DIFFERENT role_family. `score`
+    # cannot adjudicate — it is 1.0 on 99.6% of rows — so min(code) is chosen for
+    # determinism, not correctness.
+    #
+    # This is the scalar-collapse bug the location review flagged, in a new field:
+    # a multi-valued attribute reduced to one value. role_family should be
+    # multi-valued. Recorded in the deferred backlog rather than silently
+    # accepted, and pinned by test so the choice cannot drift.
     con.execute("""
         CREATE OR REPLACE TEMP TABLE _styrk AS
         SELECT uuid, min(code) AS code, min(name) AS name
         FROM ad_categories WHERE category_type = 'STYRK08' GROUP BY uuid
     """)
-    # ESCO occupation URIs only — 15.8% of ads carry just an /isco/ group URI,
-    # which has no preferred occupation label to offer.
+    # ESCO occupation URIs only. 15.8% of ads carry just an /esco/isco/Cxxxx
+    # group URI. DEFENSIVE, not load-bearing: `esco_occupation` currently holds
+    # 0 group URIs, so the join cannot match one and removing this filter changes
+    # nothing today (verified — the mutation survives). It stays because the ESCO
+    # loader could ingest group concepts later, and is labelled rather than
+    # presented as a guard that tests enforce.
     con.execute("""
         CREATE OR REPLACE TEMP TABLE _esco AS
         SELECT c.uuid,
