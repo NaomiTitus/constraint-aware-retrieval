@@ -74,16 +74,98 @@ tested. This split is itself a hiring signal; do not blur it.
 
 ## 3. TDD workflow — the gate
 
-Every step runs this loop. Step 2 is a hard gate; nothing proceeds without it.
+Every step runs this loop. Steps 1 and 3 are hard gates; nothing proceeds
+without them.
 
-1. Produce a **scenario table** — input · expected output · rationale.
-2. **Human approves or amends it.** No code before this.
-3. Write the tests. They fail.
-4. Demonstrate they fail *for the right reason* — not an import error.
-5. Implement until green.
-6. Only then run against real data.
+1. **GROUND THE INPUT.** Measure what the real input and output actually look
+   like, and write the measurement down. Takes as many steps as it takes.
+2. Produce a **scenario table** — input · expected output · rationale — whose
+   every fixture **cites its grounding** from step 1.
+3. **Human approves or amends it.** No code before this.
+4. Write the tests. They fail.
+5. Demonstrate they fail *for the right reason* — not an import error.
+6. Implement until green.
+7. Only then run against real data.
 
 The scenario table is the artifact. Tests are its executable form.
+
+### 3.0 Grounding — the step before the scenario table
+
+**Rule: a test fixture is either loaded from a real artifact, or accompanied by
+the measurement that justifies its shape. Never invented.**
+
+A hand-written fixture is allowed — often it is clearer — but it must carry a
+comment naming what it was derived from and what was measured, e.g.
+*"the real shape: html_clean emits blocks, silver joins them with `\n`"*, or
+*"· U+00B7 leads 1,930 corpus blocks"*. A fixture with no provenance is a
+guess about production, and a test built on a guess agrees with the guess.
+
+Being multi-step is expected and budgeted. Counting glyph frequencies across
+10,166 ads before writing a boundary test is not overhead; it IS the test
+design.
+
+**Match the source to the kind of assumption.** This is the part that is easy to
+get wrong — see the caveat below.
+
+| Assumption under test | Ground it in |
+|---|---|
+| labels, semantics, the level taxonomy | `eval/golden_set.json` — 44 hand-labelled ads |
+| **text shape**: block joins, whitespace, glyphs, invisibles | **the full corpus, counted** — `SELECT description_text FROM ads`, not a sample |
+| LLM response shape, tool-use envelopes | `tests/fixtures/batch_results_real.json` — recorded live responses |
+| HTML structure, markup variants | `tests/fixtures/ads_sample_71.json` — raw `description` values |
+| HTTP/API behaviour, error bodies | recorded fixtures: `feedentry_active.json`, `feedentry_inactive_stub.json`, `search_index_429.json` |
+| a data file's schema and key names | **the file itself, with a closed key vocabulary** |
+
+**The golden set is not a general grounding source, and here is the proof.**
+The 44-ad golden set is stratified for *label* diversity, not *surface*
+diversity. Measured over its ad text, the glyphs that caused the 55%-demotion
+bug are absent:
+
+| glyph | corpus blocks | in golden set | in `ads_sample_71` |
+|---|---:|---|---|
+| `·` U+00B7 | 1,930 | **no** | no |
+| `●` U+25CF | 141 | **no** | no |
+| `` U+F0B7 (Wingdings, from Word) | 29 | **no** | no |
+
+So grounding the span-boundary tests in the golden set would have produced
+exactly the same bug. Only a **distributional** count over the whole corpus
+surfaces them. Use the golden set for *what a correct answer is*; use the corpus
+for *what the input looks like*.
+
+### 3.1 The failure this rule exists to prevent
+
+Seven bugs in the census module were a hand-written pattern of mine, not a model
+error, and **every one had a green test**. The tests constructed their own
+inputs, so they agreed with themselves:
+
+| The test's fixture | Production reality | Cost |
+|---|---|---|
+| single-line prose, full stops between sentences | blocks joined with `\n` | 55% of the pilot demoted; 26 of 28 rejections legitimate |
+| `BOUNDARY` listing `•` only | `·` `●` emoji U+200B U+2060 U+F0B7 lead 2,998 blocks | 9 of 22 ads demoted with correct evidence |
+| corpus check passing blocks **with** their glyph | the model quotes the text **without** it | reported "0 false rejects" while the above was live |
+| oracle regex spelled `dokument` | ~7% of the corpus is English — `documentation` | 1 of 2 "model errors" in a probe |
+| oracle matching any `X eller engelsk` | document-language clauses say it too | 4 of 9 "model errors" in a probe |
+| glyph filter requiring a typed bullet | `<li>` markup yields no glyph | made a 289-ad population look like 26 |
+| `test_9_1` **setting** `annotated_accessible` itself | the file used `accessibility_note` | `taxonomy_gap` unreachable for the whole project |
+
+The last one is the clearest statement of the rule: the test wrote the field it
+then asserted on. It passed for weeks and measured nothing.
+
+### 3.2 Helpers — make grounded the path of least resistance
+
+`tests/conftest.py` exposes the canonical sources so using real data is shorter
+than inventing it:
+
+| Helper | Gives |
+|---|---|
+| `golden_file()` | `eval/golden_set.json` parsed — the file, not a built dict |
+| `real_blocks()` | block texts from `ads_sample_71.json` via `html_clean` — the true production shape, no DB needed |
+| `corpus_con` (fixture) | read-only session connection to `data/ads.duckdb` |
+| `requires_corpus` | skip marker with a stated reason, for a fresh clone |
+
+Corpus-dependent tests **run by default** and skip with a reason when `data/` is
+absent. They were excluded once, and a golden-set relabelling was committed with
+the drift guards red because `pytest` never executed them.
 
 ### Tiers
 
