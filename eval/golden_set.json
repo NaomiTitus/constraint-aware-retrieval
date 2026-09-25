@@ -201,15 +201,14 @@
   "title": "Jurist / saksbehandler / advokatfullmektig ",
   "stratum": "prof_muntlig",
   "expected": {
-   "norwegian_requirement_level": "explicitly_not_required",
-   "evidence_span": "Er du polsktallende jurist men norskkunnskapene er under utvikling",
+   "norwegian_requirement_level": "certified",
+   "evidence_span": "Svært god norsk muntlig og skriftlig (B2 eller høyere)",
    "stated_working_language": "unstated",
    "authorisation_required": null
   },
-  "note": "OWNER RULING: level is explicitly_not_required. Accessibility OVERRIDDEN to False: the ad addresses POLISH speakers with developing Norwegian and never mentions English, so the derivation's True is wrong for an English-only applicant.",
+  "note": "OWNER RULING 2026-09-25, SUPERSEDES the 2026-09-24 ruling below: the ad requires Norwegian at B2 ('Svært god norsk muntlig og skriftlig (B2 eller høyere)'), so Norwegian IS required. A CEFR level is a documentary gate, which this taxonomy calls `certified` rather than a bare 'required' — see the census-v4 rule 'CEFR A1-C2 ... a scale you can be examined on'. Accessibility follows from the level: certified is blocking, so derived_accessible is now False and no annotation is needed. SUPERSEDED 2026-09-24 ruling: level explicitly_not_required, on the strength of 'Er du polsktallende jurist men norskkunnskapene er under utvikling? Søk!'. That line is a carve-out inviting Polish speakers whose Norwegian is developing; it sits beside, and does not cancel, the B2 requirement. The revised reading weights the stated requirement over the invitation. Recorded because this ad was the project's only example of the taxonomy gap, and the gap example is now gone.",
   "doc_lang": "no",
-  "derived_accessible": true,
-  "accessibility_note": "Derivation gives True (explicitly_not_required). A human reading says False: the ad addresses POLISH speakers with developing Norwegian and never mentions English. Recorded as an annotation, NOT as a label — the model never emits this field, so overriding it in the frozen set would only break any harness that computes it."
+  "derived_accessible": false
  },
  {
   "n": 16,

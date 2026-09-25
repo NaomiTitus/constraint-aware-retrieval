@@ -4,12 +4,12 @@
  "unscored": [],
  "extra_predictions": 0,
  "coverage": 1.0,
- "pooled_accuracy": 0.8863636363636364,
+ "pooled_accuracy": 0.9090909090909091,
  "pooled_accuracy_caveat": "Pooled accuracy is dominated by the golden set's level mix, which is a stratified sampling artifact: `desirable` is over-represented ~200x relative to the corpus. Read per_level instead.",
  "per_level": {
   "certified": {
-   "n": 4,
-   "correct": 4,
+   "n": 5,
+   "correct": 5,
    "accuracy": 1.0
   },
   "either_norwegian_or_english": {
@@ -42,12 +42,12 @@
    "correct": 5,
    "accuracy": 1.0
   },
-  "explicitly_not_required": {
-   "n": 3,
-   "correct": 2,
-   "accuracy": 0.6666666666666666
-  },
   "conversational": {
+   "n": 2,
+   "correct": 2,
+   "accuracy": 1.0
+  },
+  "explicitly_not_required": {
    "n": 2,
    "correct": 2,
    "accuracy": 1.0
@@ -56,25 +56,25 @@
  "invalid_levels": 0,
  "taxonomy_gap": [],
  "accessibility": {
-  "hidden_wrongly": 1,
+  "hidden_wrongly": 0,
   "shown_wrongly": 1,
-  "n_accessible": 13,
-  "n_blocking": 31,
-  "hidden_wrongly_rate": 0.07692307692307693,
-  "shown_wrongly_rate": 0.03225806451612903,
+  "n_accessible": 12,
+  "n_blocking": 32,
+  "hidden_wrongly_rate": 0.0,
+  "shown_wrongly_rate": 0.03125,
   "hidden_wrongly_ci95": [
-   0.013710066379696323,
-   0.3331453392824736
+   0.0,
+   0.2425007574992425
   ],
   "shown_wrongly_ci95": [
-   0.00571707408694444,
-   0.16194457176169622
+   0.005537717362550945,
+   0.15744607800372734
   ]
  },
  "evidence": {
   "n_expected": 32,
-  "exact": 19,
-  "different": 13,
+  "exact": 20,
+  "different": 12,
   "missing": 0,
   "spurious": 3,
   "fabricated": 0
@@ -91,14 +91,13 @@
   "spurious": 1
  },
  "confusion": {
-  "certified->certified": 4,
+  "certified->certified": 5,
   "either_norwegian_or_english->either_norwegian_or_english": 5,
   "desirable->desirable": 4,
   "fluent->fluent": 1,
   "scandinavian_accepted->scandinavian_accepted": 7,
   "unstated->professional": 3,
   "professional->professional": 5,
-  "explicitly_not_required->certified": 1,
   "conversational->conversational": 2,
   "explicitly_not_required->explicitly_not_required": 2,
   "unstated->unstated": 9,

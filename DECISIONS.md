@@ -402,3 +402,58 @@ make mistakes 4 and 5 by construction — it cannot distinguish "the job needs
 Norwegian" from "your diploma may be in English". That is an argument for the
 constraint stage reading `ad_facets` rather than text, and it is now measured
 rather than asserted.
+
+## D15 — Golden #15 is `certified`; and the harness now reads the golden FILE
+
+**Owner ruling, 2026-09-25.** #15 (*Jurist / saksbehandler / advokatfullmektig*)
+requires Norwegian at B2 — "Svært god norsk muntlig og skriftlig (B2 eller
+høyere)" — so Norwegian IS required. In this taxonomy a CEFR level is a
+documentary gate, which is `certified` rather than a bare "required"; there is no
+bare `required` level, because the scale splits by proficiency bar.
+
+This supersedes the 2026-09-24 ruling of `explicitly_not_required`, which rested
+on "Er du polsktallende jurist men norskkunnskapene er under utvikling? Søk!".
+That line invites Polish speakers whose Norwegian is developing; it sits beside
+the B2 requirement rather than cancelling it. The revised reading weights the
+stated requirement over the invitation.
+
+Accessibility now follows from the level — `certified` is blocking — so
+`derived_accessible` is False and the hand annotation is gone.
+
+**Effect on the pilot, stated plainly:** pooled 88.6% → 90.9% and hidden wrongly
+1 → 0 of 12. **That gain is a relabelling, not a model improvement.** The census
+output did not change; the same prediction (`certified`) is now scored correct.
+Recorded here so no later reader mistakes 0/12 for extractor progress.
+
+**The taxonomy gap now has zero instances.** #15 was the project's only example
+of "a correct level that a human judged inaccessible". The underlying limitation
+is unchanged — `explicitly_not_required` derives to accessible whether or not
+English is mentioned, so an ad saying "no Norwegian needed, we work in Polish"
+would still derive True — but no golden ad illustrates it any more, and
+`taxonomy_gap` is a forward guard rather than a live measurement.
+
+**The harness bug, which is the more general lesson.** `scoring.py` reads
+`annotated_accessible`; the golden set recorded the override as prose in
+`accessibility_note`. **0 of 44 ads carried the key scoring reads, so
+`taxonomy_gap` was unreachable for the whole project** — a documented headline
+number that measured nothing.
+
+`test_9_1` passed throughout. It builds its own golden ad and sets
+`annotated_accessible` on it, so it exercised the mechanism and agreed with
+itself. Identical shape to the span tests that used single-line prose and the
+corpus false-reject check that passed blocks with their bullet glyph attached:
+**the test constructed the input, so it could not detect that real inputs never
+reach the code.**
+
+Four tests now read `eval/golden_set.json` itself:
+
+| test | what it pins |
+|---|---|
+| closed key vocabulary | ROOT CAUSE — a typo'd field name now fails a test instead of silently disabling a metric |
+| prose override ⇒ boolean | an `accessibility_note` without `annotated_accessible` is invisible to scoring |
+| stored `derived_accessible` == `derive()` | 44 documentation fields that no test read, free to drift from the code they document |
+| `taxonomy_gap` runs on the real file | the check executes against real data, and every uuid it lists genuinely carries a disagreeing override |
+
+The closed vocabulary is the only one of the four that generalises: the bug was a
+key name nothing validated, and that class of bug recurs wherever data files
+carry fields by convention.

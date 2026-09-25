@@ -463,3 +463,109 @@ def test_14_3_a_string_that_is_not_an_authorisation_does_not_match():
     for wrong in ("Gode norskkunnskaper", "sykepleier", "Bachelor i sykepleie", "ja"):
         r = scoring.score({"u1": pred("unstated", auth=wrong)}, g)
         assert r["authorisation"]["correct"] == 0, f"{wrong!r} is not an authorisation"
+
+
+# ── 9b · the golden FILE, not a fixture the test builds itself ───────────────
+#
+# test_9_1 passes and proves nothing about the data. It constructs a golden ad
+# and sets `annotated_accessible` on it, so the mechanism is exercised while the
+# real eval/golden_set.json — which recorded the override as prose in
+# `accessibility_note` — never reached the check at all. Measured: 0 of 44 ads
+# carry `annotated_accessible`, so `taxonomy_gap` was unreachable in production.
+#
+# That is the same failure shape as the span tests that used single-line prose
+# and the corpus check that passed blocks with their bullet glyph attached: the
+# test built its own input, so it agreed with itself.
+#
+# These tests read the file. The closed-vocabulary one is the root-cause fix:
+# the bug was a KEY NAME that nothing validated, and any future typo in a field
+# name fails here rather than silently disabling a metric.
+
+import json as _json
+import pathlib as _pathlib
+
+GOLDEN_PATH = _pathlib.Path(__file__).resolve().parents[2] / "eval" / "golden_set.json"
+
+# Every key the harness or a human is allowed to use. Adding one is a
+# deliberate act that shows up in this list and in review.
+GOLDEN_KEYS = {
+    "n", "uuid", "title", "stratum", "expected", "note", "doc_lang",
+    "derived_accessible",        # documentation of what the derivation yields
+    "annotated_accessible",      # BOOLEAN human override, read by scoring
+    "accessibility_note",        # prose explaining an override
+}
+# Any facet a golden ad may pin. These are real fields of the tool schema, not
+# free-form annotation: #3 pins `conflicting_statements`. The point of the closed
+# set is that adding one is visible here, not that the list is short.
+EXPECTED_KEYS = {"norwegian_requirement_level", "evidence_span",
+                 "stated_working_language", "authorisation_required",
+                 "conflicting_statements"}
+
+
+def _golden_file():
+    return _json.loads(GOLDEN_PATH.read_text(encoding="utf-8"))
+
+
+def test_9b_1_golden_set_uses_no_unknown_keys():
+    """ROOT CAUSE. `accessibility_note` was written where scoring reads
+    `annotated_accessible`; both are plausible names and nothing objected, so a
+    documented metric quietly measured nothing for the whole project.
+
+    A closed vocabulary makes the next such typo a failing test instead of a
+    silent hole."""
+    for g in _golden_file():
+        unknown = set(g) - GOLDEN_KEYS
+        assert not unknown, f"golden #{g['n']} has unknown key(s) {unknown}"
+        unknown_exp = set(g["expected"]) - EXPECTED_KEYS
+        assert not unknown_exp, f"golden #{g['n']} expected has {unknown_exp}"
+
+
+def test_9b_2_a_prose_override_must_carry_the_boolean_scoring_reads():
+    """The specific bug, as a permanent guard. Prose alone cannot be compared to
+    a derived boolean, so an `accessibility_note` without `annotated_accessible`
+    is an override that no metric can see."""
+    for g in _golden_file():
+        if "accessibility_note" in g:
+            assert "annotated_accessible" in g, (
+                f"golden #{g['n']} explains an accessibility override in prose but "
+                "omits `annotated_accessible`, which is the field scoring reads — "
+                "the override would be invisible to taxonomy_gap"
+            )
+            assert isinstance(g["annotated_accessible"], bool)
+
+
+def test_9b_3_stored_derived_accessible_matches_the_derivation():
+    """`derived_accessible` is present on all 44 ads and, before this test, was
+    read by nothing. A documentation field no test checks is free to drift away
+    from the code it documents — and it is the field a reader would trust when
+    auditing the set by hand."""
+    for g in _golden_file():
+        e = g["expected"]
+        want = scoring._accessible(e["norwegian_requirement_level"],
+                                   e["stated_working_language"],
+                                   g.get("doc_lang", "no"))
+        assert g["derived_accessible"] == want, (
+            f"golden #{g['n']}: stored derived_accessible={g['derived_accessible']} "
+            f"but derive() gives {want} for level "
+            f"{e['norwegian_requirement_level']!r}"
+        )
+
+
+def test_9b_4_taxonomy_gap_runs_against_the_real_file():
+    """Exercises the check on the real data rather than a built fixture. It is
+    allowed to be empty — after #15's level was revised to `certified` the
+    derivation and the human reading AGREE, so the set legitimately contains no
+    taxonomy-gap ad and this is a forward guard.
+
+    What it pins is that the check RUNS and returns the documented type. The
+    previous state was indistinguishable from that, which is why the closed
+    vocabulary above is the real protection."""
+    golden = _golden_file()
+    preds = {g["uuid"]: pred(g["expected"]["norwegian_requirement_level"])
+             for g in golden}
+    r = scoring.score(preds, golden)
+    assert isinstance(r["taxonomy_gap"], list)
+    # every listed uuid must actually carry an override that disagrees
+    for uuid in r["taxonomy_gap"]:
+        g = next(x for x in golden if x["uuid"] == uuid)
+        assert "annotated_accessible" in g
