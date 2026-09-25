@@ -46,7 +46,29 @@ LANG_TOKEN = re.compile(
 # ("Behersker norsk eller engelsk"), so a finite-verb test is the wrong tool.
 # The defence against fragment-quoting is a BOUNDARY rule: a span must begin
 # where a sentence or bullet begins.
-BOUNDARY = set(".!?:;\u2022\u2013\u2014-*\n")
+# BOUNDARY served two roles and they are NOT the same set.
+#
+#   START — what may precede a span. A colon or semicolon legitimately ends a
+#           lead-in ("Krav: Gode norskkunnskaper"), so they belong here.
+#   END   — what may terminate a span. A colon, semicolon or hyphen does NOT
+#           end a sentence, so they must NOT be here: with them present,
+#           `n_span[-1] not in BOUNDARY` was false and the whole end check was
+#           SKIPPED. Measured: 1,568 block-prefix spans in 978 ads (9.6%) were
+#           accepted while their block continued, and 87 of those in 64 ads
+#           dropped a qualifier or negation. Ad 8da75b8c accepted "…i Øst-" and
+#           dropped "Finnmark er positivt, men ikke et krav."
+#
+# Bullets and dashes are in neither. They are non-alphanumeric, so the furniture
+# walk already steps over them to the block edge — and as terminators they also
+# created FALSE START boundaries for Norwegian suspended compounding
+# ("norsk- eller engelskkunnskaper", 6,350 ads / 62.5%, 507 blocks with a
+# language token, 60 of those with a negation).
+START_BOUNDARY = set(".!?:;\n")
+END_BOUNDARY = set(".!?\n")
+
+# Kept for callers that ask "is this a sentence edge at all". Not used by the
+# span rules, which need the two sets above kept apart.
+BOUNDARY = START_BOUNDARY
 
 
 def prepare(title: str, body: str, doc_lang: str) -> dict:
@@ -122,17 +144,17 @@ def _boundaries_ok(n_span: str, n_text: str, i: int) -> str:
         j = i - 1
         while j >= 0:
             ch = n_text[j]
-            if ch == "\n" or ch in BOUNDARY:
+            if ch in START_BOUNDARY:
                 break                       # block edge or sentence terminator
             if ch.isalnum():
                 return "starts_mid_sentence"
             j -= 1                          # list furniture: keep walking back
 
-    if n_span[-1] not in BOUNDARY:
+    if n_span[-1] not in END_BOUNDARY:
         k = i + len(n_span)
         while k < len(n_text):
             ch = n_text[k]
-            if ch == "\n" or ch in BOUNDARY:
+            if ch in END_BOUNDARY:
                 break
             if ch.isalnum():
                 return "ends_mid_sentence"

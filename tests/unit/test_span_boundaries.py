@@ -316,3 +316,79 @@ def test_a_digit_before_the_span_still_rejects():
     "3 norsk eller engelsk" through as a boundary."""
     text = "Krav\nSe punkt 3 norsk eller engelsk kreves her\nOppstart"
     assert v._span_ok("norsk eller engelsk kreves her", text) == (False, "starts_mid_sentence")
+
+
+# ── BOUNDARY conflated two roles (external review, measured) ──────────────────
+#
+# One set served both ends of the span, but the two roles are not the same:
+#
+#   what may PRECEDE a span   `.!?:;` and a block edge — a colon legitimately
+#                             ends a lead-in ("Krav: Gode norskkunnskaper")
+#   what may TERMINATE a span `.!?` and a block edge ONLY — a colon, semicolon
+#                             or hyphen does NOT end a sentence
+#
+# Because `: ; - – — * •` were terminators, `if n_span[-1] not in BOUNDARY`
+# was false and THE ENTIRE END CHECK WAS SKIPPED. Measured over the corpus:
+# 1,568 block-prefix spans in 978 ads (9.6%) are accepted while their block
+# continues, and 87 of those in 64 ads drop a qualifier or negation. Real case,
+# ad 8da75b8c: "…lokale forhold i Øst-" accepted, "Finnmark er positivt, men
+# ikke et krav." dropped — the span asserts the opposite of its sentence, which
+# is precisely what the end rule exists to stop. Two of the real cases end on a
+# MID-WORD hyphen ("Øst-", "B2-").
+#
+# The same conflation created false START boundaries. Norwegian suspended
+# compounding ("norsk- eller engelskkunnskaper") occurs in 6,350 ads (62.5%),
+# 16,685 times; 507 blocks pair it with a language token and 60 of those with a
+# negation. With `-` a terminator, the walk-back stopped at the hyphen and
+# accepted a span whose sentence began "Vi krever ikke".
+#
+# Bullets and dashes need no place in either set: they are non-alphanumeric, so
+# the furniture walk already steps over them to reach the block edge. Dropping
+# them survived all 34 tests in this file, which is why this comment carries the
+# measurements rather than the old set carrying the characters.
+
+@pytest.mark.parametrize("cut", [":", ";", "-", "*", "•", "–", "—"])
+def test_a_head_ending_on_a_non_terminator_is_still_rejected(cut):
+    """Only `.!?` and a block edge may bypass the end check."""
+    text = f"Om oss\nGode norskkunnskaper{cut} men det er ikke et krav\nOppstart"
+    assert v._span_ok(f"Gode norskkunnskaper{cut}", text) == (False, "ends_mid_sentence")
+
+
+def test_a_mid_word_hyphen_does_not_terminate_a_span():
+    """Ad 8da75b8c, the real case: the accepted span ended "i Øst-" and the
+    dropped remainder was "Finnmark er positivt, men ikke et krav."."""
+    text = ("Om oss\nKjennskap til samisk språk og lokale forhold i Øst-Finnmark "
+            "er positivt, men ikke et krav\nOppstart")
+    assert v._span_ok("Kjennskap til samisk språk og lokale forhold i Øst-",
+                      text) == (False, "ends_mid_sentence")
+
+
+def test_a_suspended_hyphen_is_not_a_sentence_start():
+    """`\\w- og/eller \\w` occurs in 6,350 ads (62.5%). The previous guard used
+    the UNhyphenated "norsk og engelsk" and so never reached this path."""
+    text = "Krav\nVi krever ikke norsk- eller engelskkunnskaper for denne jobben\nOppstart"
+    assert v._span_ok("eller engelskkunnskaper for denne jobben",
+                      text) == (False, "starts_mid_sentence")
+
+
+def test_a_full_stop_still_terminates_a_span():
+    """The other direction: narrowing the end set must not reject real spans.
+    116 of 169 real emitted spans carry no terminator and are accepted by the
+    block-edge rule; the 53 that do end in `.` must stay accepted mid-block."""
+    text = "Om oss\nGode norskkunnskaper. Vi tilbyr opplæring\nOppstart"
+    assert v._span_ok("Gode norskkunnskaper.", text) == (True, "")
+
+
+def test_a_colon_still_opens_a_span():
+    """`:` remains a START boundary — "Krav: Gode norskkunnskaper" is one block
+    in real ads, and the lead-in is not part of the evidence."""
+    text = "Om oss\nKrav: Gode norskkunnskaper muntlig og skriftlig\nOppstart"
+    assert v._span_ok("Gode norskkunnskaper muntlig og skriftlig", text) == (True, "")
+
+
+def test_a_bullet_glyph_still_opens_a_span_via_furniture():
+    """Bullets are gone from both terminator sets; the furniture walk must still
+    reach the block edge. 1,437 corpus blocks are led by a hyphen, 2,883 by •."""
+    for glyph in ("-", "•", "*", "–"):
+        text = f"Om oss\n{glyph} Gode norskkunnskaper er et krav\nOppstart"
+        assert v._span_ok("Gode norskkunnskaper er et krav", text) == (True, ""), glyph

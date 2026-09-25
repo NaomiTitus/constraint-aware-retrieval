@@ -77,7 +77,14 @@
   "different": 12,
   "missing": 0,
   "spurious": 3,
-  "fabricated": 0
+  "fabricated": 0,
+  "fabrication_checked": true,
+  "agreement": {
+   "strict": 20,
+   "trailing_punct_only": 5,
+   "containment": 7,
+   "disjoint": 0
+  }
  },
  "working_language": {
   "non_default_total": 4,
