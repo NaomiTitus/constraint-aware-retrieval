@@ -673,3 +673,88 @@ def test_revalidating_a_run_recovers_verdicts_without_a_client(tmp_con):
     back = census.cache_get(tmp_con, census.MODEL, PROMPT_VERSION, text)
     assert back["norwegian_requirement_level"] == "either_norwegian_or_english"
     assert back["evidence_spans"][0]["span"] == good_span
+
+
+# ── grounded in tests/fixtures/batch_results_real.json (STANDARDS § 3.0) ─────
+#
+# FakeClient's usage dict has 2 keys. The RECORDED live responses have 7, and
+# the one that dominates the bill was missing: `cache_read_input_tokens` is
+# 9,217 on all 3 recorded requests, against `input_tokens` of only 456-1,092.
+# Cache reads bill at 0.1x input, so ignoring them under-reports by 27.1%:
+# the full census reports $12.18 and is billed $16.71. The spend CAP is computed
+# the same way, so `--max-llm-spend 20` actually permitted ~$27.43.
+
+from tests.conftest import recorded_batch_results
+
+REAL_USAGE = [r["result"]["message"]["usage"] for r in recorded_batch_results()]
+
+
+def test_real_usage_has_the_keys_fakeclient_omits():
+    """Pins the grounding itself. If the recorded artifact is ever replaced with
+    one lacking the cache fields, the tests below silently stop testing them."""
+    assert len(REAL_USAGE) == 3
+    for u in REAL_USAGE:
+        assert u["cache_read_input_tokens"] == 9217
+        assert {"input_tokens", "output_tokens", "cache_creation_input_tokens",
+                "cache_read_input_tokens"} <= set(u)
+
+
+def test_spend_includes_the_cached_prefix(tmp_con):
+    """THE cost bug. 9,217 cached tokens at 0.1x input is $0.000461 per call --
+    more than a third of the per-call bill -- and was counted as zero."""
+    u = REAL_USAGE[0]
+    res = {"a": {"custom_id": "a", "type": "succeeded", "facets": VALID, "usage": u}}
+    out = census.run([ad("a")], FakeClient(results=res), tmp_con, max_demotion_rate=1.0)
+    expected = (u["input_tokens"] * census.PRICE_IN
+                + u["output_tokens"] * census.PRICE_OUT
+                + u["cache_read_input_tokens"] * census.PRICE_CACHE_READ)
+    assert out["spend_usd"] == pytest.approx(expected, rel=1e-9)
+    naive = u["input_tokens"] * census.PRICE_IN + u["output_tokens"] * census.PRICE_OUT
+    assert out["spend_usd"] > naive * 1.25, "cached prefix must move the number materially"
+
+
+def test_the_spend_cap_counts_cached_tokens_too(tmp_con):
+    """The cap is the guard on a $17 run. Under-counting it by 27% means the
+    guard passes while real billing exceeds the limit."""
+    u = REAL_USAGE[0]
+    naive = u["input_tokens"] * census.PRICE_IN + u["output_tokens"] * census.PRICE_OUT
+    res = {"a": {"custom_id": "a", "type": "succeeded", "facets": VALID, "usage": u}}
+    # a cap just above the NAIVE cost must still trip, because the true cost exceeds it
+    with pytest.raises(census.SpendLimitError):
+        census.run([ad("a")], FakeClient(results=res), tmp_con,
+                   max_spend_usd=naive * 1.05, max_demotion_rate=1.0)
+
+
+def test_cache_read_price_is_a_tenth_of_input():
+    """Pinned so a refactor cannot quietly change the multiplier."""
+    assert census.PRICE_CACHE_READ == pytest.approx(census.PRICE_IN * 0.1)
+
+
+# ── the audit trail must survive revalidation ────────────────────────────────
+#
+# Measured over the real llm_cache: 171 of 256 stored records carry a 16th key
+# `_reasons`, 84 do not. run() sets it; revalidate_cache() wrote
+# checked["facets"] without it, so re-running after a revalidation reset
+# ad_facets.demoted to False and reasons to [] while the level stayed demoted.
+# A demotion in force with an audit flag saying it never happened is the same
+# class of defect as a metric reading a key nothing writes.
+
+def test_revalidate_preserves_the_demotion_flag(tmp_con):
+    bad = dict(SILENT, norwegian_requirement_level="certified",
+               evidence_basis="explicit_statement",
+               evidence_strength="explicit_and_unambiguous",
+               evidence_spans=[{"span": "Invented sentence entirely.", "section_language": "no"}])
+    res = {"a": {"custom_id": "a", "type": "succeeded", "facets": bad,
+                 "usage": {"input_tokens": 1, "output_tokens": 1}}}
+    census.run([ad("a")], FakeClient(results=res), tmp_con, max_demotion_rate=1.0)
+    text = ad("a")["description_text"]
+    before = tmp_con.execute("SELECT demoted, reasons FROM ad_facets WHERE uuid='a'").fetchone()
+    assert before[0] is True and before[1], "setup: the falsified span must demote"
+
+    key = census.cache_key(census.MODEL, PROMPT_VERSION, text)
+    census.revalidate_cache(tmp_con, {key: text})
+    census.run([ad("a")], FakeClient(results=res), tmp_con, max_demotion_rate=1.0)
+
+    after = tmp_con.execute("SELECT demoted, reasons FROM ad_facets WHERE uuid='a'").fetchone()
+    assert after[0] is True, "revalidation cleared the demotion flag while the demotion stands"
+    assert after[1], "revalidation cleared the demotion reasons"

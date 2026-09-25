@@ -47,6 +47,14 @@ MODEL = "claude-haiku-4-5-20251001"
 # Haiku 4.5 Batch API, USD per token.
 PRICE_IN = 0.50 / 1_000_000
 PRICE_OUT = 2.50 / 1_000_000
+# Cache READS bill at 0.1x input; cache WRITES at 1.25x. Both were counted as
+# zero, which under-reported by 27.1% because the prompt's cached prefix is
+# 9,217 tokens against 456-1,092 uncached input per call (measured over the
+# recorded responses in tests/fixtures/batch_results_real.json). Over 9,823
+# clusters that is $12.18 reported against $16.71 billed -- and max_spend_usd
+# was computed the same way, so a $20 cap actually permitted ~$27.43.
+PRICE_CACHE_READ = PRICE_IN * 0.1
+PRICE_CACHE_WRITE = PRICE_IN * 1.25
 
 DEFAULT_MAX_DEMOTION_RATE = 0.15
 
@@ -195,8 +203,14 @@ def revalidate_cache(con, key_to_text: Mapping[str, str]) -> int:
         except (json.JSONDecodeError, TypeError):
             continue
         checked = validate_mod.validate(dict(raw), text or "")
+        # `_reasons` is the audit trail run() attaches, and ad_facets.demoted is
+        # derived from it. Writing the bare facets reset `demoted` to False and
+        # `reasons` to [] on the next cached run while the demotion was still in
+        # force -- a demotion whose audit flag says it never happened.
+        out = dict(checked["facets"])
+        out["_reasons"] = checked["reasons"]
         con.execute("UPDATE llm_cache SET response = ? WHERE key = ?",
-                    [json.dumps(checked["facets"], ensure_ascii=False), key])
+                    [json.dumps(out, ensure_ascii=False), key])
         n += 1
     return n
 
@@ -274,6 +288,8 @@ def run(ads: Iterable[Mapping[str, Any]], client, con, *,
                 usage = res.get("usage") or {}
                 spend += usage.get("input_tokens", 0) * PRICE_IN
                 spend += usage.get("output_tokens", 0) * PRICE_OUT
+                spend += usage.get("cache_read_input_tokens", 0) * PRICE_CACHE_READ
+                spend += usage.get("cache_creation_input_tokens", 0) * PRICE_CACHE_WRITE
                 if max_spend_usd is not None and spend > max_spend_usd:
                     raise SpendLimitError(f"spend ${spend:.2f} exceeded cap ${max_spend_usd:.2f}")
                 raw[uuid] = (res["facets"], usage)

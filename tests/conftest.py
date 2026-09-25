@@ -22,14 +22,30 @@ requires_corpus = pytest.mark.skipif(
 )
 
 
+def open_corpus():
+    """Read-only corpus connection, or SKIP with a stated reason.
+
+    Two environment conditions, neither a test failure:
+      - the file is absent (data/ is gitignored, so a fresh clone has none)
+      - another process holds duckdb's write lock (an ingest, a probe, a census)
+    Erroring on either turns "you have work running" into a red suite, which
+    trains people to ignore red. duckdb.connect() also CREATES a missing file,
+    so the existence check must come first or an unguarded test silently
+    asserts against an empty database."""
+    import duckdb
+    if not CORPUS.exists():
+        pytest.skip(f"needs {CORPUS.relative_to(ROOT)} (gitignored; run `make ingest`)")
+    try:
+        return duckdb.connect(str(CORPUS), read_only=True)
+    except duckdb.IOException as e:
+        pytest.skip(f"corpus is locked by another process: {str(e).splitlines()[0][:90]}")
+
+
 @pytest.fixture(scope="session")
 def corpus_con():
     """Read-only connection to the real corpus. Session-scoped: duckdb takes a
     file lock, so per-test connections collide when tests run in one process."""
-    if not CORPUS.exists():
-        pytest.skip(f"needs {CORPUS.relative_to(ROOT)}")
-    from finn_smart_search.ingest import store
-    return store.connect(str(CORPUS))
+    return open_corpus()
 
 
 # ── grounding sources (STANDARDS.md § 3.0) ───────────────────────────────────

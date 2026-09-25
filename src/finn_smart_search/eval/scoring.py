@@ -69,6 +69,25 @@ def _same_span(a: str | None, b: str | None) -> bool:
     return normalise(a).lower() == normalise(b).lower()
 
 
+_TRAILING = ".!?:;,"
+
+
+def _agreement_bucket(want: str, got_spans: list[str]) -> str:
+    """How does the closest predicted span differ from the expected one?
+
+    `different` is a single bucket covering three very unlike situations, and
+    only one of them is a real extraction error. Naming them separately is what
+    stops `exact` being quoted as quality.
+    """
+    w = normalise(want)
+    cands = [normalise(s) for s in got_spans]
+    if any(c.rstrip(_TRAILING) == w.rstrip(_TRAILING) for c in cands):
+        return "trailing_punct_only"
+    if any(w in c or c in w for c in cands):
+        return "containment"
+    return "disjoint"
+
+
 def _accessible(level: str, working: str, doc_lang: str) -> bool:
     return derive_english_accessible(
         {"norwegian_requirement_level": level, "stated_working_language": working},
@@ -111,7 +130,16 @@ def score(predictions: dict, golden: list) -> dict:
     taxonomy_gap: list[str] = []
 
     ev = Counter()
+    # WHY `agreement` travels with `exact`. Measured over the 32 golden spans:
+    # 20 strict-equal, 5 differing ONLY by trailing punctuation, 7 a containment
+    # (the model quoted a superset or subset sentence), 0 a genuinely different
+    # sentence. So `exact` reads 62.5% while substantive agreement is 32/32, and
+    # five points of the gap are a full stop. Reporting `exact` alone would put
+    # that 62.5% in the README as extraction quality.
+    agree = Counter({"strict": 0, "trailing_punct_only": 0,
+                     "containment": 0, "disjoint": 0})
     n_span_expected = 0
+    n_source_supplied = 0
     auth_expected = auth_correct = auth_spurious = 0
     wl_non_default_total = wl_non_default_hit = 0
 
@@ -154,16 +182,21 @@ def score(predictions: dict, golden: list) -> dict:
         want_span = exp["evidence_span"]
         got_spans = [s["span"] for s in p.get("evidence_spans") or []]
         source = normalise(g.get("source_text") or "")
+        if source:
+            n_source_supplied += 1
         if want_span:
             n_span_expected += 1
             if any(_same_span(s, want_span) for s in got_spans):
                 ev["exact"] += 1
+                agree["strict"] += 1
             elif not got_spans:
                 ev["missing"] += 1
             elif source and not any(normalise(s).lower() in source.lower() for s in got_spans):
                 ev["fabricated"] += 1
+                agree["disjoint"] += 1
             else:
                 ev["different"] += 1
+                agree[_agreement_bucket(want_span, got_spans)] += 1
         elif got_spans:
             ev["spurious"] += 1
 
@@ -204,9 +237,18 @@ def score(predictions: dict, golden: list) -> dict:
             "hidden_wrongly_ci95": _wilson(hidden_wrongly, n_accessible),
             "shown_wrongly_ci95": _wilson(shown_wrongly, len(golden) - n_accessible),
         },
+        # `fabricated` is None when it could not be checked. Reporting 0 for
+        # both "checked, none found" and "no source text, nothing checked" is
+        # the ambiguity that let `taxonomy_gap` report [] for the whole project.
+        # `source_text` is injected at runtime from the corpus (run_pilot.py) and
+        # is deliberately NOT a field of golden_set.json — that would put derived
+        # data in a frozen artifact.
         "evidence": {"n_expected": n_span_expected, "exact": ev["exact"],
                      "different": ev["different"], "missing": ev["missing"],
-                     "spurious": ev["spurious"], "fabricated": ev["fabricated"]},
+                     "spurious": ev["spurious"],
+                     "fabricated": (ev["fabricated"] if n_source_supplied else None),
+                     "fabrication_checked": bool(n_source_supplied),
+                     "agreement": dict(agree)},
         "working_language": {
             "non_default_total": wl_non_default_total,
             "non_default_correct": wl_non_default_hit,
