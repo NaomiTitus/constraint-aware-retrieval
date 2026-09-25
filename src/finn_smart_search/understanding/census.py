@@ -35,6 +35,7 @@ from datetime import datetime, timezone
 from typing import Any, Iterable, Mapping
 
 from . import census_validate as validate_mod
+from .. import pii
 from . import dedup
 from .census_prompt import (PROMPT_VERSION, TOOL, USER_TEMPLATE,
                             build_request as _build_params,
@@ -325,7 +326,12 @@ def run(ads: Iterable[Mapping[str, Any]], client, con, *,
     demoted = 0
     for uuid, (facets, usage) in raw.items():
         text = by_uuid[uuid].get("description_text") or ""
-        checked = validate_mod.validate(dict(facets), text)
+        # Scrub contact PII from free-form facet text BEFORE validation, so
+        # nothing carrying a phone or email is ever persisted. Evidence spans are
+        # deliberately untouched (they must stay byte-identical for the verbatim
+        # check); names need the ad's contactList and are handled at the export
+        # boundary. See src/finn_smart_search/pii.py.
+        checked = validate_mod.validate(pii.scrub_facets(facets), text)
         if checked["demoted"]:
             demoted += 1
         facets_by_rep[uuid] = checked["facets"]

@@ -923,3 +923,30 @@ def test_an_unterminated_bullet_span_is_accepted_and_a_truncated_one_is_not(tmp_
 def validate_mod_lang_token(text: str) -> bool:
     from finn_smart_search.understanding import census_validate as v
     return bool(v.LANG_TOKEN.search(text))
+
+
+def test_run_scrubs_contact_pii_from_skill_phrases(tmp_con):
+    """The egress path closed before the census. `skills[].phrase` is free-form
+    model text quoting the body, and the contact person's phone is in the body on
+    9.6% of ads — so excluding `contactList` from exports was a partial control.
+
+    Evidence spans must NOT be scrubbed: they have to stay byte-identical for the
+    verbatim check, which is the defence against fabricated evidence."""
+    body = "Krav til stillingen\nGode norskkunnskaper er et krav\nRing 950 27 028"
+    facets = dict(SILENT, norwegian_requirement_level="professional",
+                  evidence_basis="explicit_statement",
+                  evidence_strength="explicit_and_unambiguous",
+                  evidence_spans=[{"span": "Gode norskkunnskaper er et krav",
+                                   "section_language": "no"}],
+                  skills=[{"phrase": "Ring 950 27 028 for spørsmål", "level": "required"},
+                          {"phrase": "Førerkort klasse B", "level": "required"}])
+    a = dict(ad("a"), description_text=body)
+    res = {"a": {"custom_id": "a", "type": "succeeded", "facets": facets,
+                 "usage": {"input_tokens": 1, "output_tokens": 1}}}
+    out = census.run([a], FakeClient(results=res), tmp_con, max_demotion_rate=1.0)
+    got = out["facets"]["a"]
+    assert "950 27 028" not in str(got["skills"]), "a phone number reached the facets"
+    assert got["skills"][1]["phrase"] == "Førerkort klasse B", "clean phrase altered"
+    assert got["evidence_spans"][0]["span"] == "Gode norskkunnskaper er et krav", \
+        "spans must stay verbatim or the fabrication check breaks"
+    assert got["norwegian_requirement_level"] == "professional", "not demoted"
