@@ -1,0 +1,33 @@
+{
+ "id": "002-facet-exceptions",
+ "status": "HALTED AT DISCOVERY — verdicts discarded, review to be re-run",
+ "purpose": "Six facets take one value on 90-99% of records. If the RARE value is wrong, most of that class is wrong and the modal value hides it. Only the exceptions can tell you which.",
+ "started": "2026-09-26",
+ "n_items": 46,
+ "n_judged_before_halt": 12,
+ "artifact": "https://claude.ai/code/artifact/b40c5f14-6442-4742-833d-d0af1be79023",
+ "why_halted": "The reviewer found a CLASS bug in the first four rows and stopped rather than completing the set. That was correct: the finding changes the extraction, so the remaining 34 rows would have been judged against data about to be replaced.",
+ "finding": {
+  "what": "3 of the 4 `application_language` values were borrowed from a NEIGHBOURING field's enum. The field permits exactly {norwegian_required, english_accepted, unstated}.",
+  "values": {
+   "scandinavian_accepted": "legal in norwegian_requirement_level",
+   "either_norwegian_or_english": "legal in norwegian_requirement_level",
+   "both": "legal in stated_working_language"
+  },
+  "smoking_gun": "Rows 2 and 3 are near-identical boilerplate from university PhD ads — 'documentation to be considered must be in a Scandinavian language or English' and 'documentation must be available in a Scandinavian language or English'. They received DIFFERENT values, one of them illegal. Same meaning, unstable output: not a judgement call, a defect. Only visible because the exceptions review placed near-identical inputs side by side.",
+  "root_cause": "census-v7 told the model a documentation clause is NOT a job requirement and never said where it SHOULD go. With no destination, the model recognised the clause and borrowed vocabulary from a neighbouring field — differently on inputs differing only in wording.",
+  "why_nothing_caught_it": "Tool-use does not enforce declared enums server-side; census_validate checked no enums; scoring checked norwegian_requirement_level alone."
+ },
+ "fixes": [
+  "census_validate validates EVERY enum field, derived from TOOL rather than hand-listed, and demotes an out-of-enum value rather than warning.",
+  "census-v9 names application_language's three values, says they are its own, and lists the three borrowed values as invalid.",
+  "tests/unit/test_enum_validation.py parametrises over the schema in both directions, plus the cross-field cases specifically."
+ ],
+ "why_the_verdicts_are_discarded": [
+  "The reviewer stopped at the finding; 12 of 46 rows is not a completed review and recording it as one would misrepresent it.",
+  "THE VERDICT QUESTION WAS AMBIGUOUS for this facet. Rows 1, 2 and 4 were marked 'Justified' — correctly, in that the ad DOES state a documentation language — while the stored VALUE was illegal for the field. 'Does the ad support this fact' and 'is this the right value here' are different questions and the tool offered one button for both.",
+  "Row 12 was marked 'wrong' because the tool's per-facet search terms hid the evidence: the ad says 'Ordnede boforhold ved behov' and the filter looked for 'bolig'. Fixed by widening the terms AND by putting the full advertisement behind a toggle on every row, so a filter can never again bound the evidence.",
+  "census-v9 changes the extraction, so the 46 exception rows themselves will differ. The review must be regenerated from the census output, not resumed."
+ ],
+ "next": "Regenerate after the full census under census-v9, with the verdict question split into 'is the fact in the ad' and 'is the value legal and correct for this field'."
+}

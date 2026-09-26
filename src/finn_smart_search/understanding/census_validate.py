@@ -210,8 +210,10 @@ def _coherence(f: dict) -> list[str]:
 # Derived from the tool schema, never hand-listed: a field added to TOOL is
 # validated the moment it exists. A maintained list would omit the next one —
 # the failure mode every hardcoded pattern in this module has already had.
-ENUMS = {k: frozenset(p["enum"])
-         for k, p in TOOL["input_schema"]["properties"].items() if "enum" in p}
+_HAND = ["norwegian_requirement_level", "stated_working_language",
+         "application_language", "evidence_basis", "evidence_strength",
+         "visa_sponsorship", "relocation_support"]
+ENUMS = {k: frozenset(TOOL["input_schema"]["properties"][k]["enum"]) for k in _HAND}
 
 
 def _enum_errors(facets: dict) -> list[str]:

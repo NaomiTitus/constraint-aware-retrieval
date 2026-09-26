@@ -62,12 +62,27 @@ Not committed: ad bodies, employer contact details, and the rendered worksheets.
 body on 11.8% of ads, their email on 10.1%, their phone on 9.6%, so excluding
 the structured `contactList` alone is only a partial control.
 
+## A review that stopped early is a successful review
+
+`002` was halted after 12 of 46 rows. The reviewer found a class bug — three of
+four `application_language` values were borrowed from other fields' enums — and
+stopped rather than completing the set against data that was about to change.
+
+Its verdicts are discarded, and the manifest says why in full, including two
+faults in the TOOL rather than the reviewer: a verdict button that conflated
+"does the ad support this fact" with "is this the right value for this field",
+and per-facet search terms that hid the evidence on one row. Both are fixed.
+
+Recording a halted review, with its partial verdicts thrown away, is the honest
+form. Completing it for the sake of a full set would have produced 34 more
+judgements about output that no longer exists.
+
 ## Reviews
 
 | id | what | items | state |
 |---|---|---:|---|
 | `001-sealed-language` | held-out language labels — the unbiased accuracy set | 28 | labelled |
-| `002-facet-exceptions` | the rare values of near-constant facets | 46 | in progress |
+| `002-facet-exceptions` | the rare values of near-constant facets | 46 | **halted at discovery** — found a class bug in 4 rows; to be re-run after census-v9 |
 | `003-finn-baseline` | the live FINN product, via CV upload | 15 | not started |
 
 ### A retired review
