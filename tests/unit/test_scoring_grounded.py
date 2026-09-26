@@ -25,8 +25,25 @@ pytestmark = [pytest.mark.unit, requires_corpus]
 # Measured over all 44 golden ads with real predictions. Regenerate ONLY with a
 # recorded reason.
 #
-#   2026-09-25  census-v6: pooled 0.909, hidden 0, exact 20/different 12/missing 0
-#   2026-09-25  census-v8: pooled 0.864, hidden 1, exact 19/different 12/missing 1
+#   2026-09-25  census-v6:  pooled 0.909, hidden 0, exact 20/different 12/missing 0
+#   2026-09-25  census-v8:  pooled 0.864, hidden 1, exact 19/different 12/missing 1
+#   2026-09-26  census-v10: pooled 0.864, hidden 1, shown 1  — byte-identical to
+#               v8, which is itself the finding recorded as LIMITATIONS §11: v10
+#               changed `application_language` on three ads and the gate could
+#               not see it, because it scores none of the facets that moved.
+#   2026-09-26  census-v11: pooled 0.886, hidden 1, shown 0, exact 19/12/1
+#               scandinavian_accepted 8/8 (was 7/8)
+#               working_language non-default recall 4/4 (was 3/4)
+#               THIS TEST CAUGHT THE CHANGE, which is what it is for. Accepted
+#               as an improvement, not waved through: the v11 prompt added two
+#               `application_language` rules and nothing touching the level, so
+#               a level gain was not the intent and had to be explained before
+#               the baseline moved. It is one ad — the `scandinavian_accepted`
+#               that v8 missed — plus the disappearance of the single
+#               shown-wrongly. One ad on a set that has driven six prompt
+#               iterations is noise on an over-fitted instrument in EITHER
+#               direction; the number is updated because the run is real, not
+#               because the change is significant.
 #
 # WHY THE v8 NUMBERS ARE ACCEPTED DESPITE BEING LOWER. The difference is TWO ADS
 # (40/44 vs 38/44) on a set that has driven five prompt iterations, so it is noise
@@ -49,11 +66,11 @@ pytestmark = [pytest.mark.unit, requires_corpus]
 #
 # The unbiased comparison is the held-out probes, not this set.
 BASELINE = {
-    "pooled_accuracy": 0.864,
+    "pooled_accuracy": 0.886,
     "coverage": 1.0,
     "invalid_levels": 0,
     "hidden_wrongly": 1,
-    "shown_wrongly": 1,
+    "shown_wrongly": 0,
     "n_blocking": 32,
     "evidence": {"n_expected": 32, "exact": 19, "different": 12,
                  "missing": 1, "spurious": 3, "fabricated": 0},
