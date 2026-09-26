@@ -43,6 +43,32 @@ a reviewer who reads Norwegian could find a case where they diverge.
 made unconditionally. Until then the number should be read with this caveat
 attached.
 
+## 1b. The feature this project critiques was withdrawn mid-build, and the original observation is unevidenced
+
+The project began from a reproducible observation: FINN's AI job search
+(SmartSøk, `finn.no/job/assistant/search`) returned Norwegian-requiring ads for
+a query that stated *"I do not speak Norwegian"*. **Between 2026-09-22 and
+2026-09-26 that feature was replaced by CV-upload matching.**
+
+No screenshot or recording of the original behaviour was kept — the feature was
+not expected to change — so the README must say **"observed"**, not
+**"measured"**. The manual baseline was designed around pasting persona queries
+into SmartSøk; that is no longer possible and the tool built for it has been
+withdrawn rather than left to imply evidence that cannot be produced.
+
+**Why the thesis survives, and sharpens.** A query can state *"I do not speak
+Norwegian."* A CV cannot: it lists what you have, never what you lack. The
+constraint becomes an ABSENCE — Norwegian missing from a languages list — and an
+absence is even less representable in embedding space than a negation sentence.
+There is no vector for "this skill is not present". So the replacement feature is
+subject to the same architectural flaw in a form that is harder, not easier, to
+fix by improving the encoder.
+
+The baseline will therefore be run against the CV-matching feature as it exists
+now, using the same list-relative metric (CVR@10). That measures the live
+product rather than a retired one, which is more useful to the reader and
+honestly obtainable.
+
 ## 2. The 44-ad golden set is a regression gate, not a measurement
 
 The prompt was tuned against it across **eight versions** (`census-v4` →

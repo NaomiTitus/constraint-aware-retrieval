@@ -1,0 +1,100 @@
+{
+ "n_golden": 28,
+ "n_scored": 28,
+ "unscored": [],
+ "extra_predictions": 0,
+ "coverage": 1.0,
+ "pooled_accuracy": 0.9642857142857143,
+ "pooled_accuracy_caveat": "Pooled accuracy is dominated by the golden set's level mix, which is a stratified sampling artifact: `desirable` is over-represented ~200x relative to the corpus. Read per_level instead.",
+ "per_level": {
+  "certified": {
+   "n": 3,
+   "correct": 3,
+   "accuracy": 1.0
+  },
+  "fluent": {
+   "n": 1,
+   "correct": 1,
+   "accuracy": 1.0
+  },
+  "scandinavian_accepted": {
+   "n": 3,
+   "correct": 3,
+   "accuracy": 1.0
+  },
+  "professional": {
+   "n": 13,
+   "correct": 13,
+   "accuracy": 1.0
+  },
+  "unstated": {
+   "n": 3,
+   "correct": 2,
+   "accuracy": 0.6666666666666666
+  },
+  "desirable": {
+   "n": 1,
+   "correct": 1,
+   "accuracy": 1.0
+  },
+  "either_norwegian_or_english": {
+   "n": 4,
+   "correct": 4,
+   "accuracy": 1.0
+  }
+ },
+ "invalid_levels": 0,
+ "taxonomy_gap": [],
+ "accessibility": {
+  "hidden_wrongly": 0,
+  "shown_wrongly": 1,
+  "n_accessible": 6,
+  "n_blocking": 22,
+  "hidden_wrongly_rate": 0.0,
+  "shown_wrongly_rate": 0.045454545454545456,
+  "hidden_wrongly_ci95": [
+   0.0,
+   0.3903430336530645
+  ],
+  "shown_wrongly_ci95": [
+   0.008069219301147859,
+   0.21798489499518053
+  ]
+ },
+ "evidence": {
+  "n_expected": 27,
+  "exact": 21,
+  "different": 6,
+  "missing": 0,
+  "spurious": 0,
+  "fabricated": 0,
+  "fabrication_checked": true,
+  "agreement": {
+   "strict": 21,
+   "trailing_punct_only": 0,
+   "containment": 6,
+   "disjoint": 0
+  }
+ },
+ "working_language": {
+  "non_default_total": 0,
+  "non_default_correct": 0,
+  "non_default_recall": null,
+  "correct": 25
+ },
+ "authorisation": {
+  "n_expected": 3,
+  "correct": 2,
+  "spurious": 2
+ },
+ "confusion": {
+  "certified->certified": 3,
+  "fluent->fluent": 1,
+  "scandinavian_accepted->scandinavian_accepted": 3,
+  "professional->professional": 13,
+  "unstated->explicitly_not_required": 1,
+  "desirable->desirable": 1,
+  "either_norwegian_or_english->either_norwegian_or_english": 4,
+  "unstated->unstated": 2
+ }
+}

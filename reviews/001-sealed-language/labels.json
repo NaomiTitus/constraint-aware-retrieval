@@ -1,0 +1,422 @@
+[
+ {
+  "n": 1000,
+  "uuid": "cc10255d-6f93-489c-9760-872b4c762280",
+  "title": "Psykolog/ psykologspesialist",
+  "stratum": "comma_disjunction",
+  "expected": {
+   "norwegian_requirement_level": "certified",
+   "evidence_span": "Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fullført norskspråklig videregående skole, må minimum ha bestått Bergenstesten, eller annen norsktest på B2 nivå.",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1001,
+  "uuid": "339cd78d-7ac3-43a1-9396-879d1827e62d",
+  "title": "Vikar i SFO Gakori skole",
+  "stratum": "comma_disjunction",
+  "expected": {
+   "norwegian_requirement_level": "fluent",
+   "evidence_span": "Du snakker og skriver flytende norsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1002,
+  "uuid": "bff842d2-18c8-4be0-9c51-17474e0179b3",
+  "title": "Forsker innen samfunnssikkerhet/sikkerhet",
+  "stratum": "comma_disjunction",
+  "expected": {
+   "norwegian_requirement_level": "scandinavian_accepted",
+   "evidence_span": "Gode kommunikasjonsevner i engelsk og i ett av de skandinaviske språkene (norsk, svensk eller dansk), skriftlig og muntlig",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1003,
+  "uuid": "461384ae-71b6-4648-a65a-b26a78c2a29b",
+  "title": "Er du aktiv? Liker du å reise? Da er det deg jeg leter etter!",
+  "stratum": "bullet_glyph",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "evidence_span": "· Har gode norskkunnskaper, muntlig og skriftlig",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1004,
+  "uuid": "ee02dcff-ab5d-4930-b52f-73f08fa2c666",
+  "title": "Drift Infrastruktur - Byggdrift",
+  "stratum": "bullet_glyph",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "evidence_span": "• Må beherske norsk muntlig og skriftlig tilstrekkelig til å utøve yrket forsvarlig.",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1005,
+  "uuid": "c020ce5f-f65b-46f8-9725-e9320c1d3ac3",
+  "title": "We are looking for four part-time booking assistants to join our office team!",
+  "stratum": "bullet_glyph",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "evidence_span": "· Fluent in English (other languages are a bonus)",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "en",
+  "derived_accessible": true
+ },
+ {
+  "n": 1006,
+  "uuid": "c14b7aaa-d32c-4d78-9821-7b65de84f4ac",
+  "title": "Styrer",
+  "stratum": "truncated",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "evidence_span": "god norsk muntlig og skriftlig fremstillingsevne (barnehageloven § 28)",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1007,
+  "uuid": "871e0793-a497-4c50-8c72-e8ce19e77f35",
+  "title": "Fengselsaspirant ved Vadsø fengsel",
+  "stratum": "truncated",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "evidence_span": "God muntlig og skriftlig fremstillingsevne i norsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1008,
+  "uuid": "7c540360-4f25-445c-b6dc-4a5bc24fa3b7",
+  "title": "Ledig stilling ved operasjonssentralen som Politibetjent 3/2/1",
+  "stratum": "truncated",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "evidence_span": "God skriftlig og muntlig fremstillingsevne, norsk og engelsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1009,
+  "uuid": "a8a6e077-4902-4e0c-bc28-2abf17684fe9",
+  "title": "PhD Fellow in AI-Automated Voltage Control for Future Distribution Networks",
+  "stratum": "doc_clause",
+  "expected": {
+   "norwegian_requirement_level": "desirable",
+   "evidence_span": "Working knowledge of Norwegian or a Scandinavian language is also beneficial.",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "en",
+  "derived_accessible": true
+ },
+ {
+  "n": 1010,
+  "uuid": "885aaa35-7f9e-4a67-acb4-bdf0824f8709",
+  "title": "Helgestilling",
+  "stratum": "doc_clause",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "evidence_span": "Ha gode norskkunnskaper både skriftlig og muntlig",
+   "stated_working_language": "unstated",
+   "authorisation_required": "Helsefagarbeider med norsk autorisasjon, sykepleier-/ vernepleierstudent."
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1011,
+  "uuid": "5f63a811-997e-4118-a4fe-aa4f0a3f81a7",
+  "title": "Elektrikere søkes / Electricians wanted!",
+  "stratum": "english_worded",
+  "expected": {
+   "norwegian_requirement_level": "either_norwegian_or_english",
+   "evidence_span": "● Gode kommunikasjonsevner på norsk eller engelsk / Good communication skills in Norwegian or English",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "mixed",
+  "derived_accessible": true
+ },
+ {
+  "n": 1012,
+  "uuid": "70715209-54ae-43a2-9b04-2372fb71830d",
+  "title": "We’re Hiring: Part-Time Cleaner for Short-Term Rental Homes",
+  "stratum": "english_worded",
+  "expected": {
+   "norwegian_requirement_level": "either_norwegian_or_english",
+   "evidence_span": "Can communicate in Norwegian or English",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "en",
+  "derived_accessible": true
+ },
+ {
+  "n": 1013,
+  "uuid": "a089137a-1ef4-4c4b-a119-74f1bf0506ea",
+  "title": "Vil du profesjonalisere og forenkle det digitale sikkerhetsarbeidet i en virksomhet med stort samfunnsansvar?",
+  "stratum": "it_vertical",
+  "expected": {
+   "norwegian_requirement_level": "certified",
+   "evidence_span": "God muntlig og skriftlig fremstillingsevne på norsk. For søkere som ikke har norsk som sitt førstespråk er det krav om minimum B2 eller tilsvarende nivå.",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1014,
+  "uuid": "2adaa9a6-9928-435e-a3cd-1fdfb54f6f22",
+  "title": "100 % fast stilling som fagsystemansvarlig for ressursstyringssystem ",
+  "stratum": "it_vertical",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "evidence_span": "God muntlig og skriftlig fremstillingsevne i norsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1015,
+  "uuid": "9ec71a11-3f27-47c9-b02a-04f9731afd0d",
+  "title": "Er du en erfaren pentester som kombinerer dyp teknisk forståelse, med trygg og profesjonell kundekommunikasjon?",
+  "stratum": "it_vertical",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "evidence_span": "god skriftlig og muntlig fremstillingsevne på norsk og engelsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1016,
+  "uuid": "1c66495a-ac99-42b2-9bc4-01d99284302c",
+  "title": "Sprinklermontør",
+  "stratum": "handverkere",
+  "expected": {
+   "norwegian_requirement_level": "either_norwegian_or_english",
+   "evidence_span": "Skandinavisk språkforståelse eller flytende engelsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": true
+ },
+ {
+  "n": 1017,
+  "uuid": "2ca7882b-b36f-4da3-a917-446514589975",
+  "title": "Vil du lede vedlikeholdsarbeidet ved et av Norges mest moderne sorteringsanlegg for plastemballasje?",
+  "stratum": "handverkere",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "evidence_span": "Gode kommunikasjonsevner på norsk og engelsk, både muntlig og skriftlig",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1018,
+  "uuid": "e2bee038-2c6a-4dca-a367-a3513522cfd3",
+  "title": "Vi søker etter en lastebilmekaniker til 2 uker på og 2 uker av !",
+  "stratum": "handverkere",
+  "expected": {
+   "norwegian_requirement_level": "either_norwegian_or_english",
+   "evidence_span": "Holder med at du kan prate engelsk eller skandinavisk språk.",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": true
+ },
+ {
+  "n": 1019,
+  "uuid": "27447103-81c4-4dec-9cf0-7c9a45ad152a",
+  "title": "To stillingar som stipendiat i klimadynamikk",
+  "stratum": "utdanning",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "evidence_span": "Søkjarar må ha gode skriftlege og munnlege engelskkunnskapar",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1020,
+  "uuid": "e6065639-9cba-4bfb-b476-3d0602510fb2",
+  "title": "Virksomhet for barnehager",
+  "stratum": "utdanning",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "evidence_span": "Du må beherske norsk både muntlig og skriftlig tilstrekkelig til å utøve yrket forsvarlig",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1021,
+  "uuid": "90c9cd3b-439f-4e47-82a6-460afe2b85da",
+  "title": "Rektor ved OsloMet",
+  "stratum": "nordic_or_english",
+  "expected": {
+   "norwegian_requirement_level": "scandinavian_accepted",
+   "evidence_span": "meget god skriftlig og muntlig fremstillingsevne på norsk eller annet skandinavisk språk, samt engelsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1022,
+  "uuid": "5588f7ff-fc88-46ba-b716-eed1c631af98",
+  "title": "Seksjonssjef HR - rekruttering og personalforvaltning",
+  "stratum": "nordic_or_english",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "evidence_span": "god skriftlig og muntlig framstillingsevne på norsk og engelsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1023,
+  "uuid": "f87380f0-32ad-4693-8f30-cf8366f2394f",
+  "title": "Jobb på sykehus",
+  "stratum": "quantified_years",
+  "expected": {
+   "norwegian_requirement_level": "scandinavian_accepted",
+   "evidence_span": "Flytende norsk eller et annet nordisk språk",
+   "stated_working_language": "unstated",
+   "authorisation_required": "Norsk autorisasjon som sykepleier"
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1024,
+  "uuid": "2b0e41aa-bece-4bec-994b-de13621a45f4",
+  "title": "Sykepleier til legevakt i Finnmark",
+  "stratum": "quantified_years",
+  "expected": {
+   "norwegian_requirement_level": "certified",
+   "evidence_span": "Gode norskkunnskaper, muntlig og skriftlig (minimum B2)",
+   "stated_working_language": "unstated",
+   "authorisation_required": "Norsk autorisasjon som sykepleier"
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1025,
+  "uuid": "c10ed89a-db92-46d5-88f9-6a476c67df62",
+  "title": "Rådgiver sparing og investering",
+  "stratum": "work_mode",
+  "expected": {
+   "norwegian_requirement_level": "unstated",
+   "evidence_span": null,
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1026,
+  "uuid": "530771b2-8749-41a3-b402-4bc9aec1bcfb",
+  "title": "Regnskapsfører med ansvar for egne selskaper?  ",
+  "stratum": "work_mode",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "evidence_span": "God muntlig og skriftlig fremstillingsevne på norsk",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ },
+ {
+  "n": 1027,
+  "uuid": "eee5c4a9-4add-4852-8e84-9788c0568fd6",
+  "title": "Er du vår nye salgsreporter i Romerike?",
+  "stratum": "work_mode",
+  "expected": {
+   "norwegian_requirement_level": "professional",
+   "evidence_span": "● Du må mestre norsk, både muntlig og skriftlig.",
+   "stated_working_language": "unstated",
+   "authorisation_required": null
+  },
+  "note": null,
+  "doc_lang": "no",
+  "derived_accessible": false
+ }
+]

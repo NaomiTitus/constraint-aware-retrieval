@@ -93,3 +93,28 @@ def test_the_page_says_where_labels_are_being_stored(page):
     """The labeller should be able to tell whether their work is only in this
     browser. Silence here is how an hour goes missing."""
     assert re.search(r"saved to this artifact|this browser only|not synced", page, re.I)
+
+
+@requires_build
+def test_a_local_edit_is_timestamped_so_a_snapshot_cannot_clobber_it(page):
+    """THE clobber bug, found by reading the merge rule rather than by using it.
+
+    The rule is `if (!mine || (v.at && (!mine.at || v.at > mine.at)))`. Local
+    saves did not stamp `at`, so `!mine.at` was ALWAYS true and any incoming
+    snapshot overwrote a fresh local edit — including the 600ms debounce window
+    between typing and the remote write.
+
+    The concrete case: correcting ad 1's authorisation field would have silently
+    reverted to the stored paraphrase, which is the most confusing possible
+    failure — the edit appears to take, then undoes itself.
+    """
+    assert re.search(r"r\.at\s*=|rec\([^)]*\)\.at\s*=|\.at\s*=\s*new Date\(\)", page), \
+        "local saves must stamp `at`, or the merge always prefers the remote row"
+
+
+@requires_build
+def test_the_merge_prefers_whichever_side_is_newer(page):
+    """Symmetric comparison: with both sides stamped, last-writer-wins is
+    actually last-writer-wins rather than always-remote-wins."""
+    m = re.search(r"if \(!mine \|\| \(v\.at && \(!mine\.at \|\| v\.at > mine\.at\)\)\)", page)
+    assert m, "merge rule changed; re-verify it cannot clobber a newer local edit"

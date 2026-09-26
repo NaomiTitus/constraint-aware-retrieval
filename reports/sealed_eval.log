@@ -1,0 +1,27 @@
+prompt census-v8  |  28 SEALED ads (never tuned against)
+
+census: 77s  calls=28  cache_hits=0  demoted=0 (0%)  spend=$0.210
+
+coverage 100%   pooled 96.4%   invalid_levels=0
+
+PER LEVEL
+  professional                 13/13   100% ####################
+  either_norwegian_or_english   4/ 4   100% ####################
+  certified                     3/ 3   100% ####################
+  scandinavian_accepted         3/ 3   100% ####################
+  unstated                      2/ 3    67% #############
+  fluent                        1/ 1   100% ####################
+  desirable                     1/ 1   100% ####################
+
+ACCESSIBILITY  (the metric that matters)
+  hidden wrongly   0 of  6 accessible   ci95 [0.00, 0.39]
+  shown wrongly    1 of 22 blocking
+
+EVIDENCE SPANS (of 27)
+  exact 21  different 6  missing 0  fabricated 0  spurious 0
+  agreement {'strict': 21, 'trailing_punct_only': 0, 'containment': 6, 'disjoint': 0}
+
+authorisation 2/3  spurious 2
+
+MISCLASSIFICATIONS
+  unstated                     -> explicitly_not_required      x1

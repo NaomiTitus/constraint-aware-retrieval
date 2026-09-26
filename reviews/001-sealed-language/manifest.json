@@ -1,0 +1,59 @@
+{
+ "id": "001-sealed-language",
+ "purpose": "An unbiased accuracy measurement for the language facet. The 44-ad golden set had driven eight prompt versions (census-v4 to v8) and is a regression gate, not an estimate; these ads were selected after the prompt was frozen and must never be tuned against.",
+ "labelled_on": "2026-09-26",
+ "n_items": 28,
+ "selection": {
+  "script": "scripts/make_golden_worksheet.py",
+  "seed": 20260925,
+  "rule": "Excluded the 44 golden ads, bucketed the rest into 11 strata, kept ads carrying a language token ahead of those without, then seeded-random within each stratum, deduplicated across strata.",
+  "strata_and_why": {
+   "comma_disjunction": "120 corpus ads, 0 golden — a census-v7 rule with no behavioural test",
+   "bullet_glyph": "425 corpus ads, 0 golden — the glyph bug demoted 9 ads with correct evidence",
+   "truncated": "505 ads with a language line, 0 golden — prepare() cuts mid-block on 519",
+   "doc_clause": "254 corpus ads, 1 golden — census-v7 rule, thin",
+   "english_worded": "56 corpus ads, 1 golden — the requirement stated in English",
+   "nordic_or_english": "251 corpus ads, 2 golden",
+   "quantified_years": "311 corpus ads, 1 golden — min_years_experience is scored by nothing",
+   "work_mode": "362 corpus ads, 0 golden",
+   "it_vertical": "240 corpus ads, 0 golden — the vertical of the originating bug",
+   "handverkere": "758 corpus ads, 1 golden — the trades vertical",
+   "utdanning": "1,471 corpus ads, 2 golden"
+  },
+  "known_limits": [
+   "Selection is random WITHIN a category, so a vertical stratum is not guaranteed to contain the named persona's occupation.",
+   "Three ads matched their stratum's pattern on a clause that is not the case the stratum exists for (a mother-tongue clause, a documents clause, a staffing agency's own age). They carry a clean language line and were kept.",
+   "Only 3 of 28 are `unstated` against a corpus rate of 74.6%: the strata deliberately select ads that SAY something, so this set measures the rules and not silence-handling."
+  ]
+ },
+ "method": {
+  "tool": "scripts/build_review_artifact.py (see reviews/README.md)",
+  "prefill": "claude-opus-5, given the label space only — no precedence rules, no few-shots — so a disagreement with the census prompt's conventions would be informative rather than inherited.",
+  "human": "Every suggestion reviewed and confirmed or overridden by the project author, working from literal English glosses (LIMITATIONS.md §1).",
+  "gate": "eval/sealed_ingest.py — 28 accepted, 0 rejected"
+ },
+ "outcome": {
+  "level_distribution": {
+   "certified": 3,
+   "fluent": 1,
+   "scandinavian_accepted": 3,
+   "professional": 13,
+   "unstated": 3,
+   "desirable": 1,
+   "either_norwegian_or_english": 4
+  },
+  "derived_accessible": 6,
+  "changed_from_prefill": {
+   "norwegian_requirement_level": 0,
+   "evidence_span": 0,
+   "stated_working_language": 28,
+   "authorisation_required": 6
+  },
+  "findings": [
+   "authorisation_required was seeded with the model's ENGLISH rendering ('Norwegian psychologist authorisation (norsk autorisasjon som psykolog)') for an ad reading 'Psykolog med norsk autorisasjon.' The field is SCORED against the extractor's Norwegian, so a paraphrase fails a correct answer. The tool now offers the ad's own line and the gate refuses an ungrounded one.",
+   "stated_working_language was non-`unstated` on 27 of 28, and NO ad contained a working-language statement under a pattern six times wider than the first attempt. The model's own reasoning shows it inferring from the REQUIREMENT, which the schema forbids ('ONLY when the ad states it... Do not infer'). All 28 corrected to `unstated`, matching the golden set's 40-of-44."
+  ]
+ },
+ "artifact": "https://claude.ai/code/artifact/633ec872-7e61-4eb5-b7ec-2dc5827952bf",
+ "labels_file": "reviews/001-sealed-language/labels.json"
+}

@@ -196,6 +196,12 @@ const saveRemote = n => {
 // Coalesce bursts: one write per ad per 600ms of quiet, never one per keystroke.
 const pending = {};
 const save = n => {
+  // Stamp the local edit. Without this, `mine.at` was always undefined, the
+  // merge rule's `!mine.at` was always true, and an incoming snapshot ALWAYS
+  // won — so a fresh edit could silently revert to the stored row inside the
+  // 600ms debounce window. Correcting a field and watching it undo itself is
+  // the most confusing failure this page could have.
+  if (n != null && labels[n]) labels[n].at = new Date().toISOString();
   saveLocal();
   if (n == null || !DB) return;
   clearTimeout(pending[n]);
