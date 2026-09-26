@@ -140,3 +140,78 @@ personas:
     query: >
       I am a civil engineer with experience in structural design and Eurocode.
       I do not speak Norwegian. I am open to roles anywhere in Norway.
+
+  # ── controls: NO language constraint stated ───────────────────────────────
+  #
+  # ADDED AFTER THE CENSUS, and the census is why. Every one of the 15 personas
+  # above states a language constraint, so nothing measured the ordinary case:
+  # a seeker who never mentions language at all. That is most seekers.
+  #
+  # The risk is concrete. The census puts 3,507 ads — 34.5% of the corpus — in
+  # the blocking set by SILENCE alone, not by any stated requirement. If the
+  # constraint stage fires unconditionally, every seeker sees 9.4% of the
+  # corpus, the product is destroyed for the ~90% who speak Norwegian, and the
+  # language metric looks excellent throughout.
+  #
+  # So these four exist to assert a NON-effect: for a query with no language
+  # sentence, the ranking must be identical to the same pipeline with the
+  # constraint stage switched off. `expect_language_constraint: false` is what
+  # tests/unit/test_constraints_only_when_stated.py keys on.
+  #
+  # They also exercise the facets the evaluation otherwise ignores. The census
+  # extracts 15; the personas above test one.
+
+  - id: c1_lager_no_language_mention
+    vertical: Logistics
+    control: true
+    expect_language_constraint: false
+    exercises: [location, extent, drivers_license]
+    why: >
+      The plain case, and the majority one. Nothing about language, so the
+      language stage must contribute exactly nothing. Also the lowest-text-volume
+      ad regime, where a constraint stage has the least to work with.
+    query: >
+      Jeg søker jobb på lager i Bergen. Jeg har truckførerbevis og førerkort
+      klasse B. Jeg kan jobbe skift.
+
+  - id: c2_sykepleier_authorisation_only
+    vertical: Healthcare
+    control: true
+    expect_language_constraint: false
+    exercises: [authorisation, location, extent]
+    why: >
+      AUTHORISATION IN ISOLATION. `authorisation_required` has its own constraint
+      and its own badge precisely so a LICENSING rule is never mistaken for a
+      language rule — and no persona tested it alone. This one states a licence
+      and says nothing about language, so any language penalty applied here is
+      the exact confusion the separation exists to prevent.
+    query: >
+      Jeg er sykepleier med norsk autorisasjon og HPR-nummer. Jeg ser etter
+      fast stilling i Trondheim, gjerne dagvakt.
+
+  - id: c3_utvikler_remote_seniority
+    vertical: Technology
+    control: true
+    expect_language_constraint: false
+    exercises: [remote, seniority, skills]
+    why: >
+      Seniority and remote, with no language sentence. IT is the corpus's
+      thinnest vertical (240 ads) and its most English-friendly, so a language
+      stage that leaks would show up here first.
+    query: >
+      Jeg er senior backend-utvikler med åtte års erfaring i Python og
+      Kubernetes. Jeg ønsker å jobbe hjemmefra eller hybrid.
+
+  - id: c4_laerer_norsk_speaker
+    vertical: Education
+    control: true
+    expect_language_constraint: false
+    exercises: [location, contract]
+    why: >
+      A FLUENT Norwegian speaker who does not think to mention it, which is how
+      a Norwegian speaker actually writes. Distinct from p6, who states the
+      absence. If silence is read as a constraint, this persona is punished for
+      saying nothing.
+    query: >
+      Jeg er grunnskolelærer med undervisningskompetanse i norsk og matematikk.
+      Jeg søker fast stilling i Oslo-området fra høsten.
