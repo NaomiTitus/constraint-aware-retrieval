@@ -293,3 +293,60 @@ on the prompt's own worked example.
 A regression gate that cannot see a change cannot certify it. This is §4 with a
 worked example attached, and it is the argument for the exceptions review: for
 an unscored facet, reading the rare values is the only measurement there is.
+
+## 12. The negation probe ran on a different encoder than the plan names, and its own rubric returned a split verdict
+
+**The instrument is not nb-sbert.** `PLAN.md` D2 specifies
+`NbAiLab/nb-sbert-base` via torch. There is no PyTorch wheel for this machine —
+Python 3.13 on Intel macOS, and PyTorch dropped `macOS x86_64` after 2.2 — so
+the probe ran `sentence-transformers/paraphrase-multilingual-mpnet-base-v2`
+through **ONNX Runtime on CPU**: same family, the same 768 dimensions the plan's
+sizing assumes, Norwegian in training data, no torch dependency. 10,166 ads
+embedded in 2,712s.
+
+The claim under test is about bi-encoders **as a class**, so a sibling
+multilingual encoder is a fair instrument for it. What is *not* permissible is
+attributing any number below to nb-sbert-base, **which has never been executed
+in this project**. Every figure here is mpnet-via-ONNX.
+
+**The rubric, as the script itself prints it:** *the premise holds if cosine is
+high **and** overlap@10 is high.* Five paired personas, dense channel only:
+
+| metric | result | reads as |
+|---|---:|---|
+| mean cosine, stated-vs-negated query | **0.914** | high — as predicted |
+| mean overlap@10 | 5.6/10 | middling — **not** as predicted |
+| Kendall tau | −0.229 … +0.236 | scattered around zero |
+| **blocking ads in top-10** | **3.6/10** | the product harm |
+
+**So the rubric is not satisfied as written, and it is recorded as a split
+verdict rather than a confirmation.** The query vectors are nearly identical at
+0.914; the rankings they produce are not. Half the top-10 turns over and the
+rank correlation is indistinguishable from zero. Reporting this as a clean win
+would repeat the error §1b's control caught one commit earlier — reading a
+favourable number as proof without checking what it is being compared against.
+
+**What does not depend on the rubric.** Two results stand on their own:
+
+- `blocking_in_top10` = **3.6/10**. A seeker who explicitly stated they do not
+  speak Norwegian still receives roughly a third of their top-10 from ads that
+  demand it. Whether the ranking reshuffles is beside the point if the offending
+  ads survive the reshuffle.
+- **Cell 3, on 5 of 5 personas**: stating *"jeg snakker ikke norsk"* moved the
+  seeker vector **closer** to the census-identified Norwegian-demanding ads than
+  saying nothing at all (0.314 vs 0.247; 0.300 vs 0.253; 0.250 vs 0.218; 0.287
+  vs 0.267; 0.203 vs 0.146). The seeker is penalised for declaring the
+  constraint. No ranking metric is required to see it and the direction is
+  unanimous.
+
+**What this probe cannot support.** Five pairs is five pairs: no confidence
+interval is computed and none should be quoted. It is the **dense channel in
+isolation** — no BM25, no RRF fusion, no constraint stage — so it measures a
+component, not the product, and the retrieval ablation (E6) remains the only
+thing that can speak to end-to-end behaviour. And it is a **query-side**
+measurement: the refined hypothesis it raises — that dilution is symmetric
+while its *consequence* is asymmetric, because occupation signal saturates the
+corpus and "the absence of a requirement" has almost nothing to survive into —
+is stated but **not yet tested**.
+
+Raw output: `reports/negation_probe.json`, `reports/negation_probe.log`.

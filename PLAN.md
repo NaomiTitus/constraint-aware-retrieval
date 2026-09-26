@@ -31,7 +31,10 @@ C4 Hájek-weighted P/R/prevalence; report Kish ESS; bootstrap CIs by employer
 
 ## D. Retrieval
 D1 BM25, dual Snowball stemming (no + en), char 3-5grams for compounds
-D2 Dense: nb-sbert-base, brute-force numpy (10k×768 = 30MB, ~5ms)
+D2 Dense: brute-force numpy (10k×768 = 30MB, ~5ms). DEVIATION: nb-sbert-base needs
+   torch, and there is no PyTorch wheel for Python 3.13 on Intel macOS. Running
+   paraphrase-multilingual-mpnet-base-v2 via ONNX Runtime instead — same family, same
+   768 dims. No result may be attributed to nb-sbert. LIMITATIONS §12.
 D3 Graph channel: k-hop from profile seeds, ≥5 shared skills threshold
 D4 RRF fusion (k=60)
 D5 Constraint stage: graded severity from norwegian_requirement_level, λ dial
