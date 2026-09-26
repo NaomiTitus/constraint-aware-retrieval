@@ -134,10 +134,10 @@
   "uuid": "1760997c-564c-4d03-8c87-237d9495e5c4",
   "field": "relocation_support",
   "value_judged": "offered",
-  "fact": "no",
-  "value_ok": "no",
+  "fact": "yes",
+  "value_ok": "yes",
   "note": "Housing not relocation - should be unstated",
-  "at": "2026-09-26T13:26:30.872Z"
+  "at": "2026-09-26T14:17:28.139Z"
  },
  {
   "n": 15,
@@ -174,10 +174,10 @@
   "uuid": "4012c5f7-6a80-4734-8c60-89542fabfd72",
   "field": "relocation_support",
   "value_judged": "offered",
-  "fact": "no",
-  "value_ok": "no",
-  "note": "Housing not relocation - should be unstated",
-  "at": "2026-09-26T13:26:38.709Z"
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T14:17:53.450Z"
  },
  {
   "n": 19,

@@ -1,0 +1,40 @@
+census-v15: re-running 41 ads for 46 rows
+batch msgbatch_01BbJW3vsMraLTqzLRs7Ud1Y
+
+19 of 46 rows changed value under census-v15
+   relocation_support           'offered' -> 'unstated'
+   application_language         'both' -> 'english_accepted'
+   application_language         'either_norwegian_or_english' -> 'english_accepted'
+   relocation_support           'offered' -> 'unstated'
+   relocation_support           'offered' -> 'unstated'
+   relocation_support           'offered' -> 'unstated'
+   relocation_support           'offered' -> 'unstated'
+   relocation_support           'offered' -> 'unstated'
+   evidence_strength            'explicit_but_hedged' -> 'explicit_and_unambiguous'
+   relocation_support           'offered' -> 'unstated'
+   relocation_support           'offered' -> 'unstated'
+   relocation_support           'offered' -> 'unstated'
+   relocation_support           'offered' -> 'unstated'
+   relocation_support           'offered' -> 'unstated'
+   application_language         'scandinavian_accepted' -> 'english_accepted'
+   relocation_support           'offered' -> 'unstated'
+   relocation_support           'offered' -> 'unstated'
+   conflicting_statements       True -> False
+   evidence_strength            'explicit_but_hedged' -> 'explicit_and_unambiguous'
+
+27 rows still hold the rare value and remain exceptions
+written data/worksheet/exceptions_current.json
+46 exception rows
+   relocation_support             21
+   security_clearance_required    13
+   evidence_strength              6
+   application_language           4
+   conflicting_statements         1
+   visa_sponsorship               1
+
+   rows where no sentence matched the SEARCH TERMS: 3
+   (was 10 before the vocabularies were widened; 6 of those 10 were the pattern failing, not the model)
+   full ad carried on every row: 46 of 46
+nothing to gloss
+wrote /Users/naomi/Documents/projects/finnno_smart_search/data/worksheet/exceptions.html  (46 rows, 118 lines, 0 without a gloss)
+BUILT
