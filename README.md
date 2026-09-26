@@ -45,6 +45,14 @@ estimates. The 74.6% figure was wrong by a factor of two.
   Norwegian-demanding ads versus staying silent. The negation is not merely invisible to
   the encoder — the extra tokens about Norwegian pull the seeker *toward* the ads they rule
   out. This is the single strongest argument for a separate constraint stage.
+- **More data would not fix it — and that is the architectural argument.** 334 ads say
+  Norwegian is *not* required, more than the 166 that say `tømrer`. A query for `tømrer`
+  pulls its own ads to **7.1×** the base rate; the query *"jeg snakker ikke norsk"* reaches
+  **1.1× — chance**. The signal is present and dense retrieval cannot use it, because an ad
+  stating an absence states it as a negation too, and pooling averages it away on *both*
+  sides. Two averaged-away negations cannot meet in a metric space. See
+  [LIMITATIONS.md](LIMITATIONS.md) §13 — including the half of the original hypothesis this
+  disproved.
 - **What pooling erases is any single clause, not negation specifically.** Padding a query
   to realistic length drives cosine to 0.999, but a one-word *content* swap — nurse vs
   carpenter, Oslo vs Bergen — is erased at the same rate (margins of 0.004, noise). The
@@ -73,8 +81,10 @@ src/finn_smart_search/
   esco/         fetch.py
   retrieval/    constraints.py        graded severity, off at lambda=0
 resources/      lexicon_language.yaml
-scripts/        probe_negation.py  probe_negation_dilution.py  (+ census probes)
-reports/        negation_probe.json  negation_dilution.json  census_full.log
+scripts/        probe_negation.py  probe_negation_dilution.py
+                probe_consequence_asymmetry.py  (+ census probes)
+reports/        negation_probe.json  negation_dilution.json
+                consequence_asymmetry.json  census_full.log
 docs/           ann-hnsw-explainer.html  occupation-pruning.html
 tests/fixtures/ recorded API responses
 ```

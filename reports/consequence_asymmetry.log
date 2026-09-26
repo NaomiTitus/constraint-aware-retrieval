@@ -1,0 +1,115 @@
+corpus embeddings from cache: (10166, 768)
+loading sentence-transformers/paraphrase-multilingual-mpnet-base-v2 via ONNX (CPU)…
+
+=== CELL 2a: DOCUMENT-SIDE SIGNAL — what is there to survive into? ===
+  the mechanism claim, measured against all 10,166 ads directly
+
+  family      side   what the query asks for               ads   share
+  language    a      ads DEMANDING Norwegian              5703 56.10%
+  language    b      ads stating Norwegian NOT required     93  0.91%
+  occupation  a      Jeg er sykepleier.                   1391 13.68%
+  occupation  b      Jeg er tømrer.                        166  1.63%
+  place       a      Jeg ser etter jobb i Oslo.           1174 11.55%
+  place       b      Jeg ser etter jobb i Bergen.          436  4.29%
+
+  THE ASYMMETRY: 5703 ads say they demand Norwegian; 93 say it is not required.
+  A negated query has 1.6% as much to land on as its positive twin.
+
+  BUT THE COUNT ALONE DOES NOT CARRY THE HYPOTHESIS, and saying it did would be wrong.
+  The B-sides are comparable in size: language 93, occupation 166, place 436.
+  Language is only 1.8x rarer than `tømrer`, not orders of magnitude.
+  So if recovery differs sharply, scarcity is not the whole mechanism — the KIND of
+  signal matters too: an ABSENCE stated in an ad is itself a negation, and dilutes
+  on the document side exactly as it does on the query side.
+
+  METHOD-MATCHED, because the comparison above is not like-for-like. Occupation and
+  place are KEYWORD hits in the embedded text; language is an LLM judgment. Counting
+  language the same way occupation is counted — a requirement negated within 90 chars
+  of a mention of the Norwegian language:
+    ads stating the absence IN WORDS: 334 (3.29%)
+    vs `tømrer` 166 (1.63%) and `Bergen` 436 (4.29%)
+  Lexically the absence is NOT rarer than `tømrer` (334 vs 166). Document-side
+  SCARCITY is therefore not the mechanism: enough ads say it in words. If recovery is
+  still 0, what fails is the ENCODER's handling of those words, not their absence.
+
+=== CELL 2b & 2c: at MATCHED query-side cosine, does retrieval recover the distinction? ===
+
+--- NO — padding from 12 real persona clauses ---
+  family       k  cosine overlap@10  tau@50  recov_A  recov_B
+  language     0   0.400       1/10  -0.074    40.0%     0.0%
+  language     6   0.994       8/10   0.056    50.0%     0.0%
+  language    12   0.999      10/10   0.076    30.0%     0.0%
+  occupation   0   0.509       0/10   0.060   100.0%    80.0%
+  occupation   6   0.993       8/10   0.037    30.0%    10.0%
+  occupation  12   0.998       9/10   0.141     0.0%     0.0%
+  place        0   0.821       1/10  -0.125    80.0%    80.0%
+  place        6   0.982       6/10  -0.115    30.0%     0.0%
+  place       12   0.995       8/10   0.118    30.0%     0.0%
+
+--- EN — padding from 12 real persona clauses ---
+  family       k  cosine overlap@10  tau@50  recov_A  recov_B
+  language     0   0.446       1/10  -0.043    50.0%     0.0%
+  language     6   0.999       9/10   0.074    20.0%     0.0%
+  language    12   0.999       9/10   0.092    50.0%     0.0%
+  occupation   0   0.489       0/10   0.014   100.0%    70.0%
+  occupation   6   0.996       9/10  -0.081     0.0%    10.0%
+  occupation  12   0.994       8/10  -0.140     0.0%    10.0%
+  place        0   0.806       0/10  -0.053    70.0%    90.0%
+  place        6   0.977       4/10   0.087    30.0%     0.0%
+  place       12   0.995       8/10   0.019    40.0%     0.0%
+
+=== THE TEST: overlap@10 by family, inside shared cosine bins ===
+  the prediction is that `language` sits ABOVE the other two in every populated bin
+
+  cosine bin             language         occupation              place   verdict
+  <0.90              2.8/10 (n= 4)       2.7/10 (n= 3)       1.7/10 (n= 3)   UNDERPOWERED (margin +0.1, n_min=3)
+  0.90-0.96          8.0/10 (n= 1)       6.0/10 (n= 2)       4.2/10 (n= 6)   UNDERPOWERED (margin +2.0, n_min=1)
+  0.96-0.99          7.5/10 (n= 4)       4.3/10 (n= 3)       4.9/10 (n= 7)   AS PREDICTED (+2.6/10)
+  >0.99              9.2/10 (n=17)       7.9/10 (n=18)       8.4/10 (n=10)   UNDERPOWERED (margin +0.8, n_min=10)
+
+=== THE MECHANISM: recovery of the B-side, averaged over the whole sweep ===
+  variant B is the one the project cares about: 'ikke norsk', 'tømrer', 'Bergen'
+
+  a raw share means nothing without the base rate: a RANDOM top-10 already contains
+  some B-side ads. What matters is enrichment over chance.
+
+  family       observed   chance  enrichment  exp. hits in sweep
+  language        0.0%   0.91%        0.0x      2.4 vs     0 seen
+  occupation     11.5%   1.63%        7.1x      4.2 vs    30 seen
+  place          16.5%   4.29%        3.9x     11.2 vs    43 seen
+
+  METHOD-MATCHED language recovery (against the 334 ads that state the
+  absence in words, not the census label):
+  language*       3.5%   3.29%        1.1x
+
+written reports/consequence_asymmetry.json
+
+=== VERDICT: THE HYPOTHESIS SPLITS ===
+
+  CONFIRMED — the consequence IS asymmetric.
+    Equal query-side dilution, unequal retrieval outcome. Content queries pull their
+    own signal to 7.1x and 3.9x the base rate. The negated language query reaches
+    1.1x — chance.
+    Ranking overlap agrees in direction, but only 1 of 4 cosine bins clear the
+    power guard, so that arm is suggestive and not decisive.
+
+  DISCONFIRMED — the REASON cell 1b gave for it was wrong.
+    Cell 1b said the negation has 'nothing to survive into: almost no advertisement
+    states the ABSENCE of a requirement'. Measured the same way `tømrer` is measured,
+    334 ads state it in words — MORE than the 166 that say `tømrer`.
+    SCARCITY IS NOT THE MECHANISM. The document-side signal is there, in comparable
+    quantity, and retrieval still does not use it.
+
+  THE CORRECTED MECHANISM, which is stronger for the architecture argument, not weaker.
+    The document-side statement of an absence is ITSELF a negation — `norsk er ikke et
+    krav`. Mean pooling dilutes it on the document side exactly as it dilutes the query.
+    Two averaged-away negations cannot find each other in a metric space. So the failure
+    cannot be fixed by more coverage or more data: the data is ALREADY THERE and unusable.
+    Only extracting the constraint into a typed predicate can reach it.
+
+  WHAT IS STILL OPEN, and must not be quoted as settled.
+    - The 334 lexical hits are an unvalidated keyword floor; the census labelled only
+      93 ads `explicitly_not_required`. Either the pattern over-fires or the census
+      under-fires, and which one is unmeasured.
+    - Five pairs, one encoder, dense channel only. No confidence intervals.
+    - The cosine-bin arm needs more sweep points per bin before it can carry weight.

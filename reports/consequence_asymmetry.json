@@ -1,0 +1,953 @@
+{
+ "model": "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+ "n_ads": 10166,
+ "document_side_census": [
+  {
+   "family": "language",
+   "side": "a",
+   "n_ads": 5703,
+   "share": 0.560987605744639,
+   "method": "census level",
+   "describes": "ads DEMANDING Norwegian"
+  },
+  {
+   "family": "language",
+   "side": "b",
+   "n_ads": 93,
+   "share": 0.00914814086169585,
+   "method": "census level",
+   "describes": "ads stating Norwegian NOT required"
+  },
+  {
+   "family": "occupation",
+   "side": "a",
+   "n_ads": 1391,
+   "share": 0.13682864450127877,
+   "method": "keyword floor",
+   "describes": "Jeg er sykepleier."
+  },
+  {
+   "family": "occupation",
+   "side": "b",
+   "n_ads": 166,
+   "share": 0.016328939602596893,
+   "method": "keyword floor",
+   "describes": "Jeg er t\u00f8mrer."
+  },
+  {
+   "family": "place",
+   "side": "a",
+   "n_ads": 1174,
+   "share": 0.11548298249065513,
+   "method": "keyword floor",
+   "describes": "Jeg ser etter jobb i Oslo."
+  },
+  {
+   "family": "place",
+   "side": "b",
+   "n_ads": 436,
+   "share": 0.042888058233326774,
+   "method": "keyword floor",
+   "describes": "Jeg ser etter jobb i Bergen."
+  }
+ ],
+ "not_required_lexical": {
+  "n_ads": 334,
+  "share": 0.03285461341727326,
+  "rarer_than_occupation_b": false
+ },
+ "lexical_absence_idx_n": 334,
+ "sweeps": [
+  {
+   "lang": "no",
+   "family": "language",
+   "n_clauses": 0,
+   "cosine": 0.3999420404434204,
+   "overlap_at_10": 1,
+   "kendall_tau": -0.07428571428571429,
+   "recovery_a": 0.4,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "language",
+   "n_clauses": 1,
+   "cosine": 0.8015877604484558,
+   "overlap_at_10": 4,
+   "kendall_tau": 0.10040816326530612,
+   "recovery_a": 0.9,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.1
+  },
+  {
+   "lang": "no",
+   "family": "language",
+   "n_clauses": 2,
+   "cosine": 0.9596008062362671,
+   "overlap_at_10": 8,
+   "kendall_tau": 0.09387755102040816,
+   "recovery_a": 0.9,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.1
+  },
+  {
+   "lang": "no",
+   "family": "language",
+   "n_clauses": 3,
+   "cosine": 0.9696913957595825,
+   "overlap_at_10": 8,
+   "kendall_tau": -0.13959183673469389,
+   "recovery_a": 0.6,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.1
+  },
+  {
+   "lang": "no",
+   "family": "language",
+   "n_clauses": 4,
+   "cosine": 0.9888717532157898,
+   "overlap_at_10": 7,
+   "kendall_tau": 0.008979591836734694,
+   "recovery_a": 0.5,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.1
+  },
+  {
+   "lang": "no",
+   "family": "language",
+   "n_clauses": 5,
+   "cosine": 0.9889785051345825,
+   "overlap_at_10": 7,
+   "kendall_tau": 0.20326530612244897,
+   "recovery_a": 0.7,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.1
+  },
+  {
+   "lang": "no",
+   "family": "language",
+   "n_clauses": 6,
+   "cosine": 0.9936754703521729,
+   "overlap_at_10": 8,
+   "kendall_tau": 0.0563265306122449,
+   "recovery_a": 0.5,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.1
+  },
+  {
+   "lang": "no",
+   "family": "language",
+   "n_clauses": 7,
+   "cosine": 0.9938004016876221,
+   "overlap_at_10": 10,
+   "kendall_tau": -0.026938775510204082,
+   "recovery_a": 0.4,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.1
+  },
+  {
+   "lang": "no",
+   "family": "language",
+   "n_clauses": 8,
+   "cosine": 0.9982321262359619,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.1346938775510204,
+   "recovery_a": 0.2,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.1
+  },
+  {
+   "lang": "no",
+   "family": "language",
+   "n_clauses": 9,
+   "cosine": 0.998199999332428,
+   "overlap_at_10": 10,
+   "kendall_tau": 0.5183673469387755,
+   "recovery_a": 0.4,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.1
+  },
+  {
+   "lang": "no",
+   "family": "language",
+   "n_clauses": 10,
+   "cosine": 0.9985746145248413,
+   "overlap_at_10": 10,
+   "kendall_tau": 0.020408163265306124,
+   "recovery_a": 0.3,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "language",
+   "n_clauses": 11,
+   "cosine": 0.9990516901016235,
+   "overlap_at_10": 10,
+   "kendall_tau": 0.022040816326530613,
+   "recovery_a": 0.2,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "language",
+   "n_clauses": 12,
+   "cosine": 0.9986109137535095,
+   "overlap_at_10": 10,
+   "kendall_tau": 0.07591836734693877,
+   "recovery_a": 0.3,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "occupation",
+   "n_clauses": 0,
+   "cosine": 0.5094978213310242,
+   "overlap_at_10": 0,
+   "kendall_tau": 0.059591836734693884,
+   "recovery_a": 1.0,
+   "recovery_b": 0.8
+  },
+  {
+   "lang": "no",
+   "family": "occupation",
+   "n_clauses": 1,
+   "cosine": 0.9174419641494751,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.061224489795918366,
+   "recovery_a": 1.0,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "occupation",
+   "n_clauses": 2,
+   "cosine": 0.9684756994247437,
+   "overlap_at_10": 5,
+   "kendall_tau": -0.12000000000000001,
+   "recovery_a": 0.9,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "occupation",
+   "n_clauses": 3,
+   "cosine": 0.9788047671318054,
+   "overlap_at_10": 4,
+   "kendall_tau": -0.036734693877551024,
+   "recovery_a": 0.9,
+   "recovery_b": 0.2
+  },
+  {
+   "lang": "no",
+   "family": "occupation",
+   "n_clauses": 4,
+   "cosine": 0.9880542755126953,
+   "overlap_at_10": 4,
+   "kendall_tau": 0.030204081632653063,
+   "recovery_a": 0.8,
+   "recovery_b": 0.1
+  },
+  {
+   "lang": "no",
+   "family": "occupation",
+   "n_clauses": 5,
+   "cosine": 0.990431547164917,
+   "overlap_at_10": 6,
+   "kendall_tau": -0.14122448979591837,
+   "recovery_a": 0.4,
+   "recovery_b": 0.1
+  },
+  {
+   "lang": "no",
+   "family": "occupation",
+   "n_clauses": 6,
+   "cosine": 0.9931754469871521,
+   "overlap_at_10": 8,
+   "kendall_tau": 0.036734693877551024,
+   "recovery_a": 0.3,
+   "recovery_b": 0.1
+  },
+  {
+   "lang": "no",
+   "family": "occupation",
+   "n_clauses": 7,
+   "cosine": 0.994019627571106,
+   "overlap_at_10": 7,
+   "kendall_tau": 0.04163265306122449,
+   "recovery_a": 0.3,
+   "recovery_b": 0.1
+  },
+  {
+   "lang": "no",
+   "family": "occupation",
+   "n_clauses": 8,
+   "cosine": 0.9947413802146912,
+   "overlap_at_10": 8,
+   "kendall_tau": 0.05795918367346938,
+   "recovery_a": 0.1,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "occupation",
+   "n_clauses": 9,
+   "cosine": 0.9961012005805969,
+   "overlap_at_10": 7,
+   "kendall_tau": -0.19673469387755102,
+   "recovery_a": 0.2,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "occupation",
+   "n_clauses": 10,
+   "cosine": 0.997733473777771,
+   "overlap_at_10": 8,
+   "kendall_tau": -0.12816326530612246,
+   "recovery_a": 0.1,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "occupation",
+   "n_clauses": 11,
+   "cosine": 0.9984161853790283,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.16244897959183674,
+   "recovery_a": 0.0,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "occupation",
+   "n_clauses": 12,
+   "cosine": 0.9980520009994507,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.14122448979591837,
+   "recovery_a": 0.0,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "place",
+   "n_clauses": 0,
+   "cosine": 0.8209336996078491,
+   "overlap_at_10": 1,
+   "kendall_tau": -0.12489795918367345,
+   "recovery_a": 0.8,
+   "recovery_b": 0.8
+  },
+  {
+   "lang": "no",
+   "family": "place",
+   "n_clauses": 1,
+   "cosine": 0.9038360118865967,
+   "overlap_at_10": 6,
+   "kendall_tau": 0.05306122448979592,
+   "recovery_a": 0.5,
+   "recovery_b": 0.4
+  },
+  {
+   "lang": "no",
+   "family": "place",
+   "n_clauses": 2,
+   "cosine": 0.9461883306503296,
+   "overlap_at_10": 3,
+   "kendall_tau": -0.012244897959183673,
+   "recovery_a": 0.3,
+   "recovery_b": 0.3
+  },
+  {
+   "lang": "no",
+   "family": "place",
+   "n_clauses": 3,
+   "cosine": 0.9401289224624634,
+   "overlap_at_10": 4,
+   "kendall_tau": -0.12979591836734694,
+   "recovery_a": 0.4,
+   "recovery_b": 0.4
+  },
+  {
+   "lang": "no",
+   "family": "place",
+   "n_clauses": 4,
+   "cosine": 0.9690079689025879,
+   "overlap_at_10": 3,
+   "kendall_tau": 0.16734693877551018,
+   "recovery_a": 0.3,
+   "recovery_b": 0.1
+  },
+  {
+   "lang": "no",
+   "family": "place",
+   "n_clauses": 5,
+   "cosine": 0.9671667218208313,
+   "overlap_at_10": 2,
+   "kendall_tau": -0.06938775510204082,
+   "recovery_a": 0.3,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "place",
+   "n_clauses": 6,
+   "cosine": 0.9820260405540466,
+   "overlap_at_10": 6,
+   "kendall_tau": -0.11510204081632652,
+   "recovery_a": 0.3,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "place",
+   "n_clauses": 7,
+   "cosine": 0.9865235686302185,
+   "overlap_at_10": 8,
+   "kendall_tau": 0.061224489795918366,
+   "recovery_a": 0.1,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "place",
+   "n_clauses": 8,
+   "cosine": 0.9971727728843689,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.06775510204081632,
+   "recovery_a": 0.2,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "place",
+   "n_clauses": 9,
+   "cosine": 0.9943152070045471,
+   "overlap_at_10": 7,
+   "kendall_tau": -0.013877551020408163,
+   "recovery_a": 0.3,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "place",
+   "n_clauses": 10,
+   "cosine": 0.9972760677337646,
+   "overlap_at_10": 8,
+   "kendall_tau": -0.1036734693877551,
+   "recovery_a": 0.1,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "place",
+   "n_clauses": 11,
+   "cosine": 0.9980810880661011,
+   "overlap_at_10": 8,
+   "kendall_tau": 0.012244897959183673,
+   "recovery_a": 0.1,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "no",
+   "family": "place",
+   "n_clauses": 12,
+   "cosine": 0.9953566789627075,
+   "overlap_at_10": 8,
+   "kendall_tau": 0.11836734693877553,
+   "recovery_a": 0.3,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "language",
+   "n_clauses": 0,
+   "cosine": 0.446445494890213,
+   "overlap_at_10": 1,
+   "kendall_tau": -0.04326530612244898,
+   "recovery_a": 0.5,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "language",
+   "n_clauses": 1,
+   "cosine": 0.897679328918457,
+   "overlap_at_10": 5,
+   "kendall_tau": -0.09061224489795917,
+   "recovery_a": 0.9,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "language",
+   "n_clauses": 2,
+   "cosine": 0.9894977807998657,
+   "overlap_at_10": 8,
+   "kendall_tau": 0.10693877551020409,
+   "recovery_a": 0.5,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "language",
+   "n_clauses": 3,
+   "cosine": 0.9962168335914612,
+   "overlap_at_10": 8,
+   "kendall_tau": -0.11836734693877553,
+   "recovery_a": 0.1,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "language",
+   "n_clauses": 4,
+   "cosine": 0.9986504316329956,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.20326530612244897,
+   "recovery_a": 0.2,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "language",
+   "n_clauses": 5,
+   "cosine": 0.998327374458313,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.3240816326530612,
+   "recovery_a": 0.1,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "language",
+   "n_clauses": 6,
+   "cosine": 0.9987220764160156,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.07428571428571429,
+   "recovery_a": 0.2,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "language",
+   "n_clauses": 7,
+   "cosine": 0.9987789988517761,
+   "overlap_at_10": 8,
+   "kendall_tau": 0.17061224489795918,
+   "recovery_a": 0.3,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "language",
+   "n_clauses": 8,
+   "cosine": 0.9995050430297852,
+   "overlap_at_10": 10,
+   "kendall_tau": 0.10693877551020409,
+   "recovery_a": 0.3,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "language",
+   "n_clauses": 9,
+   "cosine": 0.9992110729217529,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.22938775510204082,
+   "recovery_a": 0.3,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "language",
+   "n_clauses": 10,
+   "cosine": 0.9994664788246155,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.3926530612244898,
+   "recovery_a": 0.3,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "language",
+   "n_clauses": 11,
+   "cosine": 0.9994271397590637,
+   "overlap_at_10": 10,
+   "kendall_tau": 0.21306122448979592,
+   "recovery_a": 0.3,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "language",
+   "n_clauses": 12,
+   "cosine": 0.9991990923881531,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.09224489795918367,
+   "recovery_a": 0.5,
+   "recovery_b": 0.0,
+   "recovery_b_lex": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "occupation",
+   "n_clauses": 0,
+   "cosine": 0.48860764503479004,
+   "overlap_at_10": 0,
+   "kendall_tau": 0.013877551020408163,
+   "recovery_a": 1.0,
+   "recovery_b": 0.7
+  },
+  {
+   "lang": "en",
+   "family": "occupation",
+   "n_clauses": 1,
+   "cosine": 0.8767865896224976,
+   "overlap_at_10": 8,
+   "kendall_tau": -0.22122448979591836,
+   "recovery_a": 1.0,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "occupation",
+   "n_clauses": 2,
+   "cosine": 0.9502161145210266,
+   "overlap_at_10": 3,
+   "kendall_tau": 0.08081632653061226,
+   "recovery_a": 0.7,
+   "recovery_b": 0.1
+  },
+  {
+   "lang": "en",
+   "family": "occupation",
+   "n_clauses": 3,
+   "cosine": 0.9933351874351501,
+   "overlap_at_10": 7,
+   "kendall_tau": -0.09877551020408164,
+   "recovery_a": 0.3,
+   "recovery_b": 0.2
+  },
+  {
+   "lang": "en",
+   "family": "occupation",
+   "n_clauses": 4,
+   "cosine": 0.9940720796585083,
+   "overlap_at_10": 6,
+   "kendall_tau": -0.07591836734693877,
+   "recovery_a": 0.1,
+   "recovery_b": 0.1
+  },
+  {
+   "lang": "en",
+   "family": "occupation",
+   "n_clauses": 5,
+   "cosine": 0.9938944578170776,
+   "overlap_at_10": 8,
+   "kendall_tau": -0.23265306122448978,
+   "recovery_a": 0.0,
+   "recovery_b": 0.1
+  },
+  {
+   "lang": "en",
+   "family": "occupation",
+   "n_clauses": 6,
+   "cosine": 0.9961948990821838,
+   "overlap_at_10": 9,
+   "kendall_tau": -0.08081632653061226,
+   "recovery_a": 0.0,
+   "recovery_b": 0.1
+  },
+  {
+   "lang": "en",
+   "family": "occupation",
+   "n_clauses": 7,
+   "cosine": 0.9942090511322021,
+   "overlap_at_10": 8,
+   "kendall_tau": 0.12326530612244897,
+   "recovery_a": 0.0,
+   "recovery_b": 0.1
+  },
+  {
+   "lang": "en",
+   "family": "occupation",
+   "n_clauses": 8,
+   "cosine": 0.9956930875778198,
+   "overlap_at_10": 8,
+   "kendall_tau": 0.12979591836734694,
+   "recovery_a": 0.0,
+   "recovery_b": 0.1
+  },
+  {
+   "lang": "en",
+   "family": "occupation",
+   "n_clauses": 9,
+   "cosine": 0.9968502521514893,
+   "overlap_at_10": 8,
+   "kendall_tau": 0.04326530612244898,
+   "recovery_a": 0.0,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "occupation",
+   "n_clauses": 10,
+   "cosine": 0.9983708262443542,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.3371428571428572,
+   "recovery_a": 0.0,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "occupation",
+   "n_clauses": 11,
+   "cosine": 0.9973393678665161,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.17714285714285716,
+   "recovery_a": 0.0,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "occupation",
+   "n_clauses": 12,
+   "cosine": 0.994259238243103,
+   "overlap_at_10": 8,
+   "kendall_tau": -0.13959183673469389,
+   "recovery_a": 0.0,
+   "recovery_b": 0.1
+  },
+  {
+   "lang": "en",
+   "family": "place",
+   "n_clauses": 0,
+   "cosine": 0.8060694336891174,
+   "overlap_at_10": 0,
+   "kendall_tau": -0.05306122448979592,
+   "recovery_a": 0.7,
+   "recovery_b": 0.9
+  },
+  {
+   "lang": "en",
+   "family": "place",
+   "n_clauses": 1,
+   "cosine": 0.8597924113273621,
+   "overlap_at_10": 4,
+   "kendall_tau": -0.1951020408163265,
+   "recovery_a": 0.5,
+   "recovery_b": 0.4
+  },
+  {
+   "lang": "en",
+   "family": "place",
+   "n_clauses": 2,
+   "cosine": 0.9055435061454773,
+   "overlap_at_10": 3,
+   "kendall_tau": -0.07265306122448979,
+   "recovery_a": 0.4,
+   "recovery_b": 0.4
+  },
+  {
+   "lang": "en",
+   "family": "place",
+   "n_clauses": 3,
+   "cosine": 0.9277551770210266,
+   "overlap_at_10": 4,
+   "kendall_tau": -0.07755102040816327,
+   "recovery_a": 0.5,
+   "recovery_b": 0.4
+  },
+  {
+   "lang": "en",
+   "family": "place",
+   "n_clauses": 4,
+   "cosine": 0.9465905427932739,
+   "overlap_at_10": 5,
+   "kendall_tau": 0.12979591836734694,
+   "recovery_a": 0.4,
+   "recovery_b": 0.2
+  },
+  {
+   "lang": "en",
+   "family": "place",
+   "n_clauses": 5,
+   "cosine": 0.9664899110794067,
+   "overlap_at_10": 7,
+   "kendall_tau": 0.19673469387755102,
+   "recovery_a": 0.4,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "place",
+   "n_clauses": 6,
+   "cosine": 0.9771803617477417,
+   "overlap_at_10": 4,
+   "kendall_tau": 0.0873469387755102,
+   "recovery_a": 0.3,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "place",
+   "n_clauses": 7,
+   "cosine": 0.9678756594657898,
+   "overlap_at_10": 4,
+   "kendall_tau": 0.04326530612244898,
+   "recovery_a": 0.3,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "place",
+   "n_clauses": 8,
+   "cosine": 0.9950794577598572,
+   "overlap_at_10": 9,
+   "kendall_tau": -0.08408163265306123,
+   "recovery_a": 0.4,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "place",
+   "n_clauses": 9,
+   "cosine": 0.9943645596504211,
+   "overlap_at_10": 9,
+   "kendall_tau": -0.15918367346938775,
+   "recovery_a": 0.5,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "place",
+   "n_clauses": 10,
+   "cosine": 0.9967381954193115,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.09877551020408164,
+   "recovery_a": 0.3,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "place",
+   "n_clauses": 11,
+   "cosine": 0.9937043190002441,
+   "overlap_at_10": 9,
+   "kendall_tau": 0.13306122448979593,
+   "recovery_a": 0.4,
+   "recovery_b": 0.0
+  },
+  {
+   "lang": "en",
+   "family": "place",
+   "n_clauses": 12,
+   "cosine": 0.9954650402069092,
+   "overlap_at_10": 8,
+   "kendall_tau": 0.018775510204081632,
+   "recovery_a": 0.4,
+   "recovery_b": 0.0
+  }
+ ],
+ "cosine_binned": [
+  {
+   "bin": "<0.90",
+   "language": 2.75,
+   "language_n": 4,
+   "occupation": 2.6666666666666665,
+   "occupation_n": 3,
+   "place": 1.6666666666666667,
+   "place_n": 3,
+   "margin": 0.08333333333333348,
+   "n_min": 3,
+   "language_higher": null,
+   "underpowered": true
+  },
+  {
+   "bin": "0.90-0.96",
+   "language": 8.0,
+   "language_n": 1,
+   "occupation": 6.0,
+   "occupation_n": 2,
+   "place": 4.166666666666667,
+   "place_n": 6,
+   "margin": 2.0,
+   "n_min": 1,
+   "language_higher": null,
+   "underpowered": true
+  },
+  {
+   "bin": "0.96-0.99",
+   "language": 7.5,
+   "language_n": 4,
+   "occupation": 4.333333333333333,
+   "occupation_n": 3,
+   "place": 4.857142857142857,
+   "place_n": 7,
+   "margin": 2.6428571428571432,
+   "n_min": 3,
+   "language_higher": true,
+   "underpowered": false
+  },
+  {
+   "bin": ">0.99",
+   "language": 9.235294117647058,
+   "language_n": 17,
+   "occupation": 7.888888888888889,
+   "occupation_n": 18,
+   "place": 8.4,
+   "place_n": 10,
+   "margin": 0.8352941176470576,
+   "n_min": 10,
+   "language_higher": null,
+   "underpowered": true
+  }
+ ],
+ "recovery_b": {
+  "language": {
+   "observed": 0.0,
+   "chance": 0.00914814086169585,
+   "enrichment": 0.0,
+   "expected_hits_in_sweep": 2.378516624040921,
+   "observed_hits_in_sweep": 0.0
+  },
+  "occupation": {
+   "observed": 0.11538461538461539,
+   "chance": 0.016328939602596893,
+   "enrichment": 7.066265060240964,
+   "expected_hits_in_sweep": 4.2455242966751925,
+   "observed_hits_in_sweep": 30.0
+  },
+  "place": {
+   "observed": 0.16538461538461538,
+   "chance": 0.042888058233326774,
+   "enrichment": 3.856192660550459,
+   "expected_hits_in_sweep": 11.15089514066496,
+   "observed_hits_in_sweep": 43.0
+  },
+  "language_lexical": {
+   "observed": 0.03461538461538462,
+   "chance": 0.03285461341727326,
+   "enrichment": 1.0535928143712576
+  }
+ },
+ "refined_hypothesis_holds": true,
+ "bins_graded": 1,
+ "bins_underpowered": 3
+}

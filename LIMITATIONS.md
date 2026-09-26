@@ -350,3 +350,65 @@ corpus and "the absence of a requirement" has almost nothing to survive into —
 is stated but **not yet tested**.
 
 Raw output: `reports/negation_probe.json`, `reports/negation_probe.log`.
+
+## 13. Cell 2 confirmed the asymmetry and disconfirmed the reason given for it
+
+Cell 1b closed with a refined hypothesis: query-side dilution is symmetric, but
+its *consequence* is not, because `"nurse"` survives retrieval on document-side
+occupation signal while `"I do not speak Norwegian"` has **"nothing to survive
+into — almost no advertisement states the ABSENCE of a requirement."** Cell 2
+tested both halves. The first held. **The second is false.**
+
+**Confirmed — the consequence is asymmetric.** Measured as enrichment of each
+query's own signal in its top-10, over the base rate that a random top-10 would
+already contain:
+
+| query's B-side | ads carrying it | observed in top-10 | chance | enrichment |
+|---|---:|---:|---:|---:|
+| `tømrer` | 166 | 11.5% | 1.63% | **7.1×** |
+| `Bergen` | 436 | 16.5% | 4.29% | **3.9×** |
+| Norwegian not required (lexical) | 334 | 3.5% | 3.29% | **1.1×** |
+
+Content queries pull their own documents up 4–7× above chance. The negated
+language query reaches **1.1× — chance**. Equal query-side damage, unequal
+retrieval outcome, which is what the hypothesis predicted.
+
+The ranking-overlap arm agrees in direction — language overlap@10 sat above both
+content families in all four cosine bins — but **only 1 of 4 bins clears a power
+guard** of n≥3 per family and a margin over one result slot. The `<0.90` bin's
+margin is +0.1/10 and the `0.90–0.96` bin has n=1. Those are not evidence, and
+the guard exists because cell 1b was nearly misread on a margin of 0.004. **The
+enrichment result carries this section; the overlap result only corroborates it.**
+
+**Disconfirmed — scarcity is not the mechanism.** Counted the same way `tømrer`
+is counted — a requirement negated within 90 characters of a mention of the
+Norwegian language — **334 ads (3.29%) state the absence in words. That is more
+than the 166 that say `tømrer`.** The signal is present in comparable quantity
+and retrieval reaches it at chance. "Nothing to survive into" was wrong.
+
+An earlier run of this probe used an unscoped pattern (`ikke et krav`,
+`ikke nødvendig` anywhere in the ad), matched 1,242 ads, and would have supported
+a conclusion in the opposite direction. Those phrases overwhelmingly negate
+*experience* or *education*, not language. The scoped count is the reportable one.
+
+**The corrected mechanism, and it is stronger for the architecture argument.** A
+document stating an absence states it *as a negation* — `norsk er ikke et krav`.
+Mean pooling dilutes that on the **document** side exactly as it dilutes the
+query. Two averaged-away negations cannot locate each other in a metric space.
+So the failure **cannot be fixed with more coverage, a bigger corpus, or a
+larger encoder**: the data is already there, in 334 ads, and single-vector
+retrieval cannot use it. Extracting the constraint into a typed predicate is the
+only thing that reaches it. That is a claim about the architecture rather than
+about this corpus, and it is the one the README should make.
+
+**Still open, and not to be quoted as settled:**
+
+- The 334 lexical hits are an **unvalidated keyword floor**. The census labelled
+  only **93** ads `explicitly_not_required`. Either the pattern over-fires or
+  the census under-fires by 3.6×; which is unmeasured, and §3b's 9.4% depends on
+  the answer. This is the highest-value follow-up in the file.
+- Five persona pairs, one encoder, dense channel only, no confidence intervals.
+- The cosine-bin arm needs more sweep points per bin before it can carry weight.
+
+Raw output: `reports/consequence_asymmetry.json`, `.log`.
+Probe: `scripts/probe_consequence_asymmetry.py`.
