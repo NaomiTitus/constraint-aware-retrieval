@@ -38,6 +38,8 @@
            border:1px solid var(--warn);border-radius:4px;padding:3px 9px}
   .prog{margin-left:auto;display:flex;gap:10px;align-items:center;
         font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
+  .storenote{font-size:12px;color:var(--accent)}
+  .storenote.warn{color:var(--warn)}
   .bar{width:150px;height:6px;background:var(--rule);border-radius:99px;overflow:hidden}
   .bar i{display:block;height:100%;background:var(--accent);width:0;
          transition:width .25s ease}
@@ -121,6 +123,12 @@
   select{font-family:var(--sans)}
   .spanok{font-size:12px;margin-top:5px;font-family:var(--mono)}
   .spanok.y{color:var(--accent)} .spanok.n{color:var(--warn)}
+  .authsug{font-size:12.5px;color:var(--muted);margin-top:6px}
+  .authbtn{display:block;width:100%;text-align:left;font-family:var(--mono);
+     font-size:12.5px;margin-top:5px;padding:6px 9px;cursor:pointer;
+     background:var(--paper);color:var(--ink);border:1px solid var(--rule);
+     border-radius:5px}
+  .authbtn:hover{border-color:var(--accent)}
 
   .navbtns{display:flex;gap:9px;margin-top:18px}
   button.act{font:inherit;font-size:13.5px;font-weight:500;cursor:pointer;
@@ -150,6 +158,7 @@
     <h1>Sealed set — labelling</h1>
     <span class="warnbar">HELD OUT · never tune the prompt against these</span>
     <div class="prog">
+      <span id="storenote" class="storenote">checking storage…</span>
       <span id="ptext">0 / 0</span>
       <span class="bar"><i id="pbar"></i></span>
     </div>
@@ -163,10 +172,74 @@
 
 <script>
 const DATA = /*__DATA__*/null;
-const KEY = "sealed-labels-v1";
-let labels = {}, cur = 0;
+// v2: starting from scratch deliberately. A stale v1 payload would resurrect
+// abandoned labels the moment the page opened.
+const KEY = "sealed-labels-v2";
+let labels = {}, cur = 0, DB = null, synced = false;
 try { labels = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { labels = {}; }
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(labels)); } catch (e) {} };
+
+const saveLocal = () => {
+  try { localStorage.setItem(KEY, JSON.stringify(labels)); } catch (e) {}
+};
+
+// One document per ad. The contract asks for one write at a time per doc and
+// only on change; a single blob would rewrite all 28 labels on every keystroke.
+const saveRemote = n => {
+  if (!DB) return;                      // no grant, or this view cannot run it
+  const r = labels[n] || {};
+  DB.doc(`labels/${n}`).set({
+    n, level: r.level || null, span: r.span || "", worklang: r.worklang || "",
+    auth: r.auth || "", note: r.note || "", at: new Date().toISOString()
+  }).catch(() => {});                   // a refused write must not break typing
+};
+
+// Coalesce bursts: one write per ad per 600ms of quiet, never one per keystroke.
+const pending = {};
+const save = n => {
+  saveLocal();
+  if (n == null || !DB) return;
+  clearTimeout(pending[n]);
+  pending[n] = setTimeout(() => saveRemote(n), 600);
+};
+
+function setStatus(txt, warn) {
+  const el = document.getElementById("storenote");
+  if (el) { el.textContent = txt; el.className = "storenote" + (warn ? " warn" : ""); }
+}
+
+async function initDb() {
+  // Resolved ONCE, outside render. `use()` returns null when the view cannot run
+  // the capability — not served, not granted, or failed to load.
+  let db = null;
+  try { db = await claude.use("db"); } catch (e) { db = null; }
+  if (!db) {
+    setStatus("Saved in this browser only — not synced. Copy the JSON when you finish.", true);
+    return;
+  }
+  DB = db;
+  setStatus("Saved to this artifact — your labels survive a browser change.", false);
+  // Subscribe ONCE, never in render.
+  try {
+    db.collection("labels").onSnapshot(snap => {
+      let touched = false;
+      (snap.docs || snap || []).forEach(d => {
+        const v = d.data ? d.data() : d;
+        if (!v || v.n == null) return;
+        const mine = labels[v.n];
+        // Last-writer-wins, and a remote row only fills a gap or arrives newer.
+        if (!mine || (v.at && (!mine.at || v.at > mine.at))) {
+          labels[v.n] = {level: v.level || null, span: v.span || "",
+                         worklang: v.worklang || "", auth: v.auth || "",
+                         note: v.note || "", at: v.at};
+          touched = true;
+        }
+      });
+      if (touched) { saveLocal(); synced = true; renderList(); }
+    }, () => setStatus("Sync interrupted — still saved in this browser.", true));
+  } catch (e) {
+    setStatus("Saved in this browser only — not synced.", true);
+  }
+}
 // Actually escapes. The first version was a no-op String() while its output went
 // straight into innerHTML — latent on this data (0 of 98 blocks contain < > &)
 // but a regenerate on other ads would mangle the text being judged.
@@ -246,8 +319,12 @@ function render(){
         `<option value="${w}"${r.worklang === w ? " selected" : ""}>${w}</option>`).join("")}</select>
 
       <label class="f" for="auth">authorisation_required — a licence to practise, not a language rule</label>
-      <input id="auth" spellcheck="false" placeholder="e.g. Norsk autorisasjon som sykepleier — or leave blank"
+      <input id="auth" spellcheck="false" placeholder="copy the ad's own wording, or leave blank"
              value="${esc(r.auth).replace(/"/g, "&quot;")}">
+      <div class="spanok" id="authok"></div>
+      ${(a.auth_lines || []).length ? `<div class="authsug">The ad says — click to use:
+        ${a.auth_lines.map(l => `<button type="button" class="authbtn">${esc(l)}</button>`).join("")}
+        </div>` : ""}
 
       <label class="f" for="note">note — anything a reader would need to follow your reasoning</label>
       <textarea id="note">${esc(r.note)}</textarea>
@@ -278,7 +355,7 @@ function render(){
       + (b.en ? `<span class="gloss">${esc(b.en)}</span>` : "")
       + (b.ok ? (b.hit ? "<small>carries a language word · valid as evidence</small>" : "")
               : `<small class="no">not usable as evidence — ${esc(b.why)}</small>`);
-    el.onclick = () => { r.span = b.text; save(); render(); };
+    el.onclick = () => { r.span = b.text; save(a.n); render(); };
     bl.appendChild(el);
   });
 
@@ -288,7 +365,7 @@ function render(){
     el.className = "lv"; el.type = "button";
     el.setAttribute("aria-pressed", r.level === L ? "true" : "false");
     el.innerHTML = `<kbd>${i + 1}</kbd><span>${L}<em>${esc(DATA.hint[L] || "")}</em></span>`;
-    el.onclick = () => { r.level = L; save(); renderList(); render(); };
+    el.onclick = () => { r.level = L; save(a.n); renderList(); render(); };
     lv.appendChild(el);
   });
 
@@ -319,9 +396,29 @@ function render(){
     ok.className = "spanok n";
     ok.textContent = "⚠ not one of the lines above — cannot be verified here. "
       + "Click a line instead; a hand-typed span that differs by one character fails.";
-  };  document.getElementById("wl").onchange = e => { r.worklang = e.target.value; save(); };
-  document.getElementById("auth").oninput = e => { r.auth = e.target.value; save(); };
-  document.getElementById("note").oninput = e => { r.note = e.target.value; save(); };
+  };  document.getElementById("wl").onchange = e => { r.worklang = e.target.value; save(a.n); };
+  // The value is SCORED against the extractor's Norwegian, so a paraphrase
+  // fails a correct answer. Warn the moment it is not in the ad.
+  const checkAuth = () => {
+    const el = document.getElementById("authok");
+    const val = (document.getElementById("auth").value || "").trim();
+    if (!val) { el.className = "spanok"; el.textContent = ""; return; }
+    const inAd = (a.auth_lines || []).some(l =>
+      l.toLowerCase().includes(val.toLowerCase()));
+    el.className = "spanok " + (inAd ? "y" : "n");
+    el.textContent = inAd
+      ? "✓ written this way in the ad"
+      : "⚠ not the ad's wording — this field is scored against the model's "
+        + "Norwegian, so a translation or paraphrase fails a correct answer";
+  };
+  document.getElementById("auth").oninput = e => {
+    r.auth = e.target.value; save(a.n); checkAuth();
+  };
+  checkAuth();
+  document.querySelectorAll(".authbtn").forEach(b => {
+    b.onclick = () => { r.auth = b.textContent; save(a.n); render(); };
+  });
+  document.getElementById("note").oninput = e => { r.note = e.target.value; save(a.n); };
   document.getElementById("prev").onclick = () => go(-1);
   document.getElementById("next").onclick = () => go(1);
   const pf = document.getElementById("takepf");
@@ -329,8 +426,10 @@ function render(){
     r.level = a.prefill.norwegian_requirement_level;
     r.worklang = a.prefill.stated_working_language || "";
     r.span = a.prefill.evidence_span || "";
-    r.auth = a.prefill.authorisation_required || "";
-    save(); renderList(); render();
+    // NOT the model's authorisation string: it is often an English rendering,
+    // and the field is scored against Norwegian. Prefer the ad's own line.
+    r.auth = (a.auth_lines && a.auth_lines.length === 1) ? a.auth_lines[0] : "";
+    save(a.n); renderList(); render();
   };
   document.getElementById("exp").onclick = () => {
     const c = document.getElementById("expcard");
@@ -386,8 +485,10 @@ document.addEventListener("keydown", e => {
   if (e.key === "k") go(-1);
   const n = parseInt(e.key, 10);
   if (n >= 1 && n <= DATA.levels.length) {
-    rec(DATA.ads[cur].n).level = DATA.levels[n - 1]; save(); renderList(); render();
+    const ad = DATA.ads[cur]; rec(ad.n).level = DATA.levels[n - 1];
+    save(ad.n); renderList(); render();
   }
 });
 render();
+initDb();
 </script>

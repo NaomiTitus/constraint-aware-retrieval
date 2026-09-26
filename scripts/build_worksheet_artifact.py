@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import html
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -23,6 +24,15 @@ from finn_smart_search.understanding import census_validate as v   # noqa: E402
 from finn_smart_search.understanding.census_prompt import TOOL     # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
+
+# A licence to practise, as the ad writes it. Offered instead of the model's
+# rendering because the field is SCORED against the extractor's Norwegian
+# output — an English paraphrase fails a correct answer. The first label made
+# through this tool stored "Norwegian psychologist authorisation (norsk
+# autorisasjon som psykolog)" for an ad reading "Psykolog med norsk autorisasjon."
+AUTH_LINE = re.compile(
+    r"autorisasjon|HPR[- ]?nummer|godkjenning fra Helsedirektoratet"
+    r"|offentlig godkjen|lisens som", re.I)
 OUT = ROOT / "data" / "worksheet"
 LEVELS = TOOL["input_schema"]["properties"]["norwegian_requirement_level"]["enum"]
 WORKLANG = TOOL["input_schema"]["properties"]["stated_working_language"]["enum"]
@@ -132,6 +142,10 @@ def main() -> None:
             # Verdicts for every string the UI can produce are precomputed here,
             # by the validator itself.
             "verdicts": _verdicts(row.get("prefill"), keep, sent["sent_text"]),
+            # The ad's own authorisation wording, verbatim, or None.
+            "auth_lines": [pii.scrub(b, contacts)
+                           for b in sent["sent_text"].split("\n")
+                           if AUTH_LINE.search(b) and len(b.strip()) < 160][:3],
         })
 
     data = {"ads": ads, "levels": LEVELS, "worklang": WORKLANG,

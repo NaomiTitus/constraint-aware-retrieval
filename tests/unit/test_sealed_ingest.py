@@ -185,3 +185,78 @@ def test_a_span_from_the_DELETED_MIDDLE_of_a_truncated_ad_is_refused():
         {"trunc": body})
     assert out == [], "a span the model is never shown must not become gold"
     assert rej[0]["reason"].startswith("span:"), rej[0]
+
+
+# ── authorisation_required must be grounded in the ad, not paraphrased ───────
+#
+# WHY. The field is SCORED: scoring._auth_matches compares the extractor's output
+# against this string with a profession regex. The extractor emits Norwegian as
+# the ad writes it, so an English gold value fails a correct answer.
+#
+# This is not hypothetical — the first label produced through the worksheet
+# stored Opus's rendering, "Norwegian psychologist authorisation (norsk
+# autorisasjon som psykolog)", for an ad whose own text says
+# "Psykolog med norsk autorisasjon."
+#
+# The rule is checked against the existing gold before being imposed: all five
+# golden ads carrying this field have a value that IS verbatim in their ad
+# ("Norsk autorisasjon", "Gyldig norsk autorisasjon som helsefagarbeider", …),
+# so this rejects nothing that is already accepted.
+
+AUTH_AD = ("Kvalifikasjoner\n"
+           "Psykolog med norsk autorisasjon\n"
+           "Gode norskkunnskaper er et krav for stillingen\n"
+           "Oppstart snarest")
+
+
+def test_an_authorisation_value_not_in_the_ad_is_refused():
+    r = row(uuid="auth", expected={**row()["expected"],
+            "authorisation_required": "Norwegian psychologist authorisation "
+                                      "(norsk autorisasjon som psykolog)"})
+    out, rej = si.ingest([r], {"auth": AUTH_AD})
+    assert out == [], "an English paraphrase would fail _auth_matches against a correct answer"
+    assert rej[0]["reason"] == "authorisation_not_in_ad"
+
+
+def test_the_ads_own_authorisation_wording_is_accepted():
+    r = row(uuid="auth", expected={**row()["expected"],
+            "authorisation_required": "Psykolog med norsk autorisasjon"})
+    out, rej = si.ingest([r], {"auth": AUTH_AD})
+    assert rej == [] and out[0]["expected"]["authorisation_required"] == \
+        "Psykolog med norsk autorisasjon"
+
+
+def test_a_shorter_grounded_form_is_accepted():
+    """The existing gold uses both full and short forms — "Norsk autorisasjon"
+    appears on its own in one ad. Substring grounding, not equality."""
+    r = row(uuid="auth", expected={**row()["expected"],
+            "authorisation_required": "norsk autorisasjon"})
+    out, rej = si.ingest([r], {"auth": AUTH_AD})
+    assert rej == [] and out
+
+
+def test_no_authorisation_is_fine():
+    out, rej = si.ingest([row()], TEXTS)
+    assert rej == [] and out[0]["expected"]["authorisation_required"] is None
+
+
+def test_the_rule_accepts_every_value_already_in_the_golden_set():
+    """Grounded in the artefact it governs: a rule the current gold fails would
+    be the wrong rule, so this asserts it against all five real values."""
+    import json, pathlib
+    import duckdb
+    from tests.conftest import CORPUS
+    if not CORPUS.exists():
+        pytest.skip("needs the corpus")
+    con = duckdb.connect(str(CORPUS), read_only=True)
+    gold = json.loads((pathlib.Path("eval/golden_set.json")).read_text(encoding="utf-8"))
+    checked = 0
+    for g in gold:
+        v = g["expected"].get("authorisation_required")
+        if not v:
+            continue
+        text = con.execute("SELECT description_text FROM ads WHERE uuid=?",
+                           [g["uuid"]]).fetchone()[0]
+        assert si._auth_grounded(v, text), f"golden #{g['n']}: {v!r}"
+        checked += 1
+    assert checked == 5, f"expected 5 golden ads with an authorisation, saw {checked}"

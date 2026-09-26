@@ -68,10 +68,20 @@ TOOL = {
 }
 
 
+def _page_data(html: str) -> dict:
+    """Parse the embedded DATA object.
+
+    A regex anchored on `);\nconst KEY` broke the moment a comment was inserted
+    between them, and silently — the caller got None and crashed later. Decoding
+    from the literal's start is anchored on the code, not its neighbours.
+    """
+    i = html.index("const DATA = ") + len("const DATA = ")
+    return json.JSONDecoder().raw_decode(html[i:])[0]
+
+
 def main() -> None:
-    import re
     html = (OUT / "worksheet.html").read_text(encoding="utf-8")
-    data = json.loads(re.search(r"const DATA = (\{.*?\});\nconst KEY", html, re.S).group(1))
+    data = _page_data(html)
 
     # Only gloss what is missing. Re-running after a single ad was swapped used
     # to re-submit all 28 and wait on a whole batch for one ad's worth of value.

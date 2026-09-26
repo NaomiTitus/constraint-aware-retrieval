@@ -32,10 +32,27 @@ from __future__ import annotations
 from typing import Any, Iterable, Mapping
 
 from ..understanding import census_validate as v
+from ..understanding.text_norm import normalise
 from ..understanding.census_prompt import TOOL, derive_english_accessible
 
 LEVELS = set(TOOL["input_schema"]["properties"]["norwegian_requirement_level"]["enum"])
 WORKLANG = set(TOOL["input_schema"]["properties"]["stated_working_language"]["enum"])
+
+
+def _auth_grounded(value: str, ad_text: str) -> bool:
+    """Is this authorisation value actually written in the ad?
+
+    The field is SCORED — scoring._auth_matches compares the extractor's output
+    to it — and the extractor emits Norwegian as the ad writes it. An English
+    paraphrase therefore fails a CORRECT answer. The first label produced through
+    the worksheet stored exactly that: "Norwegian psychologist authorisation
+    (norsk autorisasjon som psykolog)" for an ad reading "Psykolog med norsk
+    autorisasjon."
+
+    Substring, not equality: the existing gold uses both full and short forms,
+    and all five of its values pass this rule unchanged.
+    """
+    return normalise(value).lower() in normalise(ad_text or "").lower()
 
 
 def _reject(row: Mapping[str, Any], reason: str) -> dict:
@@ -84,6 +101,10 @@ def ingest(rows: Iterable[Mapping[str, Any]],
             if not ok:
                 rejected.append(_reject(row, f"span:{why}")); continue
 
+        auth = (exp.get("authorisation_required") or "").strip() or None
+        if auth and not _auth_grounded(auth, ad_texts[uuid]):
+            rejected.append(_reject(row, "authorisation_not_in_ad")); continue
+
         seen.add(uuid)
         accepted.append({
             "n": None,                      # assigned below, contiguously
@@ -94,8 +115,7 @@ def ingest(rows: Iterable[Mapping[str, Any]],
                 "norwegian_requirement_level": level,
                 "evidence_span": span,
                 "stated_working_language": wl,
-                "authorisation_required": (exp.get("authorisation_required") or "").strip()
-                                          or None,
+                "authorisation_required": auth,
             },
             "note": (row.get("note") or "").strip() or None,
             "doc_lang": row.get("doc_lang") or "no",
