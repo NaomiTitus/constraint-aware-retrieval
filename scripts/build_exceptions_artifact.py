@@ -108,10 +108,21 @@ try { R = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { R = {}; }
 // progress counter show them from the start rather than only once each row is
 // opened. A stored record always wins — the reviewer's later answer beats the
 // carried one it was derived from.
+// A stored record is keyed by ROW NUMBER, and row numbers are assigned by
+// sorting on (field, uuid) — so if the exception set ever changes, row 14
+// becomes a different advertisement and a stored answer silently follows the
+// number onto an ad it was never about. Verified by hand that the numbering
+// did not move this time; not a reason to leave it unguarded. Every record now
+// carries the uuid it was given for, and one that does not match is dropped.
+ITEMS.forEach(it => {
+  const r = R[it.n];
+  if (r && r.uuid && r.uuid !== it.uuid) delete R[it.n];
+});
 ITEMS.forEach(it => {
   if (it.carried && !R[it.n]) {
-    R[it.n] = {fact: it.carried.fact, value_ok: it.carried.value_ok,
-               note: it.carried.note || "", carried: true, confirmed: false};
+    R[it.n] = {uuid: it.uuid, fact: it.carried.fact,
+               value_ok: it.carried.value_ok, note: it.carried.note || "",
+               carried: true, confirmed: false};
   }
 });
 const esc = s => String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
@@ -133,15 +144,24 @@ function rec(n) {
   }
   return R[n];
 }
+// Whether a row is CARRIED is a property of the row, not of whatever happens
+// to be in local storage. Reading it from the stored record meant an answer
+// saved in an earlier pass — which has no `carried` flag — counted as finished,
+// and the confirmation step this whole rebuild exists for was skipped without
+// a word. The item is the authority; `confirmed` is the only thing the record
+// gets to say.
 const done = n => {
-  const r = R[n];
+  const r = R[n], it = ITEMS[n - 1];
   if (!r || !r.fact || !r.value_ok) return false;
-  return r.carried ? !!r.confirmed : true;
+  return (it && it.carried) ? !!r.confirmed : true;
 };
 const saveLocal = () => { try { localStorage.setItem(KEY, JSON.stringify(R)); } catch (e) {} };
 const pend = {};
 const save = n => {
-  if (n != null && R[n]) R[n].at = new Date().toISOString();
+  if (n != null && R[n]) {
+    R[n].at = new Date().toISOString();
+    R[n].uuid = (ITEMS[n - 1] || {}).uuid;   // so a renumbering cannot steal it
+  }
   saveLocal();
   if (!DB || n == null) return;
   clearTimeout(pend[n]);
