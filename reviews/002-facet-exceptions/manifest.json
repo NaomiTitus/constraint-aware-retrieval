@@ -1,12 +1,12 @@
 {
  "id": "002-facet-exceptions",
- "status": "HALTED AT DISCOVERY — verdicts discarded, review to be re-run",
+ "status": "PAUSED AT DISCOVERY, RESUMING — the first 12 verdicts are discarded and all 46 rows are re-judged against census-v10 output with a rebuilt tool. The review is not complete until all 46 are judged and no bug is outstanding.",
  "purpose": "Six facets take one value on 90-99% of records. If the RARE value is wrong, most of that class is wrong and the modal value hides it. Only the exceptions can tell you which.",
  "started": "2026-09-26",
  "n_items": 46,
  "n_judged_before_halt": 12,
  "artifact": "https://claude.ai/code/artifact/b40c5f14-6442-4742-833d-d0af1be79023",
- "why_halted": "The reviewer found a CLASS bug in the first four rows and stopped rather than completing the set. That was correct: the finding changes the extraction, so the remaining 34 rows would have been judged against data about to be replaced.",
+ "why_halted": "The reviewer found a CLASS bug in the first four rows and stopped rather than completing the set. That was correct: the finding changes the extraction, so the remaining 34 rows would have been judged against data about to be replaced. Stopping is not the end of the review — the review ends when all 46 rows are judged against output that will ship.",
  "finding": {
   "what": "3 of the 4 `application_language` values were borrowed from a NEIGHBOURING field's enum. The field permits exactly {norwegian_required, english_accepted, unstated}.",
   "values": {
@@ -21,7 +21,17 @@
  "fixes": [
   "census_validate validates EVERY enum field, derived from TOOL rather than hand-listed, and demotes an out-of-enum value rather than warning.",
   "census-v9 names application_language's three values, says they are its own, and lists the three borrowed values as invalid.",
-  "tests/unit/test_enum_validation.py parametrises over the schema in both directions, plus the cross-field cases specifically."
+  "tests/unit/test_enum_validation.py parametrises over the schema in both directions, plus the cross-field cases specifically.",
+  "census-v10 fixes the FEWSHOT, which still contradicted the v9 prose: example 5c showed a documentation clause and labelled it `unstated`, and 5b showed a housing offer and labelled relocation_support `unstated`.",
+  "_member() cannot raise: `application_language: [\"both\"]` aborted the whole census on TypeError, because census.run() does not guard validate().",
+  "The repair writes a value each field's own enum permits. It wrote None for evidence_basis and evidence_strength, both required non-nullable strings.",
+  "Three enums nested below properties.<field> are now validated: evidence_spans[].section_language, skills[].level, implicit_evidence[].",
+  "A required enum field that is None or absent is now an error; a missing norwegian_requirement_level used to raise KeyError inside census.run() after the batch was paid for.",
+  "The review page asks TWO questions — is the fact in the ad, and is the value right for the field — because on rows 1, 2 and 4 the honest answers differed.",
+  "The page no longer caps evidence at 8 lines or drops lines under 8 characters, and it states how many of the ad's lines matched.",
+  "The relocation vocabulary now covers `Hjelp å skaffe`, `leilighet`, `apartment`, `hybel`; row 18's decisive sentence was invisible to it.",
+  "An out-of-enum value is marked as such on the page instead of being rendered like a legal one.",
+  "pii.scrub gained ad-scoped phone targets: 18 contact phones survived the enumerated pattern in 15 ads, in groupings it did not list."
  ],
  "why_the_verdicts_are_discarded": [
   "The reviewer stopped at the finding; 12 of 46 rows is not a completed review and recording it as one would misrepresent it.",
@@ -29,5 +39,24 @@
   "Row 12 was marked 'wrong' because the tool's per-facet search terms hid the evidence: the ad says 'Ordnede boforhold ved behov' and the filter looked for 'bolig'. Fixed by widening the terms AND by putting the full advertisement behind a toggle on every row, so a filter can never again bound the evidence.",
   "census-v9 changes the extraction, so the 46 exception rows themselves will differ. The review must be regenerated from the census output, not resumed."
  ],
- "next": "Regenerate after the full census under census-v9, with the verdict question split into 'is the fact in the ad' and 'is the value legal and correct for this field'."
+ "next": "Regenerate after the full census under census-v9, with the verdict question split into 'is the fact in the ad' and 'is the value legal and correct for this field'.",
+ "what_the_pause_bought": "Two subagents audited the tool and the fix while the review was paused. Between them they found 10 further defects, 6 in the validator and 4 in the review page itself. Every one would have corrupted the remaining 34 verdicts or the census. This is the argument for pausing rather than pushing through: the 34 unspent verdicts were worth more after the audit than before it.",
+ "defects_found_by_audit_in_the_review_tool_itself": [
+  "The line filter capped at 8 matches and dropped lines of 8 characters or fewer, silently. On row 4 that hid the only line naming the application language; on row 22 it hid the bare bullet `Bolig`.",
+  "The relocation vocabulary could not see `Hjelp å skaffe leilighet i Bergen` — no `til`, and `leilighet` was absent. Row 18 would have been marked wrong on correct extraction.",
+  "Three illegal values were rendered in the same style as legal ones, so the page argued for `justified` on values that are discarded anyway.",
+  "The `visa_sponsorship` about text described the FIELD, not the VALUE, inviting `justified` on a weaker test than the enum means. The `conflicting_statements` about text named one scenario the single row of that facet does not match.",
+  "A stale closure: a remote snapshot replaced R[n] with a new object and handlers kept writing to the orphan, losing the edit silently.",
+  "Ad titles were never glossed, on a page built for a reviewer who does not read Norwegian."
+ ],
+ "process_incident": {
+  "what": "Commit e31ef0e, made while a subagent was mutation-testing census_validate.py, swept up the agent's in-flight M6 mutant with `git commit -a`. HEAD then shipped a hand-written field list in place of the schema derivation — the exact bug the previous commit was written to prevent — and HEAD's suite was red for one commit.",
+  "caught_by": "The schema-parametrised test DID catch it. The commit just did not run the suite.",
+  "fixed_in": "d6e1578",
+  "rules_now": [
+   "never `git commit -a` while a subagent holds the working tree",
+   "run the suite in the same command as the commit, not before it",
+   "never `git checkout --` to undo an uncommitted change you still want — commit the good state first, then mutate"
+  ]
+ }
 }

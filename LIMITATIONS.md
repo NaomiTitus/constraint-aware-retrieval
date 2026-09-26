@@ -163,7 +163,7 @@ Measured 1.0 on **99.5–99.6%** of all 34,742 taxonomy rows. Any design that
 weights graph edges by it — as this project's own plan originally did — is
 weighting by a constant.
 
-## 9. Eight bugs were hand-written patterns with green tests
+## 9. Fourteen bugs were hand-written patterns with green tests
 
 Recorded because it is the project's most transferable finding, not as
 self-flagellation. Every one had a passing test, because the test constructed its
@@ -175,5 +175,69 @@ missed English `documentation` in a 7%-English corpus; a filter that made a
 289-ad population look like 26; and a test that *set* the dict key it then
 asserted on, leaving a documented metric unreachable for the whole project.
 
+Six more arrived after that paragraph was written, and they are worth listing
+because four were found by *auditing the fix for the previous one*:
+
+- a phone pattern that **enumerated** digit groupings (2-2-2-2, 3-2-3, bare-8).
+  18 contact phones survived in 15 ads, in the groupings it did not list. Its
+  fixture was sampled from `contactList` VALUES; the leak was in how the ad
+  BODY writes the number — §3.0 applied to the wrong artefact.
+- an enum repair that wrote `"unstated" if "unstated" in enum else None`. Two of
+  the eight enums have no `unstated`, so `evidence_basis` and
+  `evidence_strength` repaired to `None` — both `required` and non-nullable, so
+  the repaired record violated the schema the repair exists to satisfy, and a
+  second validation pass returned `ok=True` because `None` reads as absent.
+- `v in frozenset` raising `TypeError` on `application_language: ["both"]`,
+  which would have aborted the entire census after the batch was paid for. The
+  fix for bad *vocabulary* turned bad *shape* from harmless into fatal.
+- an enum derivation that walked `properties` one level and missed three nested
+  enums — and **a guard test that certified the gap**, because it re-derived the
+  expected list with the same one-level accessor as the code. A test that shares
+  the code's accessor is not independent of the code.
+- a FEWSHOT that contradicted its own prose: the documentation-clause example
+  labelled `unstated` the exact clause census-v9 says is `english_accepted`, and
+  the housing example labelled `unstated` an ad that offers housing.
+- a review page that capped displayed evidence at 8 lines and dropped lines
+  under 8 characters, **silently** — hiding the decisive sentence on two rows of
+  a review in progress.
+
 `STANDARDS.md` §3.0 is the rule that came out of it: a fixture is either loaded
 from a real artefact or accompanied by the measurement that justifies its shape.
+
+And a second rule, from the four above: **after fixing a bug of this class, audit
+the fix adversarially before trusting it.** Mutation-testing the enum fix found
+5 of 7 mutants surviving; the two halves of that fix that its own commit message
+argued for hardest — the repair, and the completeness of the derivation — were
+the two nothing asserted.
+
+## 10. `application_language` cannot express a Scandinavian-only clause
+
+Its three values are `norwegian_required`, `english_accepted`, `unstated`. An ad
+saying *"Søknadstekst og CV må vere på norsk eller eit anna skandinavisk språk"*
+fits none: Danish and Swedish qualify, so it is not `norwegian_required`;
+English is not accepted; and the ad is not silent.
+
+**Measured before deciding.** 18 clauses in 17 ads name Scandinavian without
+naming English, but most are *proficiency* requirements (*"Du må snakke norsk
+eller et annet skandinavisk språk"*, *"språknivå B2"*) which belong in
+`norwegian_requirement_level`, where `scandinavian_accepted` is already legal.
+Genuine application-language clauses naming Scandinavian without English:
+**3 ads**.
+
+A fourth value was not added. It would reintroduce exactly the vocabulary the
+model was borrowing when this field held three values from other enums, and it
+would do so for 3 ads. Those 3 record `norwegian_required`, which is the
+actionable fact for a seeker who reads neither.
+
+## 11. Ten of the fifteen facets are still unmeasured, and the fix proved it
+
+The `application_language` defect was found by a human reading 4 rows, not by
+any test or metric — because the golden set does not score that field. The
+proof is direct: **census-v10 scores byte-identically to census-v8 on the golden
+set** (pooled 86.4%, hidden wrongly 1 of 12, fabricated spans 0), while having
+changed the value of `application_language` on 3 ads and `relocation_support`
+on the prompt's own worked example.
+
+A regression gate that cannot see a change cannot certify it. This is §4 with a
+worked example attached, and it is the argument for the exceptions review: for
+an unscored facet, reading the rare values is the only measurement there is.

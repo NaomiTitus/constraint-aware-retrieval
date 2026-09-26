@@ -284,6 +284,15 @@ def run(ads: Iterable[Mapping[str, Any]], client, con, *,
 
     # 1. cache first
     facets_by_rep, cache_hits = {}, 0
+    # PROMPT-CACHE ACCOUNTING, separate from the disk cache above.
+    # `cache_hits` counts llm_cache rows. This counts the Anthropic prompt
+    # cache, which is a DIFFERENT thing and the one that sets the census bill:
+    # the ~10k-token prefix is billed at 1.25x when a call WRITES it and 0.1x
+    # when a call READS it. In a batch every request is submitted at once, so
+    # the docstring's claim that the prefix is "billed at 0.1x on every call
+    # after the first" is an assumption about serial calls, not a measurement
+    # of batch behaviour. Reported so the census budget rests on the latter.
+    tok = {"in": 0, "out": 0, "cache_read": 0, "cache_write": 0}
     todo = []
     for uuid in reps:
         hit = cache_get(con, model, PROMPT_VERSION, by_uuid[uuid].get("description_text"))
@@ -306,6 +315,10 @@ def run(ads: Iterable[Mapping[str, Any]], client, con, *,
             kind = res.get("type")
             if kind == "succeeded":
                 usage = res.get("usage") or {}
+                tok["in"] += usage.get("input_tokens", 0)
+                tok["out"] += usage.get("output_tokens", 0)
+                tok["cache_read"] += usage.get("cache_read_input_tokens", 0)
+                tok["cache_write"] += usage.get("cache_creation_input_tokens", 0)
                 spend += usage.get("input_tokens", 0) * PRICE_IN
                 spend += usage.get("output_tokens", 0) * PRICE_OUT
                 spend += usage.get("cache_read_input_tokens", 0) * PRICE_CACHE_READ
@@ -368,6 +381,9 @@ def run(ads: Iterable[Mapping[str, Any]], client, con, *,
                     [uuid, "batch", str(reason), now])
 
     return {"facets": out, "calls": n_new, "cache_hits": cache_hits,
+            "tokens": tok,
+            "prompt_cache_hit_rate": (tok["cache_read"] /
+                                      max(1, tok["cache_read"] + tok["cache_write"])),
             "demoted": demoted, "demotion_rate": rate, "spend_usd": spend,
             "failed": failed,
             "levels": Counter(f["norwegian_requirement_level"] for f in out.values())}

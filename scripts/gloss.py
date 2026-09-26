@@ -117,6 +117,13 @@ if __name__ == "__main__":
                        .read_text(encoding="utf-8"))
     # Gloss the FULL ad too: the toggle shows it, and a reviewer who cannot read
     # Norwegian gains nothing from untranslated text behind a button.
+    # ORDER IS A CONTRACT with build_exceptions_artifact.py, which slices this
+    # list back apart positionally. Both sides derive the offsets from the item's
+    # own arrays and the artifact asserts the total length, so a change here
+    # fails loudly instead of sliding every gloss onto the wrong line — which
+    # would put confident English under the wrong Norwegian sentence, the worst
+    # possible failure for a reviewer who cannot read the original.
     groups = [{"id": str(i["n"]),
-               "lines": i["lines"] + i["spans"] + i["all_lines"]} for i in items]
+               "lines": [i["title"]] + i["lines"] + i["spans"] + i["all_lines"]}
+              for i in items]
     gloss(groups, ROOT / "data" / "worksheet" / "exceptions_glosses.json")

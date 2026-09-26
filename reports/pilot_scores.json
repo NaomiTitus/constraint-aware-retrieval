@@ -88,9 +88,9 @@
  },
  "working_language": {
   "non_default_total": 4,
-  "non_default_correct": 4,
-  "non_default_recall": 1.0,
-  "correct": 44
+  "non_default_correct": 3,
+  "non_default_recall": 0.75,
+  "correct": 43
  },
  "authorisation": {
   "n_expected": 5,

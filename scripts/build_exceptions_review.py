@@ -31,6 +31,11 @@ from pathlib import Path
 
 sys.path.insert(0, "src")
 from finn_smart_search import pii                                  # noqa: E402
+from finn_smart_search.understanding.census_prompt import TOOL     # noqa: E402
+
+# Derived, not transcribed: a hand-copied enum is the bug this review found.
+ENUMS = {k: list(v["enum"])
+         for k, v in TOOL["input_schema"]["properties"].items() if "enum" in v}
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "worksheet"
@@ -40,16 +45,29 @@ SRC = Path("/private/tmp/claude-501/-Users-naomi-Documents-projects/"
 # What each field is ABOUT, and the wording that would justify its rare value.
 FIELD = {
     "conflicting_statements": (
-        "The ad contradicts itself about language — one passage says English is "
-        "the working language, another demands fluent Norwegian.",
+        "The ad contradicts itself about language. NOT only the "
+        "English-vs-Norwegian case: a conflict about the NORWEGIAN BAR counts "
+        "too — one passage demanding good Norwegian, another asking only for "
+        "basic. The schema declares a bare boolean with no definition, so the "
+        "test is simply: do two passages about language disagree?",
         r"engelsk|english|norsk|spr[åa]k"),
     "visa_sponsorship": (
-        "The ad says something explicit about work permits or visa sponsorship.",
+        "The recorded value is what to judge, not the topic. "
+        "`explicitly_not_offered` means the ad REFUSES to sponsor — not merely "
+        "that it requires the applicant to already hold the right to work. "
+        "\"We only process applications from candidates with permission to work "
+        "in the EU/EEA\" is a requirement ON THE APPLICANT, and is NOT a refusal "
+        "to sponsor. The prompt records visa-negative boilerplate as a REJECTED "
+        "claim: 0 occurrences measured.",
         r"visa|arbeidstillatelse|oppholdstillatelse|work permit|sponsor"
         r"|EU/E[ØO]S|tillatelse til [åa] jobbe|arbeidsl[øo]yve"),
     "application_language": (
         "The ad says which language the APPLICATION must be written in — not "
-        "the working language, and not a requirement on the applicant.",
+        "the working language, and not a requirement on the applicant. "
+        "THIS FIELD HAS ONLY THREE LEGAL VALUES: `norwegian_required`, "
+        "`english_accepted`, `unstated`. Anything else is borrowed from a "
+        "neighbouring field and is discarded downstream, however well the ad "
+        "supports the underlying fact.",
         r"s[øo]knad|application|skriv|dokumentasjon|vitnem[åa]l|CV|attest"
         r"|p[åa] (norsk|engelsk|skandinavisk)"),
     "security_clearance_required": (
@@ -67,7 +85,12 @@ FIELD = {
         # "no sentence matches this facet" — asserting the regex's blind spot as
         # evidence and arguing for the wrong verdict.
         r"boforhold|bolig|bosted|overnatting|innkvarter|husv[æe]r|flytte|reloc"
-        r"|hjelp til [åa] (finne|skaffe)|accommodation|housing|zakwaterowanie"
+        # WIDENED AGAIN: row 18 says `Hjelp å skaffe leilighet i Bergen` — no
+        # `til`, and `leilighet` was not in the vocabulary at all. The reviewer
+        # saw one irrelevant line and would have marked a correct extraction
+        # wrong. Same failure class as the `boforhold` miss above.
+        r"|hjelp (til )?[åa] (finne|skaffe)|accommodation|housing|zakwaterowanie"
+        r"|leilighet|apartment|hybel|bokollektiv|personalbolig|tjenestebolig"
         r"|pendl|reise til jobb|dekning av reise|dekker reise|per diem"
         r"|rotasjon|\d+ uker p[åa]"),
     "evidence_strength": (
@@ -95,11 +118,25 @@ def main() -> None:
         except (json.JSONDecodeError, TypeError):
             pass
         rx = re.compile(pat, re.I)
+        # NO CAPS. The first build took `[:8]` and dropped blocks of <=8 chars,
+        # and said so nowhere. Measured consequence: on one row 12 of 20 matched
+        # lines were dropped INCLUDING the only one naming the application
+        # language, and on another the bare bullet `Bolig` vanished — in both
+        # cases the reviewer was shown boilerplate and would have concluded the
+        # ad says nothing. A filter may narrow attention; it must never bound
+        # the evidence silently.
         lines = [pii.scrub(b, cts) for b in (r["text"] or "").split("\n")
-                 if rx.search(b) and len(b.strip()) > 8][:8]
+                 if rx.search(b) and b.strip()]
         items.append({
             "n": i, "uuid": r["uuid"], "title": pii.scrub(r["title"] or "", cts),
             "field": r["field"], "value": str(r["value"]), "about": about,
+            # Whether the recorded value is even a member of this field's enum.
+            # Three of the four `application_language` values were not, and the
+            # first build rendered them in the same style as legal ones — so the
+            # page argued for "justified" on a value that is discarded anyway.
+            "legal_values": ENUMS.get(r["field"]),
+            "value_is_legal": (r["field"] not in ENUMS
+                               or str(r["value"]) in ENUMS[r["field"]]),
             "level": r["level"],
             "spans": [pii.scrub(s, cts) for s in r["spans"]],
             "lines": lines,

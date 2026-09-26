@@ -1,0 +1,15 @@
+census-v9: re-running 41 ads for 46 rows
+batch msgbatch_01DzmBGP9jfVEmNv4W41ciA7
+
+8 of 46 rows changed value under census-v9
+   evidence_strength            'inferred_from_context' -> 'explicit_and_unambiguous'
+   application_language         'both' -> 'english_accepted'
+   application_language         'either_norwegian_or_english' -> 'english_accepted'
+   evidence_strength            'explicit_but_hedged' -> 'explicit_and_unambiguous'
+   security_clearance_required  True -> False
+   evidence_strength            'explicit_but_hedged' -> 'explicit_and_unambiguous'
+   application_language         'scandinavian_accepted' -> 'english_accepted'
+   security_clearance_required  True -> False
+
+38 rows still hold the rare value and remain exceptions
+written data/worksheet/exceptions_v9.json

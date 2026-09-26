@@ -33,6 +33,13 @@ t0 = time.time()
 out = census.run(ads, client, con, poll_seconds=10, max_demotion_rate=1.0)
 print(f"\ncensus: {time.time()-t0:.0f}s  calls={out['calls']}  cache_hits={out['cache_hits']}  "
       f"demoted={out['demoted']} ({out['demotion_rate']:.0%})  spend=${out['spend_usd']:.3f}")
+t = out.get("tokens") or {}
+if t:
+    print(f"tokens: in={t['in']:,} out={t['out']:,} "
+          f"cache_read={t['cache_read']:,} cache_write={t['cache_write']:,}  "
+          f"prompt-cache hit rate {out['prompt_cache_hit_rate']:.0%}")
+    per = out['spend_usd'] / max(1, out['calls'])
+    print(f"        ${per:.5f}/ad  ->  9,823 clusters would cost ${per*9823:.2f}")
 if out["failed"]:
     print(f"  failed: {out['failed']}")
 

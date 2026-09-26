@@ -1,2 +1,4 @@
 census-v9: re-running 2 ads (no DB write)
 batch msgbatch_01P2CmePeXbK2587x8PkjgEY
+#2  was 'either_norwegian_or_english' -> now 'english_accepted'  legal=True  level=desirable
+#3  was 'english_accepted' -> now 'english_accepted'  legal=True  level=desirable

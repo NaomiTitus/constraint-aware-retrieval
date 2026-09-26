@@ -25,16 +25,28 @@ def main() -> None:
     missing = 0
     for it in items:
         g = glosses.get(str(it["n"])) or []
-        nl = len(it["lines"])
-        it["lines_en"] = g[:nl] + [None] * max(0, nl - len(g))
-        ns = len(it["spans"])
-        it["spans_en"] = g[nl:nl + ns]
-        it["all_en"] = g[nl + ns:nl + ns + len(it.get("all_lines") or [])]
+        nl, ns = len(it["lines"]), len(it["spans"])
+        na = len(it.get("all_lines") or [])
+        want = 1 + nl + ns + na          # title, then lines, spans, full ad
+        if g and len(g) != want:
+            # A LENGTH MISMATCH IS NOT RECOVERABLE BY SLICING. Every gloss after
+            # the short list shifts onto the wrong sentence, and the page then
+            # shows confident English under Norwegian that does not say it —
+            # which is the worst thing this page can do to a reviewer who cannot
+            # read the original. Drop the whole item's glosses and say so.
+            print(f"   row {it['n']}: gloss list is {len(g)}, expected {want} "
+                  f"— dropped rather than misaligned; re-run scripts/gloss.py")
+            g = []
+        it["title_en"] = g[0] if g else None
+        it["lines_en"] = g[1:1 + nl] if g else [None] * nl
+        it["spans_en"] = g[1 + nl:1 + nl + ns] if g else [None] * ns
+        it["all_en"] = g[1 + nl + ns:] if g else [None] * na
         missing += sum(1 for x in it["lines_en"] if not x)
 
     base = io.open(ROOT / "scripts" / "worksheet_template.html", encoding="utf-8").read()
     css = base[base.index("<style>"):base.index("</style>") + 8]
 
+    css = css.replace(".blk{", ".blk{cursor:auto;")
     html = _PAGE.replace("/*__CSS__*/", css).replace(
         "/*__ITEMS__*/", json.dumps(items, ensure_ascii=False))
     (OUT / "exceptions.html").write_text(html, encoding="utf-8")
@@ -61,6 +73,16 @@ _PAGE = """<title>Facet Exceptions Review</title>
   .noev{color:var(--warn);font-size:12.5px;margin-bottom:8px}
   .nogloss{color:var(--warn);font-size:11.5px;font-family:var(--sans);
     display:block;margin-top:6px}
+  .illegal{border:1px solid var(--warn);background:var(--warn-soft,transparent);
+    border-radius:5px;padding:9px 11px;margin:10px 0;font-size:12.5px;color:var(--warn)}
+  .illegal b{font-family:var(--mono)}
+  .qlabel{font-family:var(--sans);font-size:13px;font-weight:600;margin:14px 0 6px}
+  .qlabel span{display:block;font-weight:400;font-size:11.5px;color:var(--muted);
+    margin-top:2px}
+  .evcount{font-size:11.5px;color:var(--muted);margin:0 0 9px}
+  .spanhead{font-size:12.5px;color:var(--muted);margin:16px 0 6px;
+    font-family:var(--sans)}
+  .titlegloss{color:var(--muted);font-style:italic}
 </style>
 <header><div class="hrow">
   <h1>Facet exceptions — are these rare values justified?</h1>
@@ -71,13 +93,17 @@ _PAGE = """<title>Facet Exceptions Review</title>
 <div class="wrap"><nav><ol id="list"></ol></nav><main id="main"></main></div>
 <script>
 const ITEMS = /*__ITEMS__*/;
-const KEY = "facet-exceptions-v1";
+const KEY = "facet-exceptions-v2";  // v1 held single-verdict records
 let R = {}, cur = 0, DB = null;
 try { R = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { R = {}; }
 const esc = s => String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
   .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-const rec = n => (R[n] = R[n] || {verdict: null, note: ""});
-const done = n => !!(R[n] && R[n].verdict);
+// TWO questions, not one. The first build asked "is this justified?" and the
+// honest answer on three rows was yes-to-the-fact and no-to-the-value: the ad
+// really did state a documentation-language rule, and the value recorded for it
+// was borrowed from another field's enum. One button could not say that.
+const rec = n => (R[n] = R[n] || {fact: null, value_ok: null, note: ""});
+const done = n => !!(R[n] && R[n].fact && R[n].value_ok);
 const saveLocal = () => { try { localStorage.setItem(KEY, JSON.stringify(R)); } catch (e) {} };
 const pend = {};
 const save = n => {
@@ -87,9 +113,9 @@ const save = n => {
   clearTimeout(pend[n]);
   pend[n] = setTimeout(() => {
     const r = R[n] || {}, it = ITEMS[n - 1];
-    DB.doc(`exceptions/${n}`).set({n, uuid: it.uuid, field: it.field,
-      value: it.value, verdict: r.verdict || null, note: r.note || "",
-      at: r.at || new Date().toISOString()}).catch(() => {});
+    DB.doc(`exceptions_v2/${n}`).set({n, uuid: it.uuid, field: it.field,
+      value: it.value, fact: r.fact || null, value_ok: r.value_ok || null,
+      note: r.note || "", at: r.at || new Date().toISOString()}).catch(() => {});
   }, 600);
 };
 function setStatus(t, w) { const e = document.getElementById("storenote");
@@ -101,17 +127,18 @@ async function initDb() {
   DB = db;
   setStatus("Saved to this artifact.", false);
   try {
-    db.collection("exceptions").onSnapshot(s => {
+    db.collection("exceptions_v2").onSnapshot(s => {
       let t = false;
       (s.docs || s || []).forEach(d => {
         const v = d.data ? d.data() : d;
         if (!v || v.n == null) return;
         const m = R[v.n];
-        if (!m || (v.at && (!m.at || v.at > m.at))) {
-          R[v.n] = {verdict: v.verdict || null, note: v.note || "", at: v.at}; t = true;
+        if (v.at && (!m || !m.at || v.at > m.at)) {
+          R[v.n] = {fact: v.fact || null, value_ok: v.value_ok || null,
+                    note: v.note || "", at: v.at}; t = true;
         }
       });
-      if (t) { saveLocal(); renderList(); }
+      if (t) { saveLocal(); render(); }   // render() also renders the list
     }, () => setStatus("Sync interrupted — still saved locally.", true));
   } catch (e) { setStatus("Saved in this browser only.", true); }
 }
@@ -129,10 +156,16 @@ function renderList() {
   document.getElementById("ptext").textContent = `${n} / ${ITEMS.length}`;
   document.getElementById("pbar").style.width = (100 * n / ITEMS.length) + "%";
 }
-const VERDICTS = [
-  ["correct", "Justified", "the ad does say this"],
-  ["wrong", "Not justified", "the ad does not support it"],
-  ["unsure", "Unsure", "ambiguous — say why in the note"]];
+// Q1 is about the AD. Q2 is about the RECORD. They came apart on three rows:
+// the ad genuinely stated a documentation-language rule (Q1 yes) and the value
+// written down was borrowed from another field's enum (Q2 no). A single
+// "Justified?" button forced those into one answer and got the wrong one.
+const Q1 = [["yes", "Yes — the ad says it", "the fact is in the text"],
+            ["no", "No — the ad does not", "nothing in the ad supports it"],
+            ["unsure", "Unsure", "say why in the note"]];
+const Q2 = [["yes", "Yes — right field, right value", ""],
+            ["no", "No — wrong field or wrong value", "e.g. belongs elsewhere"],
+            ["unsure", "Unsure", "say why in the note"]];
 // Norwegian first, literal English gloss under it. The gloss is what the
 // verdict rests on; `må` vs `bør` and `eller` vs `og` are preserved exactly.
 function line(no, en) {
@@ -148,8 +181,20 @@ function render() {
     <div class="card">
       <span class="fieldname">${esc(it.field)}</span>
       <div class="claim">The extractor says <code>${esc(it.value)}</code></div>
+      ${it.value_is_legal === false ? `<div class="illegal">
+        <b>${esc(it.value)}</b> is not one of this field's legal values. It is
+        borrowed from a neighbouring field's enum, so the record is discarded
+        downstream however well the ad supports the underlying fact.
+        Legal values: ${(it.legal_values || []).map(esc).join(" · ")}.
+        <br>Answer question 1 about the AD and question 2 about the VALUE —
+        they can honestly differ here.</div>` : ""}
+      ${it.value_v8 != null && String(it.value_v8) !== String(it.value)
+        ? `<p class="evcount">Changed by the prompt fix: this ad recorded
+             <code>${esc(it.value_v8)}</code> before, <code>${esc(it.value)}</code>
+             now. You are judging the new value.</p>` : ""}
       <p class="why">${esc(it.about)}</p>
-      <div class="meta"><span>${esc(it.title)}</span>
+      <div class="meta"><span>${esc(it.title)}${it.title_en
+          ? ` <span class="titlegloss">— ${esc(it.title_en)}</span>` : ""}</span>
         <span>language level <b>${esc(it.level)}</b></span></div>
     </div>
     <div class="card">
@@ -157,11 +202,18 @@ function render() {
       ${noEv ? '<p class="noev">No sentence matched the SEARCH TERMS for this facet. '
         + 'That is a statement about the filter, not proof the ad is silent — an '
         + 'earlier version of these terms missed the evidence on 6 of 10 such rows. '
-        + 'Open the full advertisement below before deciding.</p>' : ''}
+        + 'Open the full advertisement below before deciding.</p>'
+        : `<p class="evcount">${it.lines.length} of ${(it.all_lines || []).length}
+             lines in the ad matched these search terms. All of them are shown —
+             an earlier build silently capped this at 8 and dropped short lines,
+             which hid the decisive sentence on two rows.</p>`}
       ${it.lines.length
         ? it.lines.map((l, i) => line(l, (it.lines_en || [])[i])).join("")
         : ""}
-      ${it.spans.length ? `<h3 style="margin-top:14px">Its language evidence</h3>`
+      ${it.spans.length ? `<p class="spanhead">Separately — the spans the model
+        quoted for the LANGUAGE verdict. Usually nothing to do with
+        <code>${esc(it.field)}</code>; shown because they are the only text the
+        model committed to.</p>`
         + it.spans.map((s, i) => line(s, (it.spans_en || [])[i])).join("") : ""}
       <div class="navbtns" style="margin-top:12px">
         <button class="act" id="togglefull">Show the full advertisement
@@ -173,7 +225,15 @@ function render() {
     </div>
     <div class="card">
       <h3>Your verdict</h3>
-      <div class="verdicts" id="vs"></div>
+      <p class="qlabel">1 · Is the fact in the advertisement?
+        <span>Ignore which field it was filed under — just: does the ad say it?</span></p>
+      <div class="verdicts" id="vs1"></div>
+      <p class="qlabel">2 · Is <code>${esc(it.value)}</code> the right value for
+        <code>${esc(it.field)}</code>?
+        <span>${it.value_is_legal === false
+          ? "This value is NOT one of this field's legal values — see the warning above."
+          : "Legal values: " + ((it.legal_values || ["(free-form)"]).join(" · "))}</span></p>
+      <div class="verdicts" id="vs2"></div>
       <label class="f" for="note">note</label>
       <textarea id="note">${esc(r.note)}</textarea>
       <div class="navbtns">
@@ -181,20 +241,26 @@ function render() {
         <button class="act primary" id="next">next →</button>
         <button class="act" id="exp" style="margin-left:auto">Show JSON</button>
       </div>
-      <p class="kbd-help"><kbd>1</kbd> justified · <kbd>2</kbd> not justified ·
-        <kbd>3</kbd> unsure · <kbd>j</kbd>/<kbd>k</kbd> move</p>
+      <p class="kbd-help">ad: <kbd>1</kbd> yes · <kbd>2</kbd> no · <kbd>3</kbd> unsure &nbsp;·&nbsp;
+        value: <kbd>4</kbd> yes · <kbd>5</kbd> no · <kbd>6</kbd> unsure &nbsp;·&nbsp;
+        <kbd>j</kbd>/<kbd>k</kbd> move</p>
     </div>
     <div class="card" id="expcard" hidden>
       <h3>Results</h3><p class="hintline">Copy from here.</p>
       <textarea id="out"></textarea></div>`;
-  const vs = document.getElementById("vs");
-  VERDICTS.forEach(([k, lbl, hint]) => {
-    const b = document.createElement("button");
-    b.className = "vb"; b.type = "button";
-    b.setAttribute("aria-pressed", r.verdict === k ? "true" : "false");
-    b.innerHTML = `${lbl}<em>${hint}</em>`;
-    b.onclick = () => { r.verdict = k; save(it.n); renderList(); render(); };
-    vs.appendChild(b);
+  [["vs1", Q1, "fact"], ["vs2", Q2, "value_ok"]].forEach(([id, opts, key]) => {
+    const host = document.getElementById(id);
+    opts.forEach(([k, lbl, hint]) => {
+      const b = document.createElement("button");
+      b.className = "vb"; b.type = "button";
+      b.setAttribute("aria-pressed", rec(it.n)[key] === k ? "true" : "false");
+      b.innerHTML = `${lbl}${hint ? `<em>${hint}</em>` : ""}`;
+      // read the record FRESH: a remote snapshot replaces R[n] with a NEW
+      // object, and a handler closing over the old one wrote into an orphan
+      // that saveLocal() never serialised. Silent loss of an edit.
+      b.onclick = () => { rec(it.n)[key] = k; save(it.n); render(); };
+      host.appendChild(b);
+    });
   });
   const tf = document.getElementById("togglefull");
   if (tf) tf.onclick = () => {
@@ -204,14 +270,16 @@ function render() {
       ? `Show the full advertisement (${(it.all_lines || []).length} lines)`
       : "Hide the full advertisement";
   };
-  document.getElementById("note").oninput = e => { r.note = e.target.value; save(it.n); };
+  document.getElementById("note").oninput = e => { rec(it.n).note = e.target.value; save(it.n); };
   document.getElementById("prev").onclick = () => go(-1);
   document.getElementById("next").onclick = () => go(1);
   document.getElementById("exp").onclick = () => {
     const c = document.getElementById("expcard"); c.hidden = false;
     document.getElementById("out").value = JSON.stringify(
       ITEMS.filter(i => done(i.n)).map(i => ({n: i.n, uuid: i.uuid, field: i.field,
-        value: i.value, verdict: R[i.n].verdict, note: (R[i.n].note || "").trim() || null})),
+        value: i.value, value_was: i.value_v8 ?? null,
+        fact_in_ad: R[i.n].fact, value_correct: R[i.n].value_ok,
+        note: (R[i.n].note || "").trim() || null})),
       null, 1);
   };
   renderList(); window.scrollTo({top: 0});
@@ -223,8 +291,10 @@ document.addEventListener("keydown", e => {
   if (e.key === "j") go(1);
   if (e.key === "k") go(-1);
   const i = parseInt(e.key, 10);
-  if (i >= 1 && i <= 3) { rec(ITEMS[cur].n).verdict = VERDICTS[i - 1][0];
-    save(ITEMS[cur].n); renderList(); render(); }
+  if (i >= 1 && i <= 3) { rec(ITEMS[cur].n).fact = Q1[i - 1][0];
+    save(ITEMS[cur].n); render(); }
+  if (i >= 4 && i <= 6) { rec(ITEMS[cur].n).value_ok = Q2[i - 4][0];
+    save(ITEMS[cur].n); render(); }
 });
 render(); initDb();
 </script>"""
