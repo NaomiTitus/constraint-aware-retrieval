@@ -62,27 +62,52 @@ Not committed: ad bodies, employer contact details, and the rendered worksheets.
 body on 11.8% of ads, their email on 10.1%, their phone on 9.6%, so excluding
 the structured `contactList` alone is only a partial control.
 
-## A review that stopped early is a successful review
+## Pausing at a discovery is not finishing
 
-`002` was halted after 12 of 46 rows. The reviewer found a class bug — three of
-four `application_language` values were borrowed from other fields' enums — and
-stopped rather than completing the set against data that was about to change.
+`002` paused after 12 of 46 rows. The reviewer found a class bug — three of four
+`application_language` values were borrowed from other fields' enums — and
+stopped rather than judge 34 more rows against data about to change. Those 12
+verdicts are discarded.
 
-Its verdicts are discarded, and the manifest says why in full, including two
-faults in the TOOL rather than the reviewer: a verdict button that conflated
-"does the ad support this fact" with "is this the right value for this field",
-and per-facet search terms that hid the evidence on one row. Both are fixed.
+**Pausing is a step in a review, not the end of one.** A review ends when every
+row has been judged against output that will ship and no finding is outstanding.
+The temptation after a good discovery is to write it up and move on, which
+converts a partial review into a finished-sounding artefact — and leaves the
+other 34 rows, any one of which could hold a different class bug, unexamined.
 
-Recording a halted review, with its partial verdicts thrown away, is the honest
-form. Completing it for the sake of a full set would have produced 34 more
-judgements about output that no longer exists.
+What the pause bought, measured: two subagents audited the review page and the
+fix while it was stopped, and found **ten further defects** between them — four
+in the page, six in the validator. Among them, a cap that silently hid the
+decisive sentence on two rows, and a `TypeError` that would have aborted the
+entire census after the batch was paid for. Every one would have corrupted the
+remaining verdicts or the run they were gating. The 34 unspent verdicts were
+worth more after the audit than before it.
+
+So the sequence is: **pause at the discovery → fix → audit the fix adversarially
+→ re-extract → resume from row 1.** Not pause → write up → move on.
+
+### Two faults were in the tool, not the reviewer
+
+A verdict button conflated "does the ad support this fact" with "is this the
+right value for this field" — on three rows the honest answers differed. And the
+per-facet search terms hid the evidence on one row while the page said nothing
+had matched. Both are recorded in the manifest, because a reviewer misled by the
+instrument has not made an error; the instrument has.
+
+### Process rules that came out of it
+
+- Never `git commit -a` while a subagent holds the working tree. Commit `e31ef0e`
+  swept up an agent's in-flight mutation and shipped a red suite for one commit.
+- Run the suite in the same command as the commit, not before it.
+- Never `git checkout --` to undo an experiment when the file also holds
+  uncommitted work you want. Commit the good state first, then mutate.
 
 ## Reviews
 
 | id | what | items | state |
 |---|---|---:|---|
 | `001-sealed-language` | held-out language labels — the unbiased accuracy set | 28 | labelled |
-| `002-facet-exceptions` | the rare values of near-constant facets | 46 | **halted at discovery** — found a class bug in 4 rows; to be re-run after census-v9 |
+| `002-facet-exceptions` | the rare values of near-constant facets | 46 | **in progress** — paused at a class bug found in 4 rows; tool rebuilt, rows re-extracted under census-v10, resuming from row 1 |
 | `003-finn-baseline` | the live FINN product, via CV upload | 15 | not started |
 
 ### A retired review

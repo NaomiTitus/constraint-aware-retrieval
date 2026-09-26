@@ -17,6 +17,26 @@ has measured, and the plan's figure was computed from the optimistic end.
 This probe submits ONE batch of N requests with the identical prefix and reports
 the read/write split. It costs about a cent and it decides a $45 question.
 
+MEASURED 2026-09-26, census-v10, 24 requests in one batch:
+    cache READERS 24 (100%)   WRITERS 0 (0%)
+    read=283,032 write=0 tokens   $0.00198/ad   ->  $19.41 for 9,823 clusters
+
+READ THE CONFOUND BEFORE TRUSTING THAT. This probe ran AFTER a 44-ad pilot and
+a 41-ad re-run had already written the census-v10 prefix, so it measured a WARM
+cache, not a cold start. It proves a batch READS a prefix that already exists.
+It does NOT prove the first batch under a new prompt version does.
+
+The cold number is measurable and was measured: the v10 pilot was the first v10
+batch, and all 44 of its requests wrote the prefix — $0.338 for 44 calls, i.e.
+$0.00768/ad, 3.9x the warm rate.
+
+So the operational conclusion is not "caching works", it is:
+    WARM THE CACHE BEFORE SUBMITTING THE CENSUS.
+One throwaway request carrying the prefix, then the batch, keeps the whole run
+on the 0.1x path. Each read refreshes the 5-minute TTL, so a continuously
+processing batch holds it. Without the warm-up the early requests pay 1.25x —
+and at 1.25x, marking the prefix costs MORE than not marking it at all.
+
 No DB write.
 """
 from __future__ import annotations

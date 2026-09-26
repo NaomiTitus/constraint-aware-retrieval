@@ -229,7 +229,9 @@ def test_3_5_expired_results_are_retried_once_then_failed(tmp_con):
     expired = {"custom_id": "a", "type": "expired"}
     client = FakeClient(results={"a": expired})
     out = census.run([ad("a"), ad("b", OTHER["b"])], client, tmp_con)
-    assert len(client.submitted) == 2, "expired must be retried in a second batch"
+    # 3, not 2: batch 0 is the one-request prompt-cache warm-up (see section 7),
+    # batch 1 is the remainder, batch 2 is the retry of the expired request.
+    assert len(client.submitted) == 3, "expired must be retried in a later batch"
     assert "a" in out["failed"]
 
 
@@ -483,11 +485,12 @@ def test_fan_out_spreads_a_non_default_verdict(tmp_con):
 
 
 def test_retry_resubmits_only_the_expired_request(tmp_con):
-    """len(submitted)==2 passes even if the retry re-sends every request,
-    re-billing the whole census."""
+    """A batch count alone passes even if the retry re-sends every request,
+    re-billing the whole census. Assert WHAT was resent, not how many times."""
     client = FakeClient(results={"a": {"custom_id": "a", "type": "expired"}})
     census.run([ad("a"), ad("b", OTHER["b"])], client, tmp_con)
-    assert [r["custom_id"] for r in client.submitted[1]] == ["a"]
+    # submitted[0] is the warm-up (["a"]), [1] the remainder, [2] the retry.
+    assert [r["custom_id"] for r in client.submitted[-1]] == ["a"]
 
 
 def test_long_ad_is_sent_in_full(tmp_con):
@@ -950,3 +953,58 @@ def test_run_scrubs_contact_pii_from_skill_phrases(tmp_con):
     assert got["evidence_spans"][0]["span"] == "Gode norskkunnskaper er et krav", \
         "spans must stay verbatim or the fabrication check breaks"
     assert got["norwegian_requirement_level"] == "professional", "not demoted"
+
+
+# ── 7 · prompt-cache warm-up ─────────────────────────────────────────────────
+# MEASURED, not assumed. build_request marks the ~10k-token prefix with
+# cache_control, and its docstring claimed the prefix is "billed at 0.1x on
+# every call after the first". That is true of SERIAL calls; the census is one
+# batch dispatched together.
+#
+#   probe, WARM cache (24 reqs):  24 readers, 0 writers, $0.00198/ad -> $19.41
+#   pilot, COLD cache (44 reqs):  all 44 wrote,          $0.00768/ad -> $75.42
+#
+# So the cache does work inside a batch — but only once the prefix exists. The
+# first batch under a new PROMPT_VERSION pays 1.25x on every request, and at
+# 1.25x marking the prefix costs MORE than not marking it at all. One throwaway
+# request before the real batch puts the whole run on the 0.1x path.
+
+def test_7_1_the_prefix_is_warmed_before_the_real_batch(tmp_con):
+    """The first submission must be a single warm-up, not the whole corpus."""
+    ads = [ad(u, OTHER[u]) for u in list(OTHER)[:5]]
+    c = FakeClient()
+    census.run(ads, c, tmp_con)
+    assert len(c.submitted) >= 2, "no warm-up batch was submitted"
+    assert len(c.submitted[0]) == 1, (
+        f"warm-up batch carried {len(c.submitted[0])} requests, expected 1")
+
+
+def test_7_2_the_warm_up_carries_the_same_prefix_as_the_real_requests(tmp_con):
+    """A warm-up with a different prefix warms nothing. Compare the cached
+    segment — system block plus few-shot turns — not the live ad."""
+    ads = [ad(u, OTHER[u]) for u in list(OTHER)[:3]]
+    c = FakeClient()
+    census.run(ads, c, tmp_con)
+    warm = c.submitted[0][0]["params"]
+    real = c.submitted[1][0]["params"]
+    assert warm["system"] == real["system"]
+    assert warm["tools"] == real["tools"]
+    # every turn up to and including the cache breakpoint must match
+    assert warm["messages"][:-1] == real["messages"][:-1]
+
+
+def test_7_3_the_warm_up_ad_is_not_written_to_the_facet_table(tmp_con):
+    """It is a throwaway. Its result must not become a row."""
+    ads = [ad(u, OTHER[u]) for u in list(OTHER)[:4]]
+    c = FakeClient()
+    out = census.run(ads, c, tmp_con)
+    assert set(out["facets"]) == set(list(OTHER)[:4])
+
+
+def test_7_4_a_single_ad_run_does_not_pay_for_a_warm_up(tmp_con):
+    """Warming costs one prefix write. With one ad to process there is nothing
+    to amortise it over, so it must be skipped."""
+    c = FakeClient()
+    census.run([ad("only", "A single advertisement body.")], c, tmp_con)
+    assert len(c.submitted) == 1
+    assert len(c.submitted[0]) == 1

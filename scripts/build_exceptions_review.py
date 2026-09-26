@@ -39,8 +39,10 @@ ENUMS = {k: list(v["enum"])
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "worksheet"
-SRC = Path("/private/tmp/claude-501/-Users-naomi-Documents-projects/"
-           "2d8ed1e8-68bf-4a23-bed2-3527063a5b59/scratchpad/exceptions.json")
+# The rows re-extracted under the CURRENT prompt. Reviewing the older run would
+# spend verdicts on values that will never ship. `scripts/rerun_exceptions.py`
+# writes this and carries `value_v8` so the page can show what changed.
+SRC = ROOT / "data" / "worksheet" / "exceptions_current.json"
 
 # What each field is ABOUT, and the wording that would justify its rare value.
 FIELD = {
@@ -134,6 +136,9 @@ def main() -> None:
             # Three of the four `application_language` values were not, and the
             # first build rendered them in the same style as legal ones — so the
             # page argued for "justified" on a value that is discarded anyway.
+            "value_v8": (str(r["value_v8"]) if r.get("value_v8") is not None
+                         else None),
+            "changed": bool(r.get("changed")),
             "legal_values": ENUMS.get(r["field"]),
             "value_is_legal": (r["field"] not in ENUMS
                                or str(r["value"]) in ENUMS[r["field"]]),

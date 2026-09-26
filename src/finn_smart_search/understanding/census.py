@@ -302,14 +302,35 @@ def run(ads: Iterable[Mapping[str, Any]], client, con, *,
         else:
             todo.append(uuid)
 
-    # 2. submit, retrying expired ONCE (expired requests are not billed)
+    # 2. WARM THE PROMPT CACHE, then submit, retrying expired ONCE (expired
+    #    requests are not billed).
+    #
+    #    Measured on census-v10, 24 requests in one batch against a prefix that
+    #    already existed: 24 cache READERS, 0 writers, $0.00198/ad. Measured on
+    #    the first v10 batch, 44 requests against no prefix: all 44 WROTE it,
+    #    $0.00768/ad — 3.9x. A batch shares the prefix cache happily; it just
+    #    cannot create it, because its requests are dispatched together.
+    #
+    #    Extrapolated over 9,823 clusters that is $19.41 warm against $75.42
+    #    cold, so this is the single largest cost lever in the pipeline. And at
+    #    the 1.25x write rate, marking the prefix costs MORE than not marking
+    #    it — the cache_control is only worth having if something warms it.
+    #
+    #    The warm-up is the FIRST REAL AD, sent alone and kept. Nothing is
+    #    thrown away and nothing is billed that would not have been billed.
     spend, failed, raw = 0.0, {}, {}
     pending = list(todo)
     for attempt in range(2):
         if not pending:
             break
-        requests = [build_request(by_uuid[u]) for u in pending]
-        got = _collect(client, client.submit_batch(requests), set(pending), poll_seconds)
+        # `batches`, not `groups`: `groups` is the dedup clustering above.
+        batches = ([pending[:1], pending[1:]]
+                   if attempt == 0 and len(pending) > 1 else [pending])
+        got = {}
+        for batch in batches:
+            requests = [build_request(by_uuid[u]) for u in batch]
+            got.update(_collect(client, client.submit_batch(requests),
+                                set(batch), poll_seconds))
         retry = []
         for uuid, res in got.items():
             kind = res.get("type")

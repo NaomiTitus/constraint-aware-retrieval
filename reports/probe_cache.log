@@ -1,0 +1,13 @@
+census-v10: probing prompt-cache behaviour on 24 requests in ONE batch
+batch msgbatch_01BDzUVUtqTYi7WmJiYKcurd
+
+  requests            24
+  cache READERS       24 (100%)
+  cache WRITERS       0 (0%)
+  tokens  in=22,060  out=8,897  read=283,032  write=0
+  spend               $0.0474   ($0.00198/ad)
+
+  EXTRAPOLATED to 9,823 clusters: $19.41
+  (the plan's figure was $16.71, computed assuming the prefix is read at 0.1x on every call after the first)
+
+  VERDICT: the batch does share the prefix cache.

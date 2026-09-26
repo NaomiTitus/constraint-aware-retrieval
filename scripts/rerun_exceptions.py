@@ -76,7 +76,10 @@ def main() -> None:
         rec["value"] = new_val
         rec["changed"] = str(new_val) != str(r["value"])
         rec["level"] = f.get("norwegian_requirement_level")
-        rec["spans"] = f.get("evidence_spans") or []
+        # evidence_spans are objects here and plain strings in the review's
+        # item contract. Normalise at the boundary, not in the consumer.
+        rec["spans"] = [e.get("span", "") if isinstance(e, dict) else str(e)
+                        for e in (f.get("evidence_spans") or [])]
         rec["demoted"] = bool(res.get("demoted"))
         rec["reasons"] = res.get("_reasons") or []
         changed += rec["changed"]
