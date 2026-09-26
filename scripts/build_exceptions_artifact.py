@@ -83,6 +83,14 @@ _PAGE = """<title>Facet Exceptions Review</title>
   .spanhead{font-size:12.5px;color:var(--muted);margin:16px 0 6px;
     font-family:var(--sans)}
   .titlegloss{color:var(--muted);font-style:italic}
+  .carried{border:1px solid var(--accent);border-radius:5px;padding:9px 11px;
+    margin:10px 0;font-size:12.5px}
+  .carried b{font-family:var(--mono)}
+  .carried .why{display:block;margin-top:5px;color:var(--warn)}
+  .vb.suggested{border-style:dashed}
+  .vb.suggested::after{content:" · your earlier answer";font-size:10.5px;
+    color:var(--muted)}
+  .dot.carried-dot{box-shadow:inset 0 0 0 2px var(--accent)}
 </style>
 <header><div class="hrow">
   <h1>Facet exceptions — are these rare values justified?</h1>
@@ -96,14 +104,40 @@ const ITEMS = /*__ITEMS__*/;
 const KEY = "facet-exceptions-v2";  // v1 held single-verdict records
 let R = {}, cur = 0, DB = null;
 try { R = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { R = {}; }
+// Seed carried verdicts BEFORE the first render, so the sidebar and the
+// progress counter show them from the start rather than only once each row is
+// opened. A stored record always wins — the reviewer's later answer beats the
+// carried one it was derived from.
+ITEMS.forEach(it => {
+  if (it.carried && !R[it.n]) {
+    R[it.n] = {fact: it.carried.fact, value_ok: it.carried.value_ok,
+               note: it.carried.note || "", carried: true, confirmed: false};
+  }
+});
 const esc = s => String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
   .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 // TWO questions, not one. The first build asked "is this justified?" and the
 // honest answer on three rows was yes-to-the-fact and no-to-the-value: the ad
 // really did state a documentation-language rule, and the value recorded for it
 // was borrowed from another field's enum. One button could not say that.
-const rec = n => (R[n] = R[n] || {fact: null, value_ok: null, note: ""});
-const done = n => !!(R[n] && R[n].fact && R[n].value_ok);
+// A carried verdict is PREFILLED but NOT DONE. reviews/README.md: a suggested
+// value is a suggestion, and every value stays unconfirmed until touched. That
+// rule was written for machine prefill; it applies at least as strongly here,
+// because some of these answers were given while the page was hiding evidence.
+function rec(n) {
+  if (!R[n]) {
+    const it = ITEMS[n - 1], c = it && it.carried;
+    R[n] = c ? {fact: c.fact, value_ok: c.value_ok, note: c.note || "",
+                carried: true, confirmed: false}
+             : {fact: null, value_ok: null, note: ""};
+  }
+  return R[n];
+}
+const done = n => {
+  const r = R[n];
+  if (!r || !r.fact || !r.value_ok) return false;
+  return r.carried ? !!r.confirmed : true;
+};
 const saveLocal = () => { try { localStorage.setItem(KEY, JSON.stringify(R)); } catch (e) {} };
 const pend = {};
 const save = n => {
@@ -115,7 +149,8 @@ const save = n => {
     const r = R[n] || {}, it = ITEMS[n - 1];
     DB.doc(`exceptions_v2/${n}`).set({n, uuid: it.uuid, field: it.field,
       value: it.value, fact: r.fact || null, value_ok: r.value_ok || null,
-      note: r.note || "", at: r.at || new Date().toISOString()}).catch(() => {});
+      note: r.note || "", carried: !!r.carried, confirmed: !!r.confirmed,
+      at: r.at || new Date().toISOString()}).catch(() => {});
   }, 600);
 };
 function setStatus(t, w) { const e = document.getElementById("storenote");
@@ -135,7 +170,8 @@ async function initDb() {
         const m = R[v.n];
         if (v.at && (!m || !m.at || v.at > m.at)) {
           R[v.n] = {fact: v.fact || null, value_ok: v.value_ok || null,
-                    note: v.note || "", at: v.at}; t = true;
+                    note: v.note || "", carried: !!v.carried,
+                    confirmed: !!v.confirmed, at: v.at}; t = true;
         }
       });
       if (t) { saveLocal(); render(); }   // render() also renders the list
@@ -147,15 +183,20 @@ function renderList() {
   ITEMS.forEach((it, i) => {
     const li = document.createElement("li"), b = document.createElement("button");
     b.setAttribute("aria-current", i === cur ? "true" : "false");
-    b.innerHTML = `<span class="dot ${done(it.n) ? "done" : ""}"></span>
+    const rr = R[it.n];
+    const pend = rr && rr.carried && !rr.confirmed;
+    b.innerHTML = `<span class="dot ${done(it.n) ? "done" : ""}${pend ? " carried-dot" : ""}"></span>
       <span class="nm">${it.n}</span><span class="st">${esc(it.field)}</span>`;
     b.onclick = () => { cur = i; render(); };
     li.appendChild(b); ol.appendChild(li);
   });
   const n = ITEMS.filter(i => done(i.n)).length;
-  document.getElementById("ptext").textContent = `${n} / ${ITEMS.length}`;
+  const pending = ITEMS.filter(i => i.carried && !(R[i.n] && R[i.n].confirmed)).length;
+  document.getElementById("ptext").textContent =
+    `${n} / ${ITEMS.length}` + (pending ? ` · ${pending} to confirm` : "");
   document.getElementById("pbar").style.width = (100 * n / ITEMS.length) + "%";
 }
+const WHY = {"value_changed": "The extractor now records a DIFFERENT value than the one you judged, so your earlier answer was about something else.", "tool_was_wrong": "This page was at fault on this row when you judged it \u2014 evidence was hidden by a filter cap or a vocabulary gap. What you were shown was incomplete.", "note_disagrees": "Your note and your buttons disagree. Probably a mis-click; yours to resolve."};
 // Q1 is about the AD. Q2 is about the RECORD. They came apart on three rows:
 // the ad genuinely stated a documentation-language rule (Q1 yes) and the value
 // written down was borrowed from another field's enum (Q2 no). A single
@@ -225,6 +266,17 @@ function render() {
     </div>
     <div class="card">
       <h3>Your verdict</h3>
+      ${it.carried ? `<div class="carried">
+        Carried over from your earlier pass
+        ${it.carried.at ? `(${esc(it.carried.at.slice(11, 16))})` : ""} —
+        you judged <b>${esc(it.carried.value_judged)}</b> as
+        <b>${esc(it.carried.fact)}</b> / <b>${esc(it.carried.value_ok)}</b>.
+        The answers below are filled in with it. <b>It does not count until you
+        confirm.</b>
+        ${(it.carried.flags || []).map(f => `<span class="why">${esc(WHY[f] || f)}</span>`).join("")}
+        <div class="navbtns" style="margin-top:8px">
+          <button class="act primary" id="confirmcarry">Confirm — unchanged</button>
+        </div></div>` : ""}
       <p class="qlabel">1 · Is the fact in the advertisement?
         <span>Ignore which field it was filed under — just: does the ad say it?</span></p>
       <div class="verdicts" id="vs1"></div>
@@ -253,15 +305,27 @@ function render() {
     opts.forEach(([k, lbl, hint]) => {
       const b = document.createElement("button");
       b.className = "vb"; b.type = "button";
-      b.setAttribute("aria-pressed", rec(it.n)[key] === k ? "true" : "false");
+      const cur = rec(it.n);
+      b.setAttribute("aria-pressed", cur[key] === k ? "true" : "false");
+      if (cur.carried && !cur.confirmed && cur[key] === k) b.classList.add("suggested");
       b.innerHTML = `${lbl}${hint ? `<em>${hint}</em>` : ""}`;
       // read the record FRESH: a remote snapshot replaces R[n] with a NEW
       // object, and a handler closing over the old one wrote into an orphan
       // that saveLocal() never serialised. Silent loss of an edit.
-      b.onclick = () => { rec(it.n)[key] = k; save(it.n); render(); };
+      b.onclick = () => {
+        const r = rec(it.n);
+        r[key] = k;
+        // Touching an answer IS the confirmation — the reviewer has now looked.
+        if (r.carried) r.confirmed = true;
+        save(it.n); render();
+      };
       host.appendChild(b);
     });
   });
+  const cc = document.getElementById("confirmcarry");
+  if (cc) cc.onclick = () => {
+    const r = rec(it.n); r.confirmed = true; save(it.n); go(1);
+  };
   const tf = document.getElementById("togglefull");
   if (tf) tf.onclick = () => {
     const f = document.getElementById("fulltext");

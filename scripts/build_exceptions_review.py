@@ -44,6 +44,15 @@ OUT = ROOT / "data" / "worksheet"
 # writes this and carries `value_v8` so the page can show what changed.
 SRC = ROOT / "data" / "worksheet" / "exceptions_current.json"
 
+# Verdicts the reviewer already gave, carried across a re-extraction.
+#
+# KEYED ON (uuid, field), NEVER ON ROW NUMBER. `n` is assigned by sorting on
+# (field, uuid), so if one row leaves the exception set every later row shifts
+# by one — and a carried verdict would land on a different advertisement while
+# looking perfectly normal. That is the worst available failure here: it would
+# put the reviewer's name on a judgement they never made.
+CARRIED = ROOT / "reviews" / "002-facet-exceptions" / "carried_verdicts.json"
+
 # What each field is ABOUT, and the wording that would justify its rare value.
 FIELD = {
     "conflicting_statements": (
@@ -103,10 +112,53 @@ FIELD = {
 }
 
 
+def _carry(prior: dict | None, value_now: str) -> dict | None:
+    """The reviewer's earlier verdict, plus why it might not still hold.
+
+    Three reasons a carried verdict needs a second look, and the page says
+    which applies:
+
+      value_changed   they judged a different value; the prompt has moved since
+      tool_was_wrong  the page misled them on this row — evidence was hidden by
+                      a filter cap or a vocabulary gap, both measured
+      note_disagrees  the note contradicts the buttons, which usually means a
+                      mis-click and is theirs to resolve, not mine
+    """
+    if not prior:
+        return None
+    flags = []
+    if str(prior.get("value_judged")) != value_now:
+        flags.append("value_changed")
+    if prior["n"] in TOOL_WAS_WRONG_ON:
+        flags.append("tool_was_wrong")
+    note = (prior.get("note") or "").lower()
+    if note and "unstated" in note and prior.get("value_ok") == "yes":
+        flags.append("note_disagrees")
+    return {"fact": prior.get("fact"), "value_ok": prior.get("value_ok"),
+            "note": prior.get("note") or "", "value_judged": prior.get("value_judged"),
+            "at": prior.get("at"), "flags": flags}
+
+
+# Rows where the PAGE, not the reviewer, was at fault — measured by the audit.
+#   1, 2, 4  an out-of-enum value was rendered exactly like a legal one, and
+#            the single verdict button conflated "is the fact in the ad" with
+#            "is this the right value"
+#   4, 22    the 8-line cap and the <=8-character drop hid decisive evidence
+#   12       the relocation filter did not know `boforhold`
+#   18       the relocation filter did not know `leilighet`, so the only line
+#            shown was `Mulighet for rotasjon onshore / offshore`
+TOOL_WAS_WRONG_ON = {1, 2, 4, 12, 18, 22}
+
+
 def main() -> None:
     import duckdb
     con = duckdb.connect(str(ROOT / "data" / "ads.duckdb"), read_only=True)
     raw = json.loads(SRC.read_text(encoding="utf-8"))
+
+    carried = {}
+    if CARRIED.exists():
+        for c in json.loads(CARRIED.read_text(encoding="utf-8")):
+            carried[(c["uuid"], c["field"])] = c
 
     items = []
     for i, r in enumerate(sorted(raw, key=lambda x: (x["field"], x["uuid"])), 1):
@@ -138,6 +190,11 @@ def main() -> None:
             # page argued for "justified" on a value that is discarded anyway.
             "value_v8": (str(r["value_v8"]) if r.get("value_v8") is not None
                          else None),
+            # Carried forward, and marked as carried. The reviewer asked not to
+            # start again; they did not ask to have their answers treated as
+            # final on rows where the EVIDENCE or the VALUE has since changed.
+            "carried": _carry(carried.get((r["uuid"], r["field"])),
+                              str(r["value"])),
             "changed": bool(r.get("changed")),
             "legal_values": ENUMS.get(r["field"]),
             "value_is_legal": (r["field"] not in ENUMS

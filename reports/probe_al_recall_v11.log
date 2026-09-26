@@ -1,1 +1,12 @@
 census-v11: recall probe on 40 ads selected by CLAUSE, not by model output
+batch msgbatch_01GD8bAKGzKVtfnG88VRyga5
+
+  found         38  (95%)
+  MISSED         0  (0%)   recorded `unstated`
+  wrong value    2  (5%)
+
+--- misses ---
+  160069fd  want english_accepted   got norwegian_required  Dokumentasjon av utenlandsk opprinnelse må være attestert og foreligge på norsk/samisk, 
+  1ef6e61b  want norwegian_required got english_accepted    Dokumentene må være på norsk/skandinavisk ellerengelsk.
+
+written reports/application_language_recall.json

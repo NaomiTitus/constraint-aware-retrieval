@@ -1,6 +1,6 @@
 {
  "id": "002-facet-exceptions",
- "status": "PAUSED AT DISCOVERY, RESUMING — the first 12 verdicts are discarded and all 46 rows are re-judged against census-v10 output with a rebuilt tool. The review is not complete until all 46 are judged and no bug is outstanding.",
+ "status": "IN PROGRESS — 22 of 46 judged, carried forward into the census-v11 rebuild as PREFILLED BUT UNCONFIRMED. The review ends when all 46 are judged against shipping output and no finding is outstanding.",
  "purpose": "Six facets take one value on 90-99% of records. If the RARE value is wrong, most of that class is wrong and the modal value hides it. Only the exceptions can tell you which.",
  "started": "2026-09-26",
  "n_items": 46,
@@ -58,5 +58,41 @@
    "run the suite in the same command as the commit, not before it",
    "never `git checkout --` to undo an uncommitted change you still want — commit the good state first, then mutate"
   ]
+ },
+ "n_judged": 22,
+ "second_finding": {
+  "field": "relocation_support",
+  "found_by": "the reviewer, on rows 12-22, with a consistent written reason",
+  "what": "The extractor conflates three different offers under `offered`: (a) accommodation provided BECAUSE OF the job — rotation camps, staff housing, assignment housing for a temp nurse; (b) travel and subsistence WHILE WORKING; and (c) help MOVING there. Only (c) is relocation support. A seeker who needs help relocating and a seeker offered a rotation bunk are being told the same thing.",
+  "reviewer_note_verbatim": "Housing not relocation, travel to work - should be unstated",
+  "examples": {
+   "job-provided housing, NOT relocation": [
+    "row 15 · Ansattbolig i Noresund — employee housing",
+    "row 17 · Betalt bolig under hele oppdragsperioden — paid housing for the assignment",
+    "row 20 · Dekt reise og bolig — covered travel and housing",
+    "row 22 · Bolig / Accommodation, alongside Mulighet for 6/2-rotasjon"
+   ],
+   "work travel, NOT relocation": [
+    "row 13 · dekning av reise og overnatting, betalt reisetid",
+    "row 21 · a guaranteed kindergarten place and a page about the municipality"
+   ],
+   "GENUINE relocation support, where the extractor is right": [
+    "row 14 · Vi hjelper nye arbeidstakere i Norge med å finne bolig",
+    "row 18 · Hjelp å skaffe leilighet i Bergen"
+   ]
+  },
+  "assessment": "The class is real and 9 of 11 judged rows support it. Two do not: rows 14 and 18 carry an explicit offer to help a new arrival find housing, which is exactly the fact the field is for. Row 18 is also the row whose decisive line the page was hiding at the time it was judged, so the reviewer was working from `Mulighet for rotasjon onshore / offshore` alone.",
+  "not_fixed_yet": "Deliberate. Fixing the prompt now would change the value on most of rows 12-22 and make the carried verdicts about a different value again — the third invalidation of the same review. The order is: finish all 46, collect every finding, fix once, re-extract once, confirm once."
+ },
+ "carry_forward": {
+  "file": "reviews/002-facet-exceptions/carried_verdicts.json",
+  "n": 22,
+  "keyed_on": "(uuid, field), never row number. `n` is assigned by sorting on (field, uuid), so one row leaving the set shifts every later row by one and a carried verdict would land on a different advertisement while looking entirely normal — putting the reviewer's name on a judgement they never made.",
+  "shown_as": "prefilled but NOT counted as done until confirmed, per reviews/README.md. Some of these answers were given while the page was hiding evidence, so a carried answer is a starting point, not a result.",
+  "flagged_for_a_second_look": {
+   "value_changed": "the extractor now records a different value than the one judged",
+   "tool_was_wrong": "rows 1, 2, 4, 12, 18, 22 — measured page defects at the time of judging",
+   "note_disagrees": "row 19 — marked yes/yes with the note 'Housing not relocation - should be unstated'"
+  }
  }
 }

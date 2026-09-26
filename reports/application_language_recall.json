@@ -1,8 +1,8 @@
 {
- "prompt_version": "census-v10",
+ "prompt_version": "census-v11",
  "n": 40,
- "found": 35,
- "missed": 3,
+ "found": 38,
+ "missed": 0,
  "wrong_value": 2,
  "detail": [
   {
@@ -72,15 +72,15 @@
    "uuid": "1242f465-265f-4942-bb6c-c9d13c4917db",
    "clause": "Søknadstekst og CV må vere på norsk eller eit anna skandinavisk språk.",
    "expected": "norwegian_required",
-   "got": "english_accepted",
-   "state": "wrong_value"
+   "got": "norwegian_required",
+   "state": "found"
   },
   {
    "uuid": "159eab4e-aa9d-4318-a6a7-0ddee1a6ca30",
    "clause": "Attester må være oversatt til norsk",
    "expected": "norwegian_required",
-   "got": "unstated",
-   "state": "missed"
+   "got": "norwegian_required",
+   "state": "found"
   },
   {
    "uuid": "15dc9506-608e-4340-b4f1-ada6c5277e80",
@@ -93,8 +93,8 @@
    "uuid": "160069fd-fc99-49f8-a892-2b59a6884229",
    "clause": "Dokumentasjon av utenlandsk opprinnelse må være attestert og foreligge på norsk/samisk, engelsk eller et skandinavisk språk.",
    "expected": "english_accepted",
-   "got": "english_accepted",
-   "state": "found"
+   "got": "norwegian_required",
+   "state": "wrong_value"
   },
   {
    "uuid": "163ab8be-0409-4f57-ba0b-681ebe802434",
@@ -107,8 +107,8 @@
    "uuid": "1b4f6137-361a-4bb0-9c71-cf9d85e5101d",
    "clause": "Attester må være oversatt til norsk",
    "expected": "norwegian_required",
-   "got": "unstated",
-   "state": "missed"
+   "got": "norwegian_required",
+   "state": "found"
   },
   {
    "uuid": "1c89f50a-5c20-461e-adf9-abaac78d8039",
@@ -198,8 +198,8 @@
    "uuid": "2819595b-904d-431f-9b76-31343cf6b74a",
    "clause": "Attester må være oversatt til norsk",
    "expected": "norwegian_required",
-   "got": "unstated",
-   "state": "missed"
+   "got": "norwegian_required",
+   "state": "found"
   },
   {
    "uuid": "29929392-330d-472f-a62c-784cda0ef058",
