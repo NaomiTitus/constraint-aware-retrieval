@@ -378,3 +378,55 @@ def test_the_prompt_states_the_minimum_span_length():
 def test_prompt_version_advanced_past_v7():
     assert cp.PROMPT_VERSION not in ("census-v5", "census-v6", "census-v7"), \
         "bump PROMPT_VERSION or the cache returns the v7 demotions"
+
+
+# ── v9: the documentation clause needs a DESTINATION, not just an exclusion ───
+#
+# census-v7 told the model a documentation-language clause is not a job
+# requirement. It never said where such a clause SHOULD be recorded. So the
+# model recognises the clause, has nowhere clean to put it, and borrows a
+# neighbouring field's vocabulary: 3 of the 4 `application_language` values in
+# the corpus were `scandinavian_accepted`, `either_norwegian_or_english` and
+# `both` — each legal in a DIFFERENT field, none legal in this one, which
+# permits only {norwegian_required, english_accepted, unstated}.
+#
+# Found by human review of the exceptions, not by any test. An exclusion without
+# a destination is half a rule.
+
+# Verified against census-v8 before being kept: of these four assertions, TWO
+# discriminate (naming the field's own values, and the warning against
+# borrowing) and TWO already passed on v8 — it mentions `application_language`
+# and the borrowed values elsewhere. The weak pair is retained as a deletion
+# guard, not as evidence of the v9 change, and is labelled so nobody reads four
+# green ticks as four proofs.
+def test_the_prompt_names_where_a_documentation_clause_GOES():
+    low = SYSTEM.lower()
+    assert "application_language" in low, \
+        "the prompt must name the field the documentation clause belongs in"
+    assert re.search(r"application_language[\s\S]{0,400}?"
+                     r"(norwegian_required|english_accepted)", low), \
+        "and must name that field's OWN values, or the model borrows another's"
+
+
+def test_the_prompt_states_application_languages_closed_vocabulary():
+    """The three permitted values, written out. The model cannot infer from the
+    field name that `both` and `scandinavian_accepted` are not options here."""
+    low = SYSTEM.lower()
+    for v in ("norwegian_required", "english_accepted"):
+        assert v in low, v
+
+
+def test_the_prompt_warns_against_borrowing_another_fields_values():
+    low = SYSTEM.lower()
+    assert re.search(r"do not put a level value here|belong to other fields"
+                     r"|invalid in this one", low), \
+        "the prompt must say the field's values are its own"
+    # and must name the borrowed values that actually occurred, so the warning
+    # is concrete rather than abstract
+    for borrowed in ("scandinavian_accepted", "either_norwegian_or_english", "both"):
+        assert borrowed in low, borrowed
+
+
+def test_prompt_version_advanced_past_v8():
+    assert cp.PROMPT_VERSION not in ("census-v6", "census-v7", "census-v8"), \
+        "bump PROMPT_VERSION or the cache returns records with invalid enums"

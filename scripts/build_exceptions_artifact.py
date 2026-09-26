@@ -27,7 +27,9 @@ def main() -> None:
         g = glosses.get(str(it["n"])) or []
         nl = len(it["lines"])
         it["lines_en"] = g[:nl] + [None] * max(0, nl - len(g))
-        it["spans_en"] = g[nl:nl + len(it["spans"])]
+        ns = len(it["spans"])
+        it["spans_en"] = g[nl:nl + ns]
+        it["all_en"] = g[nl + ns:nl + ns + len(it.get("all_lines") or [])]
         missing += sum(1 for x in it["lines_en"] if not x)
 
     base = io.open(ROOT / "scripts" / "worksheet_template.html", encoding="utf-8").read()
@@ -141,7 +143,7 @@ function line(no, en) {
 }
 function render() {
   const it = ITEMS[cur], r = rec(it.n);
-  const noEv = it.lines[0].startsWith("(no sentence");
+  const noEv = !it.lines.length;
   document.getElementById("main").innerHTML = `
     <div class="card">
       <span class="fieldname">${esc(it.field)}</span>
@@ -152,11 +154,22 @@ function render() {
     </div>
     <div class="card">
       <h3>What the ad says that could bear on this</h3>
-      ${noEv ? '<p class="noev">No sentence in this ad matches the vocabulary for '
-        + 'this facet at all — which is itself the finding.</p>' : ''}
-      ${it.lines.map((l, i) => line(l, (it.lines_en || [])[i])).join("")}
+      ${noEv ? '<p class="noev">No sentence matched the SEARCH TERMS for this facet. '
+        + 'That is a statement about the filter, not proof the ad is silent — an '
+        + 'earlier version of these terms missed the evidence on 6 of 10 such rows. '
+        + 'Open the full advertisement below before deciding.</p>' : ''}
+      ${it.lines.length
+        ? it.lines.map((l, i) => line(l, (it.lines_en || [])[i])).join("")
+        : ""}
       ${it.spans.length ? `<h3 style="margin-top:14px">Its language evidence</h3>`
         + it.spans.map((s, i) => line(s, (it.spans_en || [])[i])).join("") : ""}
+      <div class="navbtns" style="margin-top:12px">
+        <button class="act" id="togglefull">Show the full advertisement
+          (${(it.all_lines || []).length} lines)</button>
+      </div>
+      <div id="fulltext" hidden style="margin-top:12px">
+        ${(it.all_lines || []).map((l, i) => line(l, (it.all_en || [])[i])).join("")}
+      </div>
     </div>
     <div class="card">
       <h3>Your verdict</h3>
@@ -183,6 +196,14 @@ function render() {
     b.onclick = () => { r.verdict = k; save(it.n); renderList(); render(); };
     vs.appendChild(b);
   });
+  const tf = document.getElementById("togglefull");
+  if (tf) tf.onclick = () => {
+    const f = document.getElementById("fulltext");
+    f.hidden = !f.hidden;
+    tf.textContent = f.hidden
+      ? `Show the full advertisement (${(it.all_lines || []).length} lines)`
+      : "Hide the full advertisement";
+  };
   document.getElementById("note").oninput = e => { r.note = e.target.value; save(it.n); };
   document.getElementById("prev").onclick = () => go(-1);
   document.getElementById("next").onclick = () => go(1);

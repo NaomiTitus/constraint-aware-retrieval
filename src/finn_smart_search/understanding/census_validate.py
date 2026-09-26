@@ -10,7 +10,7 @@ import hashlib
 import re
 from collections import defaultdict
 
-from .census_prompt import HEAD_CHARS, TAIL_CHARS
+from .census_prompt import HEAD_CHARS, TAIL_CHARS, TOOL
 
 from .text_norm import normalise as norm   # the single shared implementation
 
@@ -207,10 +207,39 @@ def _coherence(f: dict) -> list[str]:
     return errs
 
 
+# Derived from the tool schema, never hand-listed: a field added to TOOL is
+# validated the moment it exists. A maintained list would omit the next one —
+# the failure mode every hardcoded pattern in this module has already had.
+ENUMS = {k: frozenset(p["enum"])
+         for k, p in TOOL["input_schema"]["properties"].items() if "enum" in p}
+
+
+def _enum_errors(facets: dict) -> list[str]:
+    """Out-of-enum values, which tool-use does NOT reject server-side.
+
+    Found by human review, not by a test: three of the four
+    `application_language` values in the corpus were borrowed from a NEIGHBOURING
+    field's enum — `scandinavian_accepted` and `either_norwegian_or_english`
+    from the level, `both` from the working language. The model recognises a
+    documentation-language clause, has nowhere clean to put it, and reaches for
+    vocabulary it has seen elsewhere in the same schema.
+
+    These are the hard ones to spot by eye: each value is legal SOMEWHERE, so it
+    reads as plausible until you check which field you are looking at.
+    """
+    out = []
+    for field, allowed in ENUMS.items():
+        v = facets.get(field)
+        if v is not None and v not in allowed:
+            out.append(f"enum:{field}={v!r}")
+    return out
+
+
 def validate(facets: dict, sent_text: str) -> dict:
     """Returns {ok, facets, demoted, reasons}. Demotion converts a precision
     error into a recall error INVISIBLY, so the caller must track the rate."""
     reasons = list(_coherence(facets))
+    reasons += _enum_errors(facets)
     kept = []
     for e in facets.get("evidence_spans") or []:
         ok, why = _span_ok(e.get("span", ""), sent_text)
@@ -226,6 +255,17 @@ def validate(facets: dict, sent_text: str) -> dict:
             reasons.append("demoted:verdict_lost_its_evidence")
     if facets.get("truncated") and out.get("evidence_basis") == "no_mention":
         reasons.append("flag:no_mention_on_truncated_ad")
+
+    # An out-of-enum value is not a warning: the record carries a value no
+    # consumer can interpret, and a downstream filter comparing against the enum
+    # silently drops the ad. Demote so it is counted, visible in the demotion
+    # rate, and never persisted as if it were a real verdict.
+    bad_enum = [r for r in reasons if r.startswith("enum:")]
+    if bad_enum:
+        for r in bad_enum:
+            field = r.split(":", 1)[1].split("=", 1)[0]
+            out[field] = "unstated" if "unstated" in ENUMS[field] else None
+        reasons.append("demoted:invalid_enum_value")
     return {"ok": not reasons, "facets": out,
             "demoted": any(r.startswith("demoted:") for r in reasons), "reasons": reasons}
 

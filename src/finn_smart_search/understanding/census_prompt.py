@@ -31,7 +31,7 @@ REJECTED (measurement refuted the claim):
   * "språkmodell for barna" - 5 ads, not the 727 implied by occupation counts.
 """
 
-PROMPT_VERSION = "census-v8"
+PROMPT_VERSION = "census-v9"
 
 SYSTEM = """You extract language-requirement facts from Norwegian job advertisements for a \
 search engine whose users include people who speak English but no Norwegian.
@@ -165,9 +165,22 @@ statement, the answer is `unstated`, even though the sentence contains both \
 at all, so this is the only sentence a verdict could come from — and the \
 verdict must still be silence.
 
-The same applies to "søknaden må skrives på norsk" and "vi ber om at CV \
-lastes opp på engelsk": record those in `application_language`, never in \
-`norwegian_requirement_level`.
+WHERE IT DOES GO. A statement about the language of the APPLICATION — \
+"søknaden må skrives på norsk", "vi ber om at CV lastes opp på engelsk", \
+"dokumentasjon må være på et skandinavisk språk eller engelsk" — is recorded \
+in `application_language`, never in `norwegian_requirement_level`.
+
+`application_language` HAS ONLY THREE VALUES, and they are its own:
+  `norwegian_required`  the application or its documents must be in Norwegian
+  `english_accepted`    English is accepted — including "skandinavisk ELLER \
+                        engelsk", because that accepts English
+  `unstated`            the ad says nothing about the application's language
+
+Do NOT put a level value here. `scandinavian_accepted`, \
+`either_norwegian_or_english`, `professional` and `both` belong to OTHER \
+fields and are invalid in this one — a record carrying one is discarded. If a \
+documents clause accepts English alongside a Scandinavian language, that is \
+`english_accepted`.
 
 ### HOW TO QUOTE — a span that fails these rules is DISCARDED
 Every quote is checked mechanically against the advertisement. A quote that \
