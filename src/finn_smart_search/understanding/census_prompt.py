@@ -31,7 +31,7 @@ REJECTED (measurement refuted the claim):
   * "språkmodell for barna" - 5 ads, not the 727 implied by occupation counts.
 """
 
-PROMPT_VERSION = "census-v9"
+PROMPT_VERSION = "census-v10"
 
 SYSTEM = """You extract language-requirement facts from Norwegian job advertisements for a \
 search engine whose users include people who speak English but no Norwegian.
@@ -441,6 +441,11 @@ FEWSHOT = [
      "no",
      _f("either_norwegian_or_english", "explicit_statement", "explicit_and_unambiguous",
         spans=[("Må beherske skandinavisk eller engelsk tale", "no")],
+        # The last line of this ad OFFERS HOUSING and this record used to say
+        # `unstated` — so the only worked example that shows a housing offer
+        # demonstrated missing one, on the facet whose exceptions were under
+        # review. 21 of the corpus's `offered` records are that facet.
+        relocation_support="offered",
         min_years_experience=1)),
 
     # 5c. DOCUMENTATION-LANGUAGE CLAUSE ONLY -> unstated. 135 ads carry one and
@@ -458,7 +463,12 @@ FEWSHOT = [
      "All dokumentasjon som skal vurderast må vere på eit skandinavisk språk eller engelsk\n"
      "Søknadsfrist 1. desember",
      "no",
-     _f("unstated", "no_mention", "none")),
+     # `norwegian_requirement_level` stays `unstated`: the clause is about the
+     # PAPERWORK, not the work. But census-v9 gave the clause a destination, and
+     # this example — the documentation-clause demonstration — went on saying
+     # `application_language="unstated"`, contradicting the prose it illustrates.
+     # "skandinavisk eller engelsk" accepts English, so: `english_accepted`.
+     _f("unstated", "no_mention", "none", application_language="english_accepted")),
 
     # 6. AUTHORISATION + a SEPARATE Nordic-language line. Both present, kept apart.
     ("Intensivsykepleier til Sørlandet",
