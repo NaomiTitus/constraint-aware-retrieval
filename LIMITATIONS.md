@@ -83,13 +83,16 @@ The unbiased evidence is narrower than the headline suggests:
 |---|---|---|
 | held-out connective probe | 39/40 | the disjunction/conjunction distinction ONLY |
 | glyph subpopulation | 21/22 | bullet-led language blocks |
-| 28-ad sealed set | pending | 11 strata + 3 previously-missing verticals |
+| **28-ad sealed set** | **27/28 · 96.4%** | 11 strata + 3 previously-missing verticals |
 
-Nothing independent yet covers the other seven levels.
+On the sealed set: 0 of 6 accessible ads wrongly hidden, 0 fabricated spans, 0
+demotions. The caveat that belongs beside it is precision, not accuracy — with
+only 6 accessible ads the 95% interval on the hidden-wrongly rate is
+[0.00, 0.39].
 
 ## 3. The sealed set cannot measure silence, which is the modal case
 
-Of the 28 held-out ads, Opus proposes `unstated` for only **3**. The corpus rate
+Of the 28 held-out ads, only **3** are labelled `unstated`. The corpus rate
 is **74.6%**. The set was deliberately selected for ads that *do* say something
 about language, so it measures the rules and not the default — an extractor that
 over-fires on silent ads would not be caught here.
