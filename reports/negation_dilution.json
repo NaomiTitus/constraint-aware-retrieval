@@ -1,0 +1,243 @@
+{
+ "model": "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+ "series": {
+  "no": [
+   {
+    "n_clauses": 0,
+    "n_tokens": 7,
+    "one_token_share": 0.14285714285714285,
+    "cosine": 0.3999420404434204
+   },
+   {
+    "n_clauses": 1,
+    "n_tokens": 20,
+    "one_token_share": 0.05,
+    "cosine": 0.8015877604484558
+   },
+   {
+    "n_clauses": 2,
+    "n_tokens": 30,
+    "one_token_share": 0.03333333333333333,
+    "cosine": 0.9596008062362671
+   },
+   {
+    "n_clauses": 3,
+    "n_tokens": 50,
+    "one_token_share": 0.02,
+    "cosine": 0.9696913957595825
+   },
+   {
+    "n_clauses": 4,
+    "n_tokens": 57,
+    "one_token_share": 0.017543859649122806,
+    "cosine": 0.9888717532157898
+   },
+   {
+    "n_clauses": 5,
+    "n_tokens": 72,
+    "one_token_share": 0.013888888888888888,
+    "cosine": 0.9889785051345825
+   },
+   {
+    "n_clauses": 6,
+    "n_tokens": 79,
+    "one_token_share": 0.012658227848101266,
+    "cosine": 0.9936754703521729
+   },
+   {
+    "n_clauses": 7,
+    "n_tokens": 98,
+    "one_token_share": 0.01020408163265306,
+    "cosine": 0.9938004016876221
+   },
+   {
+    "n_clauses": 8,
+    "n_tokens": 108,
+    "one_token_share": 0.009259259259259259,
+    "cosine": 0.9982321262359619
+   },
+   {
+    "n_clauses": 9,
+    "n_tokens": 123,
+    "one_token_share": 0.008130081300813009,
+    "cosine": 0.998199999332428
+   },
+   {
+    "n_clauses": 10,
+    "n_tokens": 132,
+    "one_token_share": 0.007575757575757576,
+    "cosine": 0.9985746145248413
+   },
+   {
+    "n_clauses": 11,
+    "n_tokens": 140,
+    "one_token_share": 0.007142857142857143,
+    "cosine": 0.9990516901016235
+   },
+   {
+    "n_clauses": 12,
+    "n_tokens": 151,
+    "one_token_share": 0.006622516556291391,
+    "cosine": 0.9986109137535095
+   }
+  ],
+  "no_spearman": 0.989010989010989,
+  "no_control": [
+   {
+    "n_clauses": 0,
+    "negation": 0.3999420404434204,
+    "occupation": 0.5094978213310242,
+    "place": 0.8209336996078491
+   },
+   {
+    "n_clauses": 1,
+    "negation": 0.8015877604484558,
+    "occupation": 0.9174419641494751,
+    "place": 0.9038360118865967
+   },
+   {
+    "n_clauses": 2,
+    "negation": 0.9596008062362671,
+    "occupation": 0.9684756994247437,
+    "place": 0.9461883306503296
+   },
+   {
+    "n_clauses": 3,
+    "negation": 0.9696913957595825,
+    "occupation": 0.9788047671318054,
+    "place": 0.9401289224624634
+   },
+   {
+    "n_clauses": 6,
+    "negation": 0.9936754703521729,
+    "occupation": 0.9931754469871521,
+    "place": 0.9820260405540466
+   },
+   {
+    "n_clauses": 12,
+    "negation": 0.9986109137535095,
+    "occupation": 0.9980520009994507,
+    "place": 0.9953566789627075
+   }
+  ],
+  "en": [
+   {
+    "n_clauses": 0,
+    "n_tokens": 8,
+    "one_token_share": 0.125,
+    "cosine": 0.446445494890213
+   },
+   {
+    "n_clauses": 1,
+    "n_tokens": 21,
+    "one_token_share": 0.047619047619047616,
+    "cosine": 0.897679328918457
+   },
+   {
+    "n_clauses": 2,
+    "n_tokens": 35,
+    "one_token_share": 0.02857142857142857,
+    "cosine": 0.9894977807998657
+   },
+   {
+    "n_clauses": 3,
+    "n_tokens": 59,
+    "one_token_share": 0.01694915254237288,
+    "cosine": 0.9962168335914612
+   },
+   {
+    "n_clauses": 4,
+    "n_tokens": 67,
+    "one_token_share": 0.014925373134328358,
+    "cosine": 0.9986504316329956
+   },
+   {
+    "n_clauses": 5,
+    "n_tokens": 83,
+    "one_token_share": 0.012048192771084338,
+    "cosine": 0.998327374458313
+   },
+   {
+    "n_clauses": 6,
+    "n_tokens": 92,
+    "one_token_share": 0.010869565217391304,
+    "cosine": 0.9987220764160156
+   },
+   {
+    "n_clauses": 7,
+    "n_tokens": 110,
+    "one_token_share": 0.00909090909090909,
+    "cosine": 0.9987789988517761
+   },
+   {
+    "n_clauses": 8,
+    "n_tokens": 122,
+    "one_token_share": 0.00819672131147541,
+    "cosine": 0.9995050430297852
+   },
+   {
+    "n_clauses": 9,
+    "n_tokens": 137,
+    "one_token_share": 0.0072992700729927005,
+    "cosine": 0.9992110729217529
+   },
+   {
+    "n_clauses": 10,
+    "n_tokens": 150,
+    "one_token_share": 0.006666666666666667,
+    "cosine": 0.9994664788246155
+   },
+   {
+    "n_clauses": 11,
+    "n_tokens": 158,
+    "one_token_share": 0.006329113924050633,
+    "cosine": 0.9994271397590637
+   },
+   {
+    "n_clauses": 12,
+    "n_tokens": 166,
+    "one_token_share": 0.006024096385542169,
+    "cosine": 0.9991990923881531
+   }
+  ],
+  "en_spearman": 0.901098901098901,
+  "en_control": [
+   {
+    "n_clauses": 0,
+    "negation": 0.446445494890213,
+    "occupation": 0.48860764503479004,
+    "place": 0.8060694336891174
+   },
+   {
+    "n_clauses": 1,
+    "negation": 0.897679328918457,
+    "occupation": 0.8767865896224976,
+    "place": 0.8597924113273621
+   },
+   {
+    "n_clauses": 2,
+    "negation": 0.9894977807998657,
+    "occupation": 0.9502161145210266,
+    "place": 0.9055435061454773
+   },
+   {
+    "n_clauses": 3,
+    "negation": 0.9962168335914612,
+    "occupation": 0.9933351874351501,
+    "place": 0.9277551770210266
+   },
+   {
+    "n_clauses": 6,
+    "negation": 0.9987220764160156,
+    "occupation": 0.9961948990821838,
+    "place": 0.9771803617477417
+   },
+   {
+    "n_clauses": 12,
+    "negation": 0.9991990923881531,
+    "occupation": 0.994259238243103,
+    "place": 0.9954650402069092
+   }
+  ]
+ }
+}
