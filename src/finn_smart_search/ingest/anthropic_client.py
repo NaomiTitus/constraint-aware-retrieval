@@ -65,6 +65,37 @@ def chunk(requests, size: int = MAX_BATCH_REQUESTS) -> Iterator[list]:
         yield reqs[i:i + size]
 
 
+# A batch is capped in BYTES as well as in requests, and the byte cap is the
+# one that binds here. Measured: a census request serialises to ~43,880 bytes
+# because it carries the system block and all 15 few-shot examples, and that
+# prefix repeats in every request. 9,599 of them is 421 MB against a
+# documented 256 MB cap — the census died on 413 Payload Too Large with
+# `chunk(size=100_000)` in the path, because 9,599 never approaches a COUNT
+# limit. The guard measured the dimension that could not bind.
+MAX_BATCH_BYTES = 200_000_000          # under the documented 256 MB, with room
+
+
+def chunk_bytes(requests, max_bytes: int = MAX_BATCH_BYTES) -> Iterator[list]:
+    """Split so each batch serialises under `max_bytes`. Order-preserving.
+
+    A single request larger than the cap is yielded ALONE rather than dropped:
+    it will fail loudly at the API, which is strictly better than an ad
+    vanishing from the corpus with no error — the failure `chunk` above was
+    written to avoid, one dimension over.
+    """
+    batch: list = []
+    size = 2                            # the "[]" wrapper
+    for r in requests:
+        n = len(json.dumps(r, ensure_ascii=False).encode("utf-8")) + 1
+        if batch and size + n > max_bytes:
+            yield batch
+            batch, size = [], 2
+        batch.append(r)
+        size += n
+    if batch:
+        yield batch
+
+
 def _err(custom_id: str, message: str) -> dict:
     """No `facets` key on failure — census.run() must never see a partial record."""
     return {"custom_id": custom_id, "type": "errored", "error": message}

@@ -34,6 +34,7 @@ from collections import Counter
 from datetime import datetime, timezone
 from typing import Any, Iterable, Mapping
 
+from ..ingest.anthropic_client import chunk_bytes as ac_chunk_bytes
 from . import census_validate as validate_mod
 from .. import pii
 from . import dedup
@@ -324,13 +325,27 @@ def run(ads: Iterable[Mapping[str, Any]], client, con, *,
         if not pending:
             break
         # `batches`, not `groups`: `groups` is the dedup clustering above.
-        batches = ([pending[:1], pending[1:]]
-                   if attempt == 0 and len(pending) > 1 else [pending])
+        # The head warms the prompt cache (see above); the tail is then split
+        # BY BYTES, because that is the cap that binds. A census request is
+        # ~44 KB — the system block and 15 few-shot examples repeat in every
+        # one — so 9,599 of them is 421 MB against a documented 256 MB limit.
+        # Submitting them as one batch returned 413 Payload Too Large.
+        head = [pending[:1]] if attempt == 0 and len(pending) > 1 else []
+        tail = pending[1:] if head else pending
         got = {}
-        for batch in batches:
+        for batch in head:
             requests = [build_request(by_uuid[u]) for u in batch]
             got.update(_collect(client, client.submit_batch(requests),
                                 set(batch), poll_seconds))
+        tail_requests = [build_request(by_uuid[u]) for u in tail]
+        parts = list(ac_chunk_bytes(tail_requests))
+        if len(parts) > 1:
+            print(f"   splitting {len(tail_requests)} requests into "
+                  f"{len(parts)} batches to stay under the byte cap", flush=True)
+        for part in parts:
+            ids = {r["custom_id"] for r in part}
+            got.update(_collect(client, client.submit_batch(part),
+                                ids, poll_seconds))
         retry = []
         for uuid, res in got.items():
             kind = res.get("type")
