@@ -432,10 +432,37 @@ def validate(facets: dict, sent_text: str) -> dict:
     bad_shape = [r for r in reasons if r.startswith("shape:")]
     if bad_shape:
         for r in bad_shape:
-            field = r.split(":", 2)[1].split("[", 1)[0]
+            # `shape:evidence_spans[1].span:maxLength_300_got_306` — the index
+            # matters. The first version dropped the whole array on any item
+            # fault, and the 400-ad census stage caught what that costs: ad
+            # 08f980a7 lost BOTH its spans because one was six characters over,
+            # and kept a `certified` verdict resting on nothing.
+            locator = r.split(":", 2)[1]
+            field = locator.split("[", 1)[0]
+            idx = None
+            if "[" in locator:
+                try:
+                    idx = int(locator.split("[", 1)[1].split("]", 1)[0])
+                except ValueError:
+                    idx = None
             spec = _PROPS.get(field) or {}
             declared = spec.get("type")
             names = declared if isinstance(declared, list) else [declared]
+
+            # maxItems overflow: KEEP the cap, do not empty the field. Ad
+            # 09f87e6b had 9 skills against a cap of 8 and lost all nine.
+            if ":maxItems_" in r and isinstance(out.get(field), list):
+                cap = spec.get("maxItems")
+                if isinstance(cap, int):
+                    out[field] = out[field][:cap]
+                    continue
+            if idx is not None and isinstance(out.get(field), list):
+                # one bad ITEM: drop that item, keep the rest
+                seq = list(out[field])
+                if 0 <= idx < len(seq):
+                    seq.pop(idx)
+                    out[field] = seq
+                continue
             if field in NEUTRAL:
                 out[field] = NEUTRAL[field]
             elif "null" in names:
@@ -447,6 +474,18 @@ def validate(facets: dict, sent_text: str) -> dict:
             else:
                 out[field] = None
         reasons.append("demoted:invalid_shape")
+
+    # RE-CHECK AFTER THE REPAIRS. The span-loss guard above ran before them, so
+    # a repair that empties the evidence left the verdict standing on nothing —
+    # a repair after the last check is an unchecked repair.
+    if (not (out.get("evidence_spans") or [])
+            and out.get("norwegian_requirement_level") not in ("unstated", None)
+            and out.get("evidence_basis") == "explicit_statement"):
+        out["norwegian_requirement_level"] = "unstated"
+        out["evidence_basis"] = "no_mention"
+        out["evidence_strength"] = "none"
+        if "demoted:verdict_lost_its_evidence" not in reasons:
+            reasons.append("demoted:verdict_lost_its_evidence")
 
     bad_enum = [r for r in reasons if r.startswith("enum:")]
     if bad_enum:

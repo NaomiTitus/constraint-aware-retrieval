@@ -1,0 +1,8 @@
+census-v15  corpus 10166  already cached 46  remaining 10120
+STAGE: 400 ads. Re-run without --limit to finish; the stage is a cache hit then and is not billed again.
+
+census: 324s  calls=400  disk-cache hits=0  demoted=11 (2.8%)  spend=$0.86
+tokens: in=400,652 out=150,454 cache_read=5,527,347 cache_write=13,853
+PROMPT-CACHE HIT RATE 100%   <- the number that sets the bill
+$0.00215/ad   full corpus would be $21.89
+levels: {'unstated': 258, 'either_norwegian_or_english': 17, 'certified': 49, 'scandinavian_accepted': 22, 'professional': 156, 'explicitly_not_required': 6, 'fluent': 16, 'conversational': 6, 'desirable': 2}

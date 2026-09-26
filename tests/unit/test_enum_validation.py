@@ -357,3 +357,85 @@ def test_the_persisted_corpus_violates_none_of_these():
         for r in v._shape_errors(f):
             bad.append((uuid, r))
     assert not bad, f"{len(bad)} persisted records violate a shape constraint: {bad[:5]}"
+
+
+# ===========================================================================
+# FOUND BY THE 400-AD CENSUS STAGE, and it is a bug this session introduced.
+#
+# Ad 08f980a7 came back `certified` with evidence_spans == [] and reasons
+#   ["shape:evidence_spans[1].span:maxLength_300_got_306",
+#    "demoted:invalid_shape"]
+#
+# ONE span was six characters over the 300 limit, and the shape repair — added
+# hours earlier — replaced the WHOLE array with []. The advertisement really
+# does say "Norwegian language skills at level B2", so the level was right and
+# its evidence was thrown away wholesale over a length overrun on a different
+# span.
+#
+# Worse, the record then kept a `certified` verdict resting on nothing. The
+# guard for that ("a verdict resting only on rejected spans cannot stand")
+# runs BEFORE the shape repair, so by the time the repair emptied the array
+# the check had already passed. A repair that runs after the last check is
+# unchecked.
+#
+# This is the same failure I had just criticised in the enum repair: a repair
+# producing a record worse than the one it repaired.
+
+def _span(n):
+    return {"span": "Vi krever norsk. " * n, "section_language": "no"}
+
+
+def test_an_oversized_span_drops_only_itself_not_the_whole_array():
+    good = {"span": SPAN, "section_language": "no"}
+    over = {"span": "x" * 400, "section_language": "no"}
+    out = v.validate(base() | {"evidence_spans": [good, over]}, AD)
+    kept = [e.get("span") for e in out["facets"]["evidence_spans"]]
+    assert SPAN in kept, f"the valid span was discarded too: {out['facets']['evidence_spans']}"
+    assert not any(len(s) > 300 for s in kept), kept
+
+
+def test_a_verdict_left_with_no_evidence_by_a_REPAIR_is_still_demoted():
+    """The span-loss guard must see the record as the repair leaves it, not as
+    it arrived. Ad 08f980a7 kept `certified` on zero spans because the repair
+    ran after the guard."""
+    over = {"span": "y" * 400, "section_language": "no"}
+    out = v.validate(base() | {"evidence_spans": [over],
+                               "norwegian_requirement_level": "certified",
+                               "evidence_basis": "explicit_statement"}, AD)
+    assert out["facets"]["evidence_spans"] == []
+    assert out["facets"]["norwegian_requirement_level"] == "unstated", (
+        "a level with no surviving evidence must demote; got "
+        f"{out['facets']['norwegian_requirement_level']!r}")
+    assert out["demoted"]
+
+
+def test_the_persisted_corpus_holds_no_verdict_without_evidence():
+    """The end state, asserted against real data rather than a fixture."""
+    import json as _json
+    import duckdb as _duckdb
+    from pathlib import Path as _Path
+    db = _Path(__file__).resolve().parents[2] / "data" / "ads.duckdb"
+    if not db.exists():
+        pytest.skip("corpus not present")
+    con = _duckdb.connect(str(db), read_only=True)
+    rows = con.execute("SELECT uuid, facets FROM ad_facets").fetchall()
+    con.close()
+    bad = []
+    for uuid, fj in rows:
+        d = _json.loads(fj) if isinstance(fj, str) else fj
+        if (d.get("norwegian_requirement_level") not in ("unstated", None)
+                and not (d.get("evidence_spans") or [])
+                and d.get("evidence_basis") == "explicit_statement"):
+            bad.append(uuid)
+    assert not bad, f"{len(bad)} records assert a level on no evidence: {bad[:5]}"
+
+
+def test_a_maxitems_overflow_truncates_rather_than_empties():
+    """Ad 09f87e6b returned 9 skills against a cap of 8 and lost all nine.
+    Eight good skills are worth more than none, and the cap is what the schema
+    asks for."""
+    skills = [{"phrase": f"skill {i}", "level": "required"} for i in range(9)]
+    out = v.validate(base() | {"skills": skills}, AD)
+    kept = out["facets"]["skills"]
+    assert len(kept) == 8, f"expected truncation to 8, got {len(kept)}"
+    assert kept[0]["phrase"] == "skill 0"
