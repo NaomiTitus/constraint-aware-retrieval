@@ -73,10 +73,20 @@ def main() -> None:
     html = (OUT / "worksheet.html").read_text(encoding="utf-8")
     data = json.loads(re.search(r"const DATA = (\{.*?\});\nconst KEY", html, re.S).group(1))
 
+    # Only gloss what is missing. Re-running after a single ad was swapped used
+    # to re-submit all 28 and wait on a whole batch for one ad's worth of value.
+    have = {}
+    gp = OUT / "glosses.json"
+    if gp.exists():
+        have = {k: v for k, v in json.loads(gp.read_text(encoding="utf-8")).items()
+                if v and any(v)}
+
     reqs = []
     for a in data["ads"]:
         lines = [b["text"] for b in a["blocks"]]
         if not lines:
+            continue
+        if len(have.get(a["uuid"]) or []) == len(lines):
             continue
         numbered = "\n".join(f"{i+1}. {t}" for i, t in enumerate(lines))
         reqs.append({"custom_id": a["uuid"], "params": {
@@ -85,8 +95,11 @@ def main() -> None:
             "messages": [{"role": "user", "content":
                           f"Gloss these {len(lines)} lines:\n\n{numbered}"}]}})
 
-    print(f"translating {sum(len(a['blocks']) for a in data['ads'])} blocks "
-          f"across {len(reqs)} ads with {MODEL}")
+    if not reqs:
+        print("nothing to gloss; all ads already have one per block")
+        return
+    print(f"translating {sum(len(a['blocks']) for a in data['ads'] if a['uuid'] not in have)} "
+          f"blocks across {len(reqs)} ads with {MODEL}")
     c = ac.AnthropicBatchClient()
     bid = c.submit_batch(reqs)
     print(f"batch {bid}", flush=True)
@@ -105,13 +118,17 @@ def main() -> None:
 
     filled = 0
     for a in data["ads"]:
-        g = got.get(a["uuid"]) or []
+        g = got.get(a["uuid"]) or have.get(a["uuid"]) or []
         for i, b in enumerate(a["blocks"]):
             b["en"] = g[i] if i < len(g) else None
             filled += bool(b.get("en"))
+    merged = dict(have)
+    for a in data["ads"]:
+        g = [b.get("en") for b in a["blocks"]]
+        if any(g):
+            merged[a["uuid"]] = g
     (OUT / "glosses.json").write_text(
-        json.dumps({a["uuid"]: [b.get("en") for b in a["blocks"]] for a in data["ads"]},
-                   indent=1, ensure_ascii=False), encoding="utf-8")
+        json.dumps(merged, indent=1, ensure_ascii=False), encoding="utf-8")
     print(f"glossed {filled} blocks -> {OUT/'glosses.json'}")
 
 

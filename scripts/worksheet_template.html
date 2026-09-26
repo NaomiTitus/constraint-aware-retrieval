@@ -91,6 +91,10 @@
              color:var(--muted);margin-top:4px}
   /* Literal gloss, not a fluent translation: må/bør/er en fordel and eller/og
      must survive intact because those distinctions ARE the label. */
+  /* A line the real validator rejects: still shown, because it is context the
+     labeller needs to judge the boundary, but never a valid span. */
+  .blk.bad{opacity:.72;border-left-color:var(--warn)}
+  .blk small.no{color:var(--warn)}
   .blk .gloss{display:block;font-family:var(--sans);font-size:13px;
              color:var(--muted);margin-top:6px;padding-top:6px;
              border-top:1px dashed var(--rule)}
@@ -163,7 +167,12 @@ const KEY = "sealed-labels-v1";
 let labels = {}, cur = 0;
 try { labels = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { labels = {}; }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(labels)); } catch (e) {} };
-const esc = s => String(s == null ? "" : s);
+// Actually escapes. The first version was a no-op String() while its output went
+// straight into innerHTML — latent on this data (0 of 98 blocks contain < > &)
+// but a regenerate on other ads would mangle the text being judged.
+const esc = s => String(s == null ? "" : s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;");
 const rec = n => (labels[n] = labels[n] || {level:null, span:"", worklang:"", auth:"", note:""});
 const done = n => !!(labels[n] && labels[n].level);
 
@@ -198,7 +207,7 @@ function render(){
         <span>title <b>${esc(a.std || "?")}</b></span>
         <span>doc_lang <b>${esc(a.doc_lang)}</b></span>
         <span>${a.n_chars} chars ${a.truncated
-          ? '<span class="trunc">· TRUNCATED at 3500+2500, the cut lands mid-block</span>' : ""}</span>
+          ? '<span class="trunc">· TRUNCATED — ' + esc(a.truncated_note || "") + '</span>' : ""}</span>
       </div>
     </div>
 
@@ -233,7 +242,7 @@ function render(){
       <div class="spanok" id="spanok"></div>
 
       <label class="f" for="wl">stated_working_language</label>
-      <select id="wl">${DATA.worklang.map(w =>
+      <select id="wl"><option value=""${r.worklang ? "" : " selected"}>— not set —</option>${DATA.worklang.map(w =>
         `<option value="${w}"${r.worklang === w ? " selected" : ""}>${w}</option>`).join("")}</select>
 
       <label class="f" for="auth">authorisation_required — a licence to practise, not a language rule</label>
@@ -263,10 +272,12 @@ function render(){
   const bl = document.getElementById("blocks");
   a.blocks.forEach(b => {
     const el = document.createElement("button");
-    el.className = "blk" + (b.hit ? " hit" : "") + (r.span === b.text ? " chosen" : "");
+    el.className = "blk" + (b.hit ? " hit" : "") + (b.ok ? "" : " bad")
+                 + (r.span === b.text ? " chosen" : "");
     el.innerHTML = esc(b.text)
       + (b.en ? `<span class="gloss">${esc(b.en)}</span>` : "")
-      + (b.hit ? "<small>carries a language word</small>" : "");
+      + (b.ok ? (b.hit ? "<small>carries a language word · valid as evidence</small>" : "")
+              : `<small class="no">not usable as evidence — ${esc(b.why)}</small>`);
     el.onclick = () => { r.span = b.text; save(); render(); };
     bl.appendChild(el);
   });
@@ -282,21 +293,33 @@ function render(){
   });
 
   const checkSpan = () => {
-    const t = document.getElementById("span").value.trim();
+    const raw = document.getElementById("span").value;
+    const s = raw.trim();
     const ok = document.getElementById("spanok");
-    if (!t) { ok.className = "spanok"; ok.textContent = "empty — valid if the ad states nothing"; return; }
-    const exact = a.blocks.some(b => b.text === t);
-    const inside = a.blocks.some(b => b.text.indexOf(t) >= 0);
-    ok.className = "spanok " + (exact ? "y" : "n");
-    ok.textContent = exact ? "✓ matches a whole line exactly"
-      : inside ? "⚠ part of a line — the validator rejects a quote that starts mid-sentence"
-      : "⚠ not found in the lines above — retype it or click the line instead";
-  };
-  const sp = document.getElementById("span");
-  sp.oninput = () => { r.span = sp.value; save(); checkSpan(); };
-  checkSpan();
-
-  document.getElementById("wl").onchange = e => { r.worklang = e.target.value; save(); };
+    if (!s) { ok.className = "spanok"; ok.textContent =
+      "empty — correct if the ad states nothing about language"; return; }
+    // The verdict comes from census_validate itself, computed per block at build
+    // time. A JS reimplementation drifted badly in the first version: it showed a
+    // green tick for all 98 blocks while the real validator accepted 42, and
+    // painted a warning on mid-block spans it actually accepts.
+    // Look up the precomputed verdict. Covers whole lines AND Opus's suggestion,
+    // which is often a sentence INSIDE a line — valid, but the first version
+    // recognised only whole-line matches and warned on it.
+    const vd = (a.verdicts || {})[s];
+    if (vd) {
+      ok.className = "spanok " + (vd.ok ? "y" : "n");
+      ok.textContent = vd.ok
+        ? "✓ the validator accepts this span"
+        : "✗ the validator REJECTS this span — " + vd.why +
+          (exact.why === "no_language_token"
+            ? " (it names no language, so it can never be matched — pick the line that does)"
+            : exact.why === "fragment_too_short" ? " (under 15 characters)" : "");
+      return;
+    }
+    ok.className = "spanok n";
+    ok.textContent = "⚠ not one of the lines above — cannot be verified here. "
+      + "Click a line instead; a hand-typed span that differs by one character fails.";
+  };  document.getElementById("wl").onchange = e => { r.worklang = e.target.value; save(); };
   document.getElementById("auth").oninput = e => { r.auth = e.target.value; save(); };
   document.getElementById("note").oninput = e => { r.note = e.target.value; save(); };
   document.getElementById("prev").onclick = () => go(-1);
@@ -312,23 +335,41 @@ function render(){
   document.getElementById("exp").onclick = () => {
     const c = document.getElementById("expcard");
     c.hidden = false;
-    document.getElementById("out").value = JSON.stringify(
-      DATA.ads.map(x => ({
-        n: x.n, uuid: x.uuid, stratum: x.stratum, title: x.title,
-        doc_lang: x.doc_lang, nav_category: x.nav,
+    // Shape matches eval/golden_set.json's CLOSED key vocabulary
+    // (tests/unit/test_scoring.py GOLDEN_KEYS). The first version emitted
+    // nav_category/labelled_by/confirmed — none of which are permitted — and
+    // omitted derived_accessible, which two tests require on every row. It also
+    // emitted unlabelled rows, which would crash scoring on a null level.
+    const rows = DATA.ads.filter(x => (labels[x.n] || {}).level).map(x => {
+      const L = labels[x.n];
+      return {
+        n: x.n, uuid: x.uuid, title: x.title, stratum: x.stratum,
         expected: {
-          norwegian_requirement_level: (labels[x.n] || {}).level || null,
-          evidence_span: ((labels[x.n] || {}).span || "").trim() || null,
-          stated_working_language: (labels[x.n] || {}).worklang || null,
-          authorisation_required: ((labels[x.n] || {}).auth || "").trim() || null
+          norwegian_requirement_level: L.level,
+          evidence_span: (L.span || "").trim() || null,
+          stated_working_language: L.worklang || "unstated",
+          authorisation_required: (L.auth || "").trim() || null
         },
-        note: ((labels[x.n] || {}).note || "").trim() || null,
-        labelled_by: "human", confirmed: !!(labels[x.n] || {}).level
-      })), null, 1);
+        note: (L.note || "").trim() || null,
+        doc_lang: x.doc_lang,
+        derived_accessible: null   // recomputed on ingest by derive_english_accessible
+      };
+    });
+    document.getElementById("out").value = JSON.stringify(rows, null, 1);
+    const left = DATA.ads.length - rows.length;
+    document.querySelector("#expcard .hintline").innerHTML = left
+      ? `<strong>${rows.length} of ${DATA.ads.length} exported.</strong> ${left} still
+         unlabelled and deliberately omitted — an unlabelled row would crash scoring.
+         Save as <code>data/worksheet/sealed_labels.json</code>.`
+      : `All ${rows.length} exported. Save as
+         <code>data/worksheet/sealed_labels.json</code>. Downloads are blocked in the
+         artifact viewer, so copy from here.`;
     c.scrollIntoView({behavior: "smooth"});
     document.getElementById("copy").onclick = async () => {
+      const btn = document.getElementById("copy");
       try { await navigator.clipboard.writeText(document.getElementById("out").value);
-            document.getElementById("copy").textContent = "Copied"; } catch (e) {}
+            btn.textContent = "Copied"; }
+      catch (e) { btn.textContent = "Clipboard blocked — select the text and copy manually"; }
     };
   };
   renderList();
@@ -338,6 +379,9 @@ function render(){
 function go(d){ cur = Math.max(0, Math.min(DATA.ads.length - 1, cur + d)); render(); }
 document.addEventListener("keydown", e => {
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  // Without this, Cmd/Ctrl+1..9 (browser tab switching) silently overwrote the
+  // current ad's level.
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.key === "j") go(1);
   if (e.key === "k") go(-1);
   const n = parseInt(e.key, 10);

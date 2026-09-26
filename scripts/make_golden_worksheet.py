@@ -131,7 +131,14 @@ def main() -> None:
         if any(GLYPH.match(b) and v.LANG_TOKEN.search(b) for b in text.split("\n")):
             buckets["bullet_glyph"].append(row)
         if n_chars > 6000 and v.LANG_TOKEN.search(text):
-            buckets["truncated"].append(row)
+            # The language line must SURVIVE prepare()'s head+tail cut, or the ad
+            # is unwinnable by construction: whatever a human labels, the model is
+            # never shown the sentence and can only emit `unstated`. One ad (8)
+            # was selected this way before the check existed — its single language
+            # line sat inside the deleted middle.
+            surviving = v.prepare(title or "", text, "no")["sent_text"]
+            if any(v.LANG_TOKEN.search(b) for b in surviving.split("\n")):
+                buckets["truncated"].append(row)
         if nav == "IT":
             buckets["it_vertical"].append(row)
         if nav == "Håndverkere":
@@ -160,6 +167,14 @@ def main() -> None:
             chosen.append((name, r))
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    # Preserve work already paid for: a re-run must not silently discard the Opus
+    # prefill or the glosses for ads that are still in the set.
+    prior = {}
+    sk = OUT_DIR / "sealed_skeleton.json"
+    if sk.exists():
+        for row in json.loads(sk.read_text(encoding="utf-8")):
+            if row.get("prefill"):
+                prior[row["uuid"]] = row["prefill"]
     md, skeleton = [], []
     md.append("# Sealed golden set — labelling worksheet\n")
     md.append("**These ads are HELD OUT. Do not tune the prompt against them.** "
@@ -208,7 +223,8 @@ def main() -> None:
                                       "evidence_span": None,
                                       "stated_working_language": None,
                                       "authorisation_required": None},
-                         "note": None})
+                         "note": None,
+                         **({"prefill": prior[uuid]} if uuid in prior else {})})
 
     (OUT_DIR / "worksheet.md").write_text("\n".join(md), encoding="utf-8")
     (OUT_DIR / "sealed_skeleton.json").write_text(

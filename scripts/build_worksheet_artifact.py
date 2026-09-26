@@ -28,14 +28,14 @@ LEVELS = TOOL["input_schema"]["properties"]["norwegian_requirement_level"]["enum
 WORKLANG = TOOL["input_schema"]["properties"]["stated_working_language"]["enum"]
 
 WHY = {
-    "comma_disjunction": "104 corpus ads · 0 golden. The census-v7 rule's PRESENCE is tested; its BEHAVIOUR is not. Note the selecting pattern is looser than the prompt's, so some ads here match a mother-tongue clause (“annet morsmål enn norsk, svensk eller dansk”) rather than a list of accepted working languages — judge what the ad demands, not why it was selected.",
-    "bullet_glyph": "419 corpus ads · 0 golden. The glyph bug demoted 9 ads that had correct evidence.",
-    "truncated": "528 ads (5.2%) · 0 golden. prepare() cuts mid-block on 519 of them.",
+    "comma_disjunction": "120 corpus ads · 0 golden. The census-v7 rule's PRESENCE is tested; its BEHAVIOUR is not. Note the selecting pattern is looser than the prompt's, so some ads here match a mother-tongue clause (“annet morsmål enn norsk, svensk eller dansk”) rather than a list of accepted working languages — judge what the ad demands, not why it was selected.",
+    "bullet_glyph": "425 corpus ads · 0 golden. The glyph bug demoted 9 ads that had correct evidence.",
+    "truncated": "505 ads with a language line (of 528 over 6,000 chars) · 0 golden. prepare() cuts mid-block on 519 of them.",
     "doc_clause": "254 corpus ads · 1 golden. census-v7 rule, thin coverage.",
     "english_worded": "56 corpus ads · 1 golden. The requirement stated in English.",
-    "it_vertical": "240 corpus ads · 0 golden. Persona P5 — the originating bug.",
-    "handverkere": "787 corpus ads · 1 golden. Persona P2 Tømrer.",
-    "utdanning": "1,471 corpus ads · 2 golden. Persona P6, the designed negative control.",
+    "it_vertical": "240 corpus ads · 0 golden. The IT vertical, which had no golden ad at all. NOT necessarily a data-scientist ad — selection is random within the category, and only 1 IT ad in the corpus has a data-science title.",
+    "handverkere": "758 corpus ads · 1 golden. The trades vertical, which had ONE golden ad. Random within the category, so not necessarily a tømrer ad (69 exist).",
+    "utdanning": "1,471 corpus ads · 2 golden. The education vertical. Random within the category, so not necessarily a grunnskolelærer ad (5 exist).",
     "nordic_or_english": "251 corpus ads · 2 golden. English present without the word 'norsk'.",
     "quantified_years": "311 corpus ads · 1 golden. min_years_experience is scored by nothing today.",
     "work_mode": "362 corpus ads · 0 golden. Needed before the facet ships.",
@@ -51,6 +51,21 @@ LEVEL_HINT = {
     "fluent": "fluency demanded",
     "certified": "a named test or CEFR level demanded",
 }
+
+
+def _verdicts(prefill, blocks, source) -> dict:
+    """{span -> {ok, why}} for every span the UI can put in the field: each
+    displayed line, and the Opus suggestion. Computed by census_validate, never
+    reimplemented in JS."""
+    out = {}
+    for b in blocks:
+        ok, why = v._span_ok(b["text"], source)
+        out[b["text"]] = {"ok": bool(ok), "why": why or ""}
+    sp = (prefill or {}).get("evidence_span")
+    if sp and sp not in out:
+        ok, why = v._span_ok(sp, source)
+        out[sp] = {"ok": bool(ok), "why": why or ""}
+    return out
 
 
 def main() -> None:
@@ -73,15 +88,32 @@ def main() -> None:
             contacts = c.get("contactList") or []
         except (json.JSONDecodeError, TypeError):
             pass
-        blocks = (body or "").split("\n")
+        # BLOCKS COME FROM prepare()['sent_text'], NOT from description_text.
+        #
+        # prepare() sends the model body[:3500] + "[...]" + body[-2500:]. Built
+        # from the full text instead, the tool showed 16 lines the extractor is
+        # never given — and on one ad (8) the ONLY language line was inside the
+        # deleted middle, making it unwinnable by construction: whatever a human
+        # labelled, the model could only emit `unstated`.
+        sent = v.prepare(title or "", body or "", "no")
+        source = sent["sent_text"]
+        blocks = source.split("\n")
         keep, seen = [], set()
         for i, b in enumerate(blocks):
             if v.LANG_TOKEN.search(b):
                 for j in (i - 1, i):
                     if j >= 0 and j not in seen and blocks[j].strip():
                         seen.add(j)
-                        keep.append({"text": pii.scrub(blocks[j], contacts),
-                                     "hit": j == i})
+                        txt = pii.scrub(blocks[j], contacts)
+                        # THE REAL VERDICT, from census_validate itself. A JS
+                        # reimplementation would drift from the Python rule — the
+                        # exact failure class this repo keeps finding — and the
+                        # first version did drift: it reported a green tick for all
+                        # 98 blocks while the validator accepted 42, and painted a
+                        # false warning on mid-block spans it actually accepts.
+                        ok, why = v._span_ok(txt, source)
+                        keep.append({"text": txt, "hit": j == i,
+                                     "ok": bool(ok), "why": why or ""})
         ads.append({
             "n": row["n"], "stratum": row["stratum"], "uuid": row["uuid"],
             "title": pii.scrub(title or "", contacts),
@@ -89,7 +121,17 @@ def main() -> None:
             "doc_lang": row["doc_lang"], "n_chars": n_chars,
             "truncated": bool(n_chars and n_chars > 6000),
             "blocks": keep[:16],
+            "truncated_note": ("the model is sent only the first 3,500 and last "
+                               "2,500 characters; lines from the deleted middle are "
+                               "not shown") if sent["truncated"] else None,
             "prefill": row.get("prefill") or None,
+            # A span may legitimately be a SENTENCE INSIDE a line — _span_ok
+            # accepts one that begins at a sentence boundary. The UI previously
+            # only recognised whole-line matches, so accepting Opus's suggestion
+            # on ad 1 raised a false warning on a span the validator accepts.
+            # Verdicts for every string the UI can produce are precomputed here,
+            # by the validator itself.
+            "verdicts": _verdicts(row.get("prefill"), keep, sent["sent_text"]),
         })
 
     data = {"ads": ads, "levels": LEVELS, "worklang": WORKLANG,
