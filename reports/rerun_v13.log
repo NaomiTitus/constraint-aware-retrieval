@@ -1,7 +1,7 @@
-census-v12: re-running 41 ads for 46 rows
-batch msgbatch_01D8AvvxyNFyot6YCLHuY49q
+census-v13: re-running 41 ads for 46 rows
+batch msgbatch_01SGXt7MsGadKqyz66JKH4Hd
 
-19 of 46 rows changed value under census-v12
+18 of 46 rows changed value under census-v13
    evidence_strength            'inferred_from_context' -> 'explicit_and_unambiguous'
    relocation_support           'offered' -> 'unstated'
    application_language         'both' -> 'english_accepted'
@@ -11,16 +11,15 @@ batch msgbatch_01D8AvvxyNFyot6YCLHuY49q
    relocation_support           'offered' -> 'unstated'
    relocation_support           'offered' -> 'unstated'
    relocation_support           'offered' -> 'unstated'
-   security_clearance_required  True -> False
-   evidence_strength            'explicit_but_hedged' -> 'explicit_and_unambiguous'
    relocation_support           'offered' -> 'unstated'
    relocation_support           'offered' -> 'unstated'
-   evidence_strength            'explicit_but_hedged' -> 'explicit_and_unambiguous'
+   relocation_support           'offered' -> 'unstated'
+   relocation_support           'offered' -> 'unstated'
    relocation_support           'offered' -> 'unstated'
    application_language         'scandinavian_accepted' -> 'english_accepted'
    relocation_support           'offered' -> 'unstated'
    relocation_support           'offered' -> 'unstated'
    evidence_strength            'explicit_but_hedged' -> 'explicit_and_unambiguous'
 
-27 rows still hold the rare value and remain exceptions
+28 rows still hold the rare value and remain exceptions
 written data/worksheet/exceptions_current.json

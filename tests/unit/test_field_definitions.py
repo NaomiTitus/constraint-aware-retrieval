@@ -128,3 +128,45 @@ def test_the_prompt_prose_carries_both_rules():
     low = SYSTEM.lower()
     assert "politiattest" in low and "bakgrunnssjekk" in low
     assert "flytteutgifter" in low or "hjelp til å finne bolig" in low
+
+
+# ===========================================================================
+# census-v12 was measured on the 46 rows and was only partly right. These pin
+# the three specific failures so a later prompt edit cannot undo them.
+#
+#   row 34  "Det er krav om at gyldig politiattest fremvises før tiltredelse"
+#           flipped True -> False. The description led with ONE inclusion
+#           sentence and then THREE "FALSE for..." sentences; the negatives
+#           drowned the positive. A rule whose exceptions outweigh it reads as
+#           an exception rule.
+#   row 17  "Betalt bolig under hele oppdragsperioden"   stayed `offered`
+#   row 32  "Gratis bolig i hele arbeidsperioden"        stayed `offered`
+#           — both almost verbatim the examples already in the prompt, so
+#           listing more examples was not the fix. v13 states the TEST instead:
+#           does the help end when the job ends?
+# ===========================================================================
+
+def test_a_bare_politiattest_requirement_is_stated_to_be_enough():
+    """Row 34's exact clause, and the failure it caused."""
+    d = (PROPS["security_clearance_required"].get("description") or "").lower()
+    assert "alone is enough" in d or "alene" in d, d
+    assert "politiattest" in d
+    # the inclusions must not be outnumbered by the exclusions
+    assert d.count("false") <= 2, (
+        f"{d.count('false')} negative clauses; v12 had three and the model "
+        f"stopped saying True at all")
+
+
+def test_the_relocation_rule_states_a_TEST_not_only_examples():
+    """v12 listed 'betalt bolig under oppdraget' and rows 17 and 32 still came
+    back `offered` on near-identical wording. More examples was not the fix."""
+    d = (PROPS["relocation_support"].get("description") or "").lower()
+    assert "does the help end when the job ends" in d or "so lenge" in d, d
+    for token in ("gratis bolig", "fri bolig", "betalt bolig"):
+        assert token in d, f"{token!r} is the commonest wording and must be named: {d}"
+
+
+def test_the_prompt_prose_states_the_relocation_test_too():
+    low = SYSTEM.lower()
+    assert "does the help end when the job ends" in low, \
+        "the discriminating test must be in the prose, not only the schema"

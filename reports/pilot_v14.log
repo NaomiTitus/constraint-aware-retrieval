@@ -1,0 +1,36 @@
+prompt census-v14  |  44 golden ads
+
+
+census: 260s  calls=44  cache_hits=0  demoted=1 (2%)  spend=$0.098
+tokens: in=38,804 out=16,883 cache_read=569,234 cache_write=13,238  prompt-cache hit rate 98%
+        $0.00224/ad  ->  9,823 clusters would cost $21.96
+
+coverage 100%   pooled 86.4% (caveat applies)   invalid_levels=0
+
+PER LEVEL
+  unstated                      9/12    75% ###############
+  scandinavian_accepted         7/ 8    88% #################
+  certified                     5/ 5   100% ####################
+  either_norwegian_or_english   5/ 5   100% ####################
+  professional                  5/ 5   100% ####################
+  desirable                     3/ 4    75% ###############
+  conversational                2/ 2   100% ####################
+  explicitly_not_required       1/ 2    50% ##########
+  fluent                        1/ 1   100% ####################
+
+ACCESSIBILITY  (the metric that matters)
+  hidden wrongly   1 of 12 accessible   rate 8%  ci95 [0.01, 0.35]
+  shown wrongly    1 of 32 blocking   rate 3%
+
+EVIDENCE SPANS (of 32 expected)
+  exact 19  different 12  missing 1  fabricated 0  spurious 3
+
+working_language non-default recall 4/4
+authorisation 5/5  spurious 1
+
+MISCLASSIFICATIONS
+  unstated                     -> professional                 x3
+  desirable                    -> unstated                     x1
+  explicitly_not_required      -> desirable                    x1
+  scandinavian_accepted        -> either_norwegian_or_english  x1
+DONE

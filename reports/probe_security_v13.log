@@ -1,0 +1,19 @@
+census-v13: 30 ads naming a security check (expect True) + 15 naming only a licence or health screening (expect False)
+batch msgbatch_012tLrGGxtKCtBAdmgriovAQ
+
+  RECALL    on ads naming a check : 18/30  (60%)   missed 12
+  PRECISION on licence/health only: 15/15  (100%)   wrongly True 0
+    002f1ad1 want True got False  ponerer egen bil Du må kunne legge fram politiattest uten merknader før du tiltrer i still
+    008403a4 want True got False   i barnehage, må du legge frem godkjent politiattest ved tiltredelse. Arbeidsoppgaver: Bid
+    00892ba5 want True got False  ven og andre relevante lovverk Godkjent politiattest må fremlegges ved ansettelse (skal ik
+    009a5bb4 want True got False  rspråklig. Du må kunne fremlegge gyldig politiattest før ansettelse. Personlige egenskaper
+    00b19841 want True got False  g skriftlig Førerkort klasse B Godkjent politiattest, ikke eldre enn 3 måneder må fremlegg
+    00b36dd4 want True got False  tilsettes må framvise tilfredsstillende politiattest (barneomsorgsattest, jfr. politiregis
+    00d38d28 want True got False   stillingen uten ny utlysning. Godkjent politiattest må framlegges før tiltredelse. Politi
+    00ee7e73 want True got False  de kommunikasjonsevner på norsk. Gyldig politiattest må fremlegges før tiltredelse. Person
+    00f4e61c want True got False  setjing skjer med atterhald om godkjend politiattest Vi tilbyr Eit godt arbeidsmiljø med e
+    0112bb88 want True got False  arbeidsgivere og vitnemål på utdanning. Politiattest skal foreligge for ansettelse i still
+    01467d45 want True got False  sjukepleiar Førarkort klasse B Godkjent politiattest Anna relevant kompetanse kan bli vurd
+    01d81932 want True got False  eter Før tiltredelse må det legges frem politiattest i tråd med Lov om helsepersonell m.v.
+
+written reports/security_recall.json

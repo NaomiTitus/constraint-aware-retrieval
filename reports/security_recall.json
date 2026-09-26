@@ -1,0 +1,279 @@
+{
+ "prompt_version": "census-v15",
+ "recall_tp": 30,
+ "recall_fn": 0,
+ "prec_tn": 15,
+ "prec_fp": 0,
+ "detail": [
+  {
+   "uuid": "001afe25-57e2-4541-863e-91ba58856f1b",
+   "expected": true,
+   "got": true,
+   "clause": "Før oppstart må det legges fram gyldig politiattest. Dersom avlastningen skal foregå i avlasters eget hjem, kan"
+  },
+  {
+   "uuid": "001d3fb8-f030-4a50-a6ec-dafa441e980b",
+   "expected": true,
+   "got": true,
+   "clause": "ende lover, reglement og tariffavtaler. Politiattest må framlegges før tiltredelse i stillingen. Krav om at skje"
+  },
+  {
+   "uuid": "002f1ad1-ca22-4a9f-9ef8-ef5ec65a0c2e",
+   "expected": true,
+   "got": true,
+   "clause": "ponerer egen bil Du må kunne legge fram politiattest uten merknader før du tiltrer i stillingen Vi tilbyr: Et po"
+  },
+  {
+   "uuid": "0064d685-8a88-48e5-9d6c-45336fd4baa5",
+   "expected": true,
+   "got": true,
+   "clause": ". Ansettelsesvilkår Det stilles krav om politiattest ved tilsetting. Det er 6 måneders prøvetid med 14 dagers gj"
+  },
+  {
+   "uuid": "00771c49-7284-4faa-83d0-b92ff0223287",
+   "expected": true,
+   "got": true,
+   "clause": "stes opp og legges ved søknaden. Gyldig politiattest må fremlegges før tiltredelse for stillinger som krever det"
+  },
+  {
+   "uuid": "00794fdd-3cc9-4c89-b463-f2b10d19ff1e",
+   "expected": true,
+   "got": true,
+   "clause": "erktøy. Førerkort klasse B Du bør kunne sikkerhetsklareres, da flere av våre kunder krever dette Du bør beherske nor"
+  },
+  {
+   "uuid": "008403a4-0cec-4a02-8b96-8910db016e5a",
+   "expected": true,
+   "got": true,
+   "clause": " i barnehage, må du legge frem godkjent politiattest ved tiltredelse. Arbeidsoppgaver: Bidra til barnas trivsel "
+  },
+  {
+   "uuid": "00892ba5-54b1-4b67-85c5-2bd6e4ec35b7",
+   "expected": true,
+   "got": true,
+   "clause": "ven og andre relevante lovverk Godkjent politiattest må fremlegges ved ansettelse (skal ikke legges ved i søknad"
+  },
+  {
+   "uuid": "009955bb-d7d7-4c00-b26e-a90b502c47b7",
+   "expected": true,
+   "got": true,
+   "clause": "n eller helse- og omsorg, kreves gyldig politiattest Skjema for forhåndsundersøkelse av tuberkulose og MRSA må l"
+  },
+  {
+   "uuid": "009a5bb4-5631-4661-a23b-16532bc0d971",
+   "expected": true,
+   "got": true,
+   "clause": "rspråklig. Du må kunne fremlegge gyldig politiattest før ansettelse. Personlige egenskaper Vi legger vekt på per"
+  },
+  {
+   "uuid": "00b19841-d243-4d3e-a2c6-ee41c0a37847",
+   "expected": true,
+   "got": true,
+   "clause": "g skriftlig Førerkort klasse B Godkjent politiattest, ikke eldre enn 3 måneder må fremlegges ved ansettelse Pers"
+  },
+  {
+   "uuid": "00b36dd4-60b0-459f-9597-a1b51d77d406",
+   "expected": true,
+   "got": true,
+   "clause": "tilsettes må framvise tilfredsstillende politiattest (barneomsorgsattest, jfr. politiregisterloven § 39). Den so"
+  },
+  {
+   "uuid": "00ccf8b3-1ff4-4806-bf53-0894d6fc90d6",
+   "expected": true,
+   "got": true,
+   "clause": "beidsoppgavene Kvalifikasjoner Godkjent politiattest, jr barnehageloven § 30 Gode norskferdigheter muntlig og sk"
+  },
+  {
+   "uuid": "00d38d28-1156-4236-8fc2-97c94a9521ca",
+   "expected": true,
+   "got": true,
+   "clause": " stillingen uten ny utlysning. Godkjent politiattest må framlegges før tiltredelse. Politiattest skal ikke legge"
+  },
+  {
+   "uuid": "00ee7e73-f82f-4e87-aee0-b6c0e1e4b42f",
+   "expected": true,
+   "got": true,
+   "clause": "de kommunikasjonsevner på norsk. Gyldig politiattest må fremlegges før tiltredelse. Personlig kjemi vil vektlegg"
+  },
+  {
+   "uuid": "00f4e61c-bee7-4492-b164-1595a79ca391",
+   "expected": true,
+   "got": true,
+   "clause": "setjing skjer med atterhald om godkjend politiattest Vi tilbyr Eit godt arbeidsmiljø med engasjerte kollegaer Hø"
+  },
+  {
+   "uuid": "010d4669-25a0-4a85-a5e8-3f043d106ce7",
+   "expected": true,
+   "got": true,
+   "clause": "elder til enhver tid. Ved tilsetting må politiattest og helseattest for tuberkulose og MRSA fremlegges, jf. Lov "
+  },
+  {
+   "uuid": "0112bb88-ad12-4ec6-8d7e-4289008f9f28",
+   "expected": true,
+   "got": true,
+   "clause": "arbeidsgivere og vitnemål på utdanning. Politiattest skal foreligge for ansettelse i stillinger som krever dette"
+  },
+  {
+   "uuid": "01133b79-a6e5-4150-bd4f-89691fb71607",
+   "expected": true,
+   "got": true,
+   "clause": "t er krav om å levere tilfredsstillande politiattest før tilsetting. Politiattesten skal ikkje vere eldre enn 3 "
+  },
+  {
+   "uuid": "013fda3d-7893-4a5c-8961-a927d574bb08",
+   "expected": true,
+   "got": true,
+   "clause": "gaver kan det på sikt bli nødvendig med sikkerhetsklarering og autorisasjon for tilgang til informasjon gradert HEMM"
+  },
+  {
+   "uuid": "01467d45-15a5-4636-88f6-013f4cf78e42",
+   "expected": true,
+   "got": true,
+   "clause": "sjukepleiar Førarkort klasse B Godkjent politiattest Anna relevant kompetanse kan bli vurdert dersom det ikkje s"
+  },
+  {
+   "uuid": "016d5aca-9b02-41c6-b9c4-eb9ccab0cb3a",
+   "expected": true,
+   "got": true,
+   "clause": "hagelovens §27 og §28 Tilfredsstillende politiattest er en forutsetning for ansettelse. Denne skal ikke legges v"
+  },
+  {
+   "uuid": "018595a1-923e-47d7-8b6b-8e2a0ffbceb1",
+   "expected": true,
+   "got": true,
+   "clause": " - Fleksibilitet - Gode samarbeidsevner Politiattest ikke eldre enn 3 måneder er påkrevet før du starter. Kvalif"
+  },
+  {
+   "uuid": "01886d6f-c5da-402f-9833-51999671be85",
+   "expected": true,
+   "got": true,
+   "clause": "g tariffavtalar. Det blir stilt krav om politiattest før tiltreding."
+  },
+  {
+   "uuid": "0195b5bd-e4fc-4f88-a490-f9acc19abace",
+   "expected": true,
+   "got": true,
+   "clause": "meet the requirements for the necessary security clearance, access clearance and authorization as described in the Nat"
+  },
+  {
+   "uuid": "01bfeb9e-6a26-4f81-bd05-af9fb79c0809",
+   "expected": true,
+   "got": true,
+   "clause": "e og barn, region vest, avdeling Førde. Politiattest må leggjast fram ved tilsetjing, jf. lov om barnevern § 12-"
+  },
+  {
+   "uuid": "01d41d28-48d8-4f70-9dda-c007d6df07ba",
+   "expected": true,
+   "got": true,
+   "clause": "tid) Generelt: Før ansettelse må gyldig politiattest framlegges. Tilsetting i kommunen skjer i henhold til enhve"
+  },
+  {
+   "uuid": "01d81932-32f8-48d7-966a-b5ab3df3e553",
+   "expected": true,
+   "got": true,
+   "clause": "eter Før tiltredelse må det legges frem politiattest i tråd med Lov om helsepersonell m.v. (helsepersonelloven) "
+  },
+  {
+   "uuid": "01dd4f57-32aa-4db3-a060-4e833ef547eb",
+   "expected": true,
+   "got": true,
+   "clause": "sere for kvalifikasjonskravet. Godkjent politiattest etter Opplæringsloven må leveres før ansettelse Arbeidsoppg"
+  },
+  {
+   "uuid": "01e33ab9-91ea-487d-a815-4ff324cb8640",
+   "expected": true,
+   "got": true,
+   "clause": " ut fra kvalifikasjoner og ansiennitet. Politiattest Ved tilsetting må gyldig politiattest iht. helse- og omsorg"
+  },
+  {
+   "uuid": "0068a96d-c723-4f90-bd23-edc5dbf2481f",
+   "expected": false,
+   "got": false,
+   "clause": "iljøer. Kvalifikasjoner Bioingeniør med norsk autorisasjon Erfaring fra laboratoriemedisin, ønskelig med kompetanse i "
+  },
+  {
+   "uuid": "00bf3333-7c20-4077-bb1b-86adacdaee4d",
+   "expected": false,
+   "got": false,
+   "clause": "kasjoner Vi trenger deg som: Har gyldig norsk autorisasjon som sykepleier Har svært gode skriftlige og muntlige språkf"
+  },
+  {
+   "uuid": "0210ff96-0d06-43aa-ad31-07b89210c035",
+   "expected": false,
+   "got": false,
+   "clause": "n, natt og/eller helg). Kvalifikasjoner Norsk autorisasjon som sykepleier. Videreutdanning/spesialisering som operasjo"
+  },
+  {
+   "uuid": "02a54ddc-7aef-462b-bfb4-ecd2f4bbbb0a",
+   "expected": false,
+   "got": false,
+   "clause": "riksmedisinsk senter Kvalifikasjonskrav norsk autorisasjon som lege og gjennomført LIS1, eller tilsvarende godkjent tj"
+  },
+  {
+   "uuid": "02b1f767-c521-4afa-b56f-de9b1c548e49",
+   "expected": false,
+   "got": false,
+   "clause": "g i behandlingsforløpet Kvalifikasjoner Norsk autorisasjon som sykepleier/spesialsykepleier Gode samarbeidsevner og ev"
+  },
+  {
+   "uuid": "02cb6805-8b1a-4dc0-89d8-a15645ff9114",
+   "expected": false,
+   "got": false,
+   "clause": "iske løsninger Vi ser etter deg som Har norsk autorisasjon som helsefagarbeider Har gode norskkunnskaper, minimum nivå"
+  },
+  {
+   "uuid": "02d53e67-961a-45a9-9592-ccb4a5c73b11",
+   "expected": false,
+   "got": false,
+   "clause": "om for tiden er 11-delt Kvalifikasjoner Autorisasjon som lege i Norge Godkjent norsk spesialitet i Fysikalsk medisin"
+  },
+  {
+   "uuid": "03192599-0ae4-4142-8089-94e2e0dc7912",
+   "expected": false,
+   "got": false,
+   "clause": "jø. Ivareta smittevern. Kvalifikasjoner Norsk autorisasjon kreves for søkere som er sykepleiere, vernepleiere, eller h"
+  },
+  {
+   "uuid": "0351f377-cba9-49d0-ab4c-50e919775548",
+   "expected": false,
+   "got": false,
+   "clause": "v i avdelingen. Kvalifikasjoner Du har: Norsk autorisasjon som bioingeniør. Gode norskferdighet, både skriftlig og mun"
+  },
+  {
+   "uuid": "043aeec9-753d-4110-a6fa-806468bf21d2",
+   "expected": false,
+   "got": false,
+   "clause": "kken og hverandre. Hvem er du? • Du har norsk autorisasjon som veterinær. • Du har gjerne noe erfaring fra smådyrpraks"
+  },
+  {
+   "uuid": "043fd575-33f3-49d0-a127-7fb66578479a",
+   "expected": false,
+   "got": false,
+   "clause": "unget psykisk helsevern Kvalifikasjoner Autorisasjon som psykolog Relevant erfaring fra psykisk helsevern for voksne"
+  },
+  {
+   "uuid": "0591ed4e-4ef7-471d-a9de-cac09a8dc5ed",
+   "expected": false,
+   "got": false,
+   "clause": "nstilling. Kvalifikasjoner: Erfaring og autorisasjon som helsesekretær (krav) Bred erfaring fra helsesektoren er en "
+  },
+  {
+   "uuid": "060fea1b-cce4-4af6-80ee-cdfbce964c12",
+   "expected": false,
+   "got": false,
+   "clause": "et lar seg gjøre Kvalifikasjoner Gyldig norsk autorisasjon som hjelpepleier/helsefagarbeider Videreutdanning i spedbar"
+  },
+  {
+   "uuid": "0645ac2c-4ff8-47d4-ae2b-8164a500a6fa",
+   "expected": false,
+   "got": false,
+   "clause": "hendelser. Kvalifikasjoner Må ha gyldig norsk autorisasjon som ambulansearbeider eller paramedisiner ved søknadsfrist "
+  },
+  {
+   "uuid": "07d89a5e-a375-4a86-b57d-32f7bfeb4f07",
+   "expected": false,
+   "got": false,
+   "clause": " hverandre gode. Kvalifikasjoner Gyldig norsk autorisasjon som sykepleier Norsk eller annet skandinavisk språk: både m"
+  }
+ ]
+}

@@ -1,0 +1,7 @@
+census-v15: 30 ads naming a security check (expect True) + 15 naming only a licence or health screening (expect False)
+batch msgbatch_01SNJDZV1fPU2K8HAJVnqQev
+
+  RECALL    on ads naming a check : 30/30  (100%)   missed 0
+  PRECISION on licence/health only: 15/15  (100%)   wrongly True 0
+
+written reports/security_recall.json

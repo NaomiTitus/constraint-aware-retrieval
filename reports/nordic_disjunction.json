@@ -1,0 +1,249 @@
+{
+ "prompt_version": "census-v15",
+ "n": 40,
+ "scandinavian_accepted": 24,
+ "asserted_english": 0,
+ "other": 16,
+ "detail": [
+  {
+   "uuid": "00bf3333-7c20-4077-bb1b-86adacdaee4d",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Har svært gode skriftlige og muntlige språkferdigheter i norsk eller annet skandinavisk språk"
+  },
+  {
+   "uuid": "01554434-b845-46f6-b358-4aa504b6a7a8",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "• Gode kunnskaper i norsk eller et skandinavisk språk, muntlig og skriftlig"
+  },
+  {
+   "uuid": "04da1330-8bbe-41b3-b5e9-0eff220aa7c6",
+   "level": "certified",
+   "state": "other:certified",
+   "clause": "Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fullført norskspråklig videregående skole, må minimum ha bestått Bergenstesten, eller annen norsktest på B2 nivå."
+  },
+  {
+   "uuid": "05604a84-5cfc-4f69-bb1f-2ced875a7357",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Gode kommunikasjonsevner på norsk eller et annet skandinavisk språk"
+  },
+  {
+   "uuid": "060fea1b-cce4-4af6-80ee-cdfbce964c12",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Norsk eller annet skandinavisk språk: både muntlige og skriftlige ferdigheter er nødvendig"
+  },
+  {
+   "uuid": "06396fd0-1d18-4fc4-9bab-24cf9fd89f4a",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Gjør deg forstått på norsk (nivå B2) eller annet skandinavisk språk, både muntlig og skriftlig."
+  },
+  {
+   "uuid": "0645ac2c-4ff8-47d4-ae2b-8164a500a6fa",
+   "level": "certified",
+   "state": "other:certified",
+   "clause": "Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fullført norskspråklig videregående skole, må minimum ha bestått Bergenstesten, eller annen norsktest på B2 nivå."
+  },
+  {
+   "uuid": "0729e888-4314-4ac5-bb05-839d24938b85",
+   "level": "professional",
+   "state": "other:professional",
+   "clause": "Språkkrav: Norsk, samisk, svensk eller dansk som førstespråk eller dokumenterte norskferdigheter i henhold til barnehagelovens krav for å bli ansatt som styrer eller pedagogisk leder"
+  },
+  {
+   "uuid": "07d89a5e-a375-4a86-b57d-32f7bfeb4f07",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Norsk eller annet skandinavisk språk: både muntlige og skriftlige ferdigheter er nødvendig"
+  },
+  {
+   "uuid": "084fa7cd-b820-4c11-b7cd-816fdb5163f3",
+   "level": "certified",
+   "state": "other:certified",
+   "clause": "* Språkkravet gjelder søkere med annet førstespråk enn norsk, svensk eller dansk."
+  },
+  {
+   "uuid": "08fdd01e-5ea0-4673-b05c-70d5462152a4",
+   "level": "certified",
+   "state": "other:certified",
+   "clause": "Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fullført norskspråklig videregående skole, må minimum ha bestått Bergenstesten, eller annen norsktest på B2 nivå."
+  },
+  {
+   "uuid": "09ef9cd1-130a-457c-a377-2a9be0a38424",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Norsk eller annet skandinavisk språk: både muntlige og skriftlige ferdigheter er nødvendig"
+  },
+  {
+   "uuid": "0a0c7a3b-37c7-4801-b358-58d052c1bd67",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Gode ferdigheter i norsk eller annet skandinavisk språk, skriftlig og muntlig"
+  },
+  {
+   "uuid": "0aa07a5c-21ce-4cbe-a2e7-d72c00830818",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "• Behersker norsk eller et skandinavisk språk"
+  },
+  {
+   "uuid": "0b2c0065-3121-41ce-afe0-4e62945dabe3",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Du må snakke norsk eller et annet skandinavisk språk"
+  },
+  {
+   "uuid": "0c6377d6-3f5c-4e1c-a7b0-1faa5f10dad6",
+   "level": "certified",
+   "state": "other:certified",
+   "clause": "Søkere som har et annet morsmål enn norsk, svensk eller dansk, og som ikke har fullført norskspråklig videregående skole, må minimum ha bestått Bergenstesten, eller annen norsktest på B2-nivå."
+  },
+  {
+   "uuid": "0d7955d4-649f-4aae-bf4a-bfcf6a4be7a1",
+   "level": "certified",
+   "state": "other:certified",
+   "clause": "Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fullført norskspråklig videregående skole, må minimum ha bestått Bergenstest eller annen norsktest på B2 nivå."
+  },
+  {
+   "uuid": "0d8e8730-f8c4-4509-bcc7-22988f0921f8",
+   "level": "certified",
+   "state": "other:certified",
+   "clause": "Dersom du har et annet morsmål enn norsk, svensk, eller dansk, må du dokumentere norskkunnskaper tilsvarende minimum B2-nivå"
+  },
+  {
+   "uuid": "0e70b8e1-02da-41e2-9138-e1bc5d143cd1",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Beherskelse av et skandinavisk språk (norsk, svensk eller dansk)"
+  },
+  {
+   "uuid": "0f00816e-b55a-41c6-9ccb-3157f9bc19c5",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Den som ansettes må beherske norsk eller et annet skandinavisk språk, skriftlig og muntlig."
+  },
+  {
+   "uuid": "11b7c76e-4638-4e64-bc49-62f3408130d6",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Behersker norsk eller et annet skandinavisk språk."
+  },
+  {
+   "uuid": "11c98d12-643a-40ff-a24c-caafe01c5244",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Norsk eller annet skandinavisk språk: både muntlige og skriftlige ferdigheter er nødvendig."
+  },
+  {
+   "uuid": "1242f465-265f-4942-bb6c-c9d13c4917db",
+   "level": "fluent",
+   "state": "other:fluent",
+   "clause": "Søknadstekst og CV må vere på norsk eller eit anna skandinavisk språk."
+  },
+  {
+   "uuid": "129bec77-54eb-4df3-bef4-9e29d6f9117b",
+   "level": "certified",
+   "state": "other:certified",
+   "clause": "Ved annet morsmål enn norsk eller skandinavisk må språknivå tilsvarende B2 dokumenteres."
+  },
+  {
+   "uuid": "131eff7d-4519-4c27-8e5d-93d1490f7210",
+   "level": "desirable",
+   "state": "other:desirable",
+   "clause": "gratis norskkurs dersom du ikke behersker norsk, svensk eller dansk på minimum A2-nivå ved ansettelse"
+  },
+  {
+   "uuid": "135545ab-5bf7-4606-81b3-d6e2cc379d81",
+   "level": "certified",
+   "state": "other:certified",
+   "clause": "Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fullført norskspråklig videregående skole, må minimum ha bestått norsktest på B2 nivå."
+  },
+  {
+   "uuid": "150a718d-97c4-4758-87a9-5bdc89c60a4c",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "behersker norsk eller et annet skandinavisk språk godt"
+  },
+  {
+   "uuid": "159eab4e-aa9d-4318-a6a7-0ddee1a6ca30",
+   "level": "certified",
+   "state": "other:certified",
+   "clause": "Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fullført norskspråklig videregående skole, må minimum ha bestått Bergenstesten, eller annen norsktest på B2 nivå."
+  },
+  {
+   "uuid": "16957fd3-b250-4718-ad61-954baa07da48",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "behersker norsk eller et annet skandinavisk språk godt, minimum B1/B2-nivå"
+  },
+  {
+   "uuid": "17b6c91b-1fa2-494d-9794-c38f89206d59",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "· Behersker norsk eller skandinavisk språk, muntlig og skriftlig"
+  },
+  {
+   "uuid": "17ef2f7f-dca1-497f-8cae-130b55adcecb",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Søkere må ha gode kunnskaper i norsk eller annet skandinavisk språk skriftlig og muntlig."
+  },
+  {
+   "uuid": "19c7fc1d-3390-4994-8c3f-ff2ccec7b676",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "God muntlig og skriftlig fremstillingsevne på norsk eller skandinavisk språk"
+  },
+  {
+   "uuid": "1a82456f-dc40-404d-a075-5b81da20db23",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Norsk eller annet skandinavisk språk: både muntlige og skriftlige ferdigheter er nødvendig"
+  },
+  {
+   "uuid": "1b4f6137-361a-4bb0-9c71-cf9d85e5101d",
+   "level": "certified",
+   "state": "other:certified",
+   "clause": "Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fullført norskspråklig videregående skole, må minimum ha bestått Bergenstesten, eller annen norsktest på B2 nivå."
+  },
+  {
+   "uuid": "1b82a971-fe8c-48c4-8491-b10f07477618",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Meget gode ferdigheter i norsk eller annet skandinavisk språk."
+  },
+  {
+   "uuid": "1c75e100-afa4-4654-934e-534640995382",
+   "level": "certified",
+   "state": "other:certified",
+   "clause": "Ansatte som ikke har norsk eller annet skandinavisk språk som førstespråk må dokumentere minimum B2-nivå i norsk muntlig og norsk skriftlig."
+  },
+  {
+   "uuid": "1cbc1fa6-4b27-4ddc-8f36-ccb3d1f45d53",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Du behersker norsk, eller et annet skandinavisk språk, både muntlig og skriftlig"
+  },
+  {
+   "uuid": "1dd7dbb7-ae7e-4f32-a4cd-c2edc64af689",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "du må kunne uttrykke deg meget godt, både muntlig og skriftlig på norsk eller et annet skandinavisk språk"
+  },
+  {
+   "uuid": "1eee33b3-470f-4f92-a807-c76efd027e08",
+   "level": "scandinavian_accepted",
+   "state": "ok",
+   "clause": "Må kunne undervise på norsk eller et annet skandinavisk språk."
+  },
+  {
+   "uuid": "20eeb76a-2ff8-4ba2-a3de-7bf2eeafad29",
+   "level": "certified",
+   "state": "other:certified",
+   "clause": "Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fullført norskspråklig videregående skole, må minimum ha bestått norsktest på B2 nivå."
+  }
+ ]
+}

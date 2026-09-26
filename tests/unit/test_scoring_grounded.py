@@ -31,6 +31,20 @@ pytestmark = [pytest.mark.unit, requires_corpus]
 #               v8, which is itself the finding recorded as LIMITATIONS §11: v10
 #               changed `application_language` on three ads and the gate could
 #               not see it, because it scores none of the facets that moved.
+#   2026-09-26  census-v15: pooled 0.864, hidden 1, shown 2, exact 19/12/1
+#               scandinavian_accepted 6/8 · explicitly_not_required 2/2
+#               LOWER THAN v11 AND ACCEPTED AS MORE HONEST. Three of these 44
+#               ads had their decisive language line quoted in the few-shot
+#               with its answer — "God kunnskap i norsk, munnleg og skriftleg",
+#               "Må beherske skandinavisk eller engelsk tale" and "Du trenger
+#               ikke å snakke norsk, men ..." each occur in exactly ONE corpus
+#               ad, and that ad was golden. All three are now replaced with
+#               clauses from ads in neither the golden nor the sealed set, so
+#               part of every earlier figure on this line was leakage.
+#               The two remaining scandinavian_accepted misses were checked
+#               against a held-out probe of 40 ads carrying the same shape:
+#               the asserted-English error occurs 0 times there. Eight items
+#               cannot separate a live class from two hard ads.
 #   2026-09-26  census-v11: pooled 0.886, hidden 1, shown 0, exact 19/12/1
 #               scandinavian_accepted 8/8 (was 7/8)
 #               working_language non-default recall 4/4 (was 3/4)
@@ -66,11 +80,11 @@ pytestmark = [pytest.mark.unit, requires_corpus]
 #
 # The unbiased comparison is the held-out probes, not this set.
 BASELINE = {
-    "pooled_accuracy": 0.886,
+    "pooled_accuracy": 0.864,
     "coverage": 1.0,
     "invalid_levels": 0,
     "hidden_wrongly": 1,
-    "shown_wrongly": 0,
+    "shown_wrongly": 2,
     "n_blocking": 32,
     "evidence": {"n_expected": 32, "exact": 19, "different": 12,
                  "missing": 1, "spurious": 3, "fabricated": 0},

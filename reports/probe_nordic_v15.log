@@ -1,0 +1,24 @@
+census-v15: 40 held-out ads with a Nordic-only disjunction (no golden, no sealed)
+batch msgbatch_01Qr83CYxGGzTVnN8og8TaN7
+
+  scandinavian_accepted             24  (60%)
+  ASSERTED ENGLISH (shown wrongly)   0  (0%)   <- the error being hunted
+  other level                       16  (40%)
+    04da1330 certified                    Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fu
+    0645ac2c certified                    Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fu
+    0729e888 professional                 Språkkrav: Norsk, samisk, svensk eller dansk som førstespråk eller dokumentert
+    084fa7cd certified                    * Språkkravet gjelder søkere med annet førstespråk enn norsk, svensk eller dan
+    08fdd01e certified                    Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fu
+    0c6377d6 certified                    Søkere som har et annet morsmål enn norsk, svensk eller dansk, og som ikke har
+    0d7955d4 certified                    Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fu
+    0d8e8730 certified                    Dersom du har et annet morsmål enn norsk, svensk, eller dansk, må du dokumente
+    1242f465 fluent                       Søknadstekst og CV må vere på norsk eller eit anna skandinavisk språk.
+    129bec77 certified                    Ved annet morsmål enn norsk eller skandinavisk må språknivå tilsvarende B2 dok
+    131eff7d desirable                    gratis norskkurs dersom du ikke behersker norsk, svensk eller dansk på minimum
+    135545ab certified                    Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fu
+    159eab4e certified                    Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fu
+    1b4f6137 certified                    Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fu
+    1c75e100 certified                    Ansatte som ikke har norsk eller annet skandinavisk språk som førstespråk må d
+    20eeb76a certified                    Søkere som har annet morsmål enn norsk, svensk eller dansk, og som ikke har fu
+
+written reports/nordic_disjunction.json

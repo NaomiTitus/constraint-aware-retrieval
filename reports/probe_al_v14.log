@@ -1,0 +1,11 @@
+census-v14: recall probe on 40 ads selected by CLAUSE, not by model output
+batch msgbatch_01L5orZqUD6WQU8tGAdPdeQp
+
+  found         39  (98%)
+  MISSED         0  (0%)   recorded `unstated`
+  wrong value    1  (2%)
+
+--- misses ---
+  1ef6e61b  want norwegian_required got english_accepted    Dokumentene må være på norsk/skandinavisk ellerengelsk.
+
+written reports/application_language_recall.json

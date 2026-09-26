@@ -430,3 +430,60 @@ def test_the_prompt_warns_against_borrowing_another_fields_values():
 def test_prompt_version_advanced_past_v8():
     assert cp.PROMPT_VERSION not in ("census-v6", "census-v7", "census-v8"), \
         "bump PROMPT_VERSION or the cache returns records with invalid enums"
+
+
+# ===========================================================================
+# `norsk ELLER <another Nordic language>` — a disjunction with NO English.
+#
+# Found by the golden set on census-v13, in the direction that matters:
+#   8ae0f800  "Snakker flytende norsk eller tydelig skandinavisk med god
+#              språkforståelse"
+#   expected scandinavian_accepted · got either_norwegian_or_english
+#
+# The span was correct. The VALUE reached for the `eller`-pattern without
+# checking what followed `eller`, and `either_norwegian_or_english` asserts
+# that English is accepted when the advertisement never mentions it. That is a
+# `shown wrongly` error: a non-Norwegian speaker is told they can apply when
+# they cannot, which is the exact failure this project exists to prevent.
+#
+# MEASURED: 344 ads (3.38%) say `norsk eller <skandinavisk|nordisk|svensk|
+# dansk>` with no English anywhere in the sentence. A class, not a one-off.
+#
+# The prompt already said the level "is decided by whether ENGLISH IS
+# ACCEPTED" and carried examples for "skandinavisk og engelsk" and "norsk,
+# engelsk eller polsk". What it had no example of was a disjunction where BOTH
+# branches are Nordic — so the discriminating case was the one not shown.
+
+NORDIC_DISJUNCTIONS = [
+    ("8ae0f800", "Snakker flytende norsk eller tydelig skandinavisk med god språkforståelse"),
+    ("52bee290", "Behersker norsk eller et annet skandinavisk språk."),
+    ("48fab2b2", "Du må kunne gjøre deg forstått på norsk eller annet skandinavisk språk."),
+    ("47366cc8", "kommuniserer svært godt på norsk eller et annet skandinavisk språk"),
+    ("0aa07a5c", "• Behersker norsk eller et skandinavisk språk"),
+    ("06396fd0", "Gjør deg forstått på norsk (nivå B2) eller annet skandinavisk språk, "
+                 "både muntlig og skriftlig."),
+    ("0c6377d6", "Søkere som har et annet morsmål enn norsk, svensk eller dansk"),
+]
+
+
+@pytest.mark.parametrize("uuid,clause", NORDIC_DISJUNCTIONS)
+def test_a_nordic_only_disjunction_names_no_english(uuid, clause):
+    """Guards the fixture: if any of these mentions English the case is not
+    what it claims to be, and the rule built on it would be wrong."""
+    assert not re.search(r"engelsk|english", clause, re.I), clause
+
+
+def test_the_prompt_rules_on_a_disjunction_whose_branches_are_both_nordic():
+    """`eller` alone must not decide the level; what follows it must."""
+    low = SYSTEM.lower()
+    assert "norsk eller" in low and "skandinavisk" in low
+    i = low.find("begge sider")
+    if i < 0:
+        i = low.find("both branches")
+    if i < 0:
+        i = low.find("norsk eller et annet skandinavisk")
+    assert i >= 0, ("the prompt must show a disjunction with no English in it; "
+                    "measured, the model answered either_norwegian_or_english "
+                    "on 'norsk eller tydelig skandinavisk'")
+    window = low[i:i + 500]
+    assert "scandinavian_accepted" in window, window[:250]

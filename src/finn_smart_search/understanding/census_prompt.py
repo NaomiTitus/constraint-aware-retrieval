@@ -31,7 +31,7 @@ REJECTED (measurement refuted the claim):
   * "språkmodell for barna" - 5 ads, not the 727 implied by occupation counts.
 """
 
-PROMPT_VERSION = "census-v12"
+PROMPT_VERSION = "census-v15"
 
 SYSTEM = """You extract language-requirement facts from Norwegian job advertisements for a \
 search engine whose users include people who speak English but no Norwegian.
@@ -112,7 +112,18 @@ stop at the first that matches:
      requires Scandinavian → `scandinavian_accepted`. Do NOT apply rule 3 to a \
      conjunction.
    A comma-separated list with NO connective at all ("norsk, engelsk", 21 \
-   advertisements) is a conjunction — treat it as "og". But a comma list \
+   advertisements) is a conjunction — treat it as "og". BOTH BRANCHES NORDIC — the disjunction that does NOT reach English. \
+"Snakker flytende norsk eller tydelig skandinavisk", "behersker norsk eller \
+et annet skandinavisk språk", "gjør deg forstått på norsk eller annet \
+skandinavisk språk" are `scandinavian_accepted`, NOT \
+`either_norwegian_or_english`. The word `eller` does not decide this field; \
+WHAT FOLLOWS `eller` does. If every branch of the disjunction is a Nordic \
+language and English is named nowhere, English is not accepted and the answer \
+is `scandinavian_accepted`. 344 advertisements (3.4%) are written this way, \
+and answering `either_norwegian_or_english` on them tells a seeker who reads \
+no Norwegian that they may apply when they may not.
+
+But a comma list \
    CLOSED by a disjunction is a disjunction: "norsk, engelsk eller polsk" \
    (104 advertisements) offers three alternatives and is \
    `either_norwegian_or_english`. Read to the end of the list before deciding; \
@@ -154,10 +165,13 @@ dokumenterte norskkunnskaper på nivå B2" — still binds, and is `certified`.
 
 ### TWO FIELDS THAT HAD NO DEFINITION, AND NOW DO
 
-`security_clearance_required` is TRUE for ANY security vetting of the person: \
-sikkerhetsklarering, autorisasjon etter sikkerhetsloven, politiattest, \
-vandelsattest, "plettfri vandel", bakgrunnssjekk. 3,643 advertisements (35.8%) \
-carry one, so this is common, not rare.
+`security_clearance_required` is TRUE for ANY security vetting of the person, \
+and ONE of these ALONE is enough: politiattest · vandelsattest · "plettfri \
+vandel" · "god vandel" · bakgrunnssjekk · sikkerhetsklarering · autorisasjon \
+etter sikkerhetsloven. "Det er krav om at gyldig politiattest fremvises før \
+tiltredelse", with nothing else in the advertisement, is TRUE. 3,643 \
+advertisements (35.8%) carry one, so TRUE is the expected answer here and a \
+False on an ad that asks for a politiattest is an error.
 
 It is FALSE for a PROFESSIONAL LICENCE, which uses the same word: "norsk \
 autorisasjon som sykepleier", "autorisasjon som helsefagarbeider", an \
@@ -170,10 +184,13 @@ taushetsplikt.
 finne bolig", "vi er behjelpelig med bolig", "dekning av flytteutgifter", help \
 with a deposit or references for someone arriving.
 
-It is `unstated` when the employer HOUSES you because of the job rather than to \
-help you move: "betalt bolig under oppdraget", "ansattbolig", "kostnadsfri \
-bolig når oppdraget krever at du bor borte", brakke, a 6/2 or 2/2 rotasjon, \
-kost og losji. It is also `unstated` when the offer is travel or overnatting \
+It is `unstated` whenever the housing lasts only as long as the work does. \
+THE TEST: does the help end when the job ends? Then it housed you for the work \
+and did not help you move. "Betalt bolig under hele oppdragsperioden", "gratis \
+bolig i hele arbeidsperioden", "kostnadsfri bolig når oppdraget krever at du \
+bor borte", "fri bolig", ansattbolig, brakke, kost og losji, a 6/2 or 2/2 \
+rotasjon — all `unstated`. Free or paid housing is the COMMONEST way this is \
+written and it is not relocation support. It is also `unstated` when the offer is travel or overnatting \
 WHILE WORKING — "dekning av reise og overnatting, betalt reisetid". A rotation \
 bunk and help finding a flat are different facts, and a seeker who needs the \
 second cannot use the first.
@@ -354,16 +371,17 @@ TOOL = {
             "security_clearance_required": {
                 "type": "boolean",
                 "description":
-                    "True if the advertisement requires ANY security-type "
-                    "vetting of the person: sikkerhetsklarering or autorisasjon "
-                    "under sikkerhetsloven, politiattest or vandelsattest, "
-                    "plettfri/god vandel, or a bakgrunnssjekk. "
-                    "FALSE for a PROFESSIONAL LICENCE even though it uses the "
-                    "same word — 'norsk autorisasjon som sykepleier', "
-                    "'autorisasjon som helsefagarbeider', an HPR number: that "
-                    "is permission to practise a profession, not vetting. "
-                    "FALSE for health screening — MRSA, tuberkulose. "
-                    "FALSE for a confidentiality undertaking (taushetsplikt)."},
+                    "TRUE whenever the advertisement asks for ANY of these, and "
+                    "one of them ALONE is enough: politiattest · vandelsattest "
+                    "· 'plettfri vandel' · 'god vandel' · bakgrunnssjekk · "
+                    "sikkerhetsklarering · autorisasjon etter sikkerhetsloven. "
+                    "A bare politiattest requirement with nothing else in the "
+                    "advertisement is TRUE. This is common — 35.8% of ads — so "
+                    "TRUE is the expected answer, not a rare one. "
+                    "The ONLY exception is that `autorisasjon` also names a "
+                    "professional licence: 'norsk autorisasjon som sykepleier', "
+                    "an HPR number. A licence alone is False. Health screening "
+                    "(MRSA, tuberkulose) and taushetsplikt are also not vetting."},
             "visa_sponsorship": {"type": "string",
                                  "enum": ["offered", "explicitly_not_offered", "unstated"]},
             "relocation_support": {
@@ -372,13 +390,18 @@ TOOL = {
                     "of work: hjelp til å finne bolig for someone arriving, "
                     "dekning av flytteutgifter, assistance with deposit or "
                     "references. "
-                    "`unstated` when accommodation is provided BECAUSE OF the "
-                    "job rather than to help you move — betalt/fri bolig under "
-                    "oppdraget, ansattbolig, brakke, a 6/2 or 2/2 rotasjon, "
-                    "kost og losji — and when the offer is travel or "
-                    "overnatting WHILE WORKING. Being housed by the employer is "
-                    "not the same fact as being helped to relocate, and a "
-                    "seeker who needs the second cannot use the first.",
+                    "`unstated` whenever the housing lasts only as long as "
+                    "the work does. If the words 'under oppdraget', 'under "
+                    "oppdragsperioden', 'i hele arbeidsperioden', 'når "
+                    "oppdraget krever', 'under hele perioden' or a rotasjon "
+                    "(6/2, 2/2, 8/2) appear anywhere near the offer, it is "
+                    "`unstated` — INCLUDING 'gratis bolig', 'fri bolig', "
+                    "'betalt bolig' and 'kostnadsfri bolig', which are the "
+                    "commonest way this is written and are NOT relocation. "
+                    "Also `unstated`: ansattbolig, brakke, kost og losji, and "
+                    "travel or overnatting WHILE WORKING. "
+                    "The test is simple — does the help end when the job ends? "
+                    "Then it housed you for the work; it did not help you move.",
                 "type": "string",
                                    "enum": ["offered", "explicitly_not_offered", "unstated"]},
             "seniority": {
@@ -501,11 +524,17 @@ FEWSHOT = [
      "Krav:\n"
      "Fagbrev som elektriker.\n"
      "Minimum 1 års erfaring.\n"
-     "Må beherske skandinavisk eller engelsk tale\n"
+     "Beherske et av de skandinaviske språkene eller engelsk\n"
      "Vi tilbyr hjelp til å finne bolig.",
      "no",
      _f("either_norwegian_or_english", "explicit_statement", "explicit_and_unambiguous",
-        spans=[("Må beherske skandinavisk eller engelsk tale", "no")],
+        # WAS "Må beherske skandinavisk eller engelsk tale" — ONE corpus ad,
+        # and that ad is in the golden set, so the few-shot was handing the
+        # model the decisive sentence of a test item with its answer.
+        # "Beherske et av de skandinaviske språkene eller engelsk" keeps the
+        # Scandinavian-OR-English shape this example exists to teach — the v6
+        # fix, 863 ads — and appears in 5 ads, none golden, none sealed.
+        spans=[("Beherske et av de skandinaviske språkene eller engelsk", "no")],
         # The last line of this ad OFFERS HOUSING and this record used to say
         # `unstated` — so the only worked example that shows a housing offer
         # demonstrated missing one, on the facet whose exceptions were under
@@ -535,6 +564,33 @@ FEWSHOT = [
      # "skandinavisk eller engelsk" accepts English, so: `english_accepted`.
      _f("unstated", "no_mention", "none", application_language="english_accepted")),
 
+    # 5d. NORDIC *OR* NORDIC — a disjunction whose branches are BOTH Nordic.
+    # Sits next to 5b (Nordic *or* English) deliberately: the only thing that
+    # differs is the word after `eller`, and that word is what decides the
+    # field. Added after census-v13 answered `either_norwegian_or_english` on
+    # "Snakker flytende norsk eller tydelig skandinavisk", which asserts
+    # English is accepted on an ad that never mentions it — a `shown wrongly`
+    # error, the direction that costs someone an application. 344 ads (3.4%)
+    # are written this way and the few-shot had NOT ONE of them: the single
+    # `scandinavian_accepted` example was "beherske et nordisk språk", with no
+    # disjunction at all, so `eller` had only ever been demonstrated landing on
+    # English. Prose alone did not move it; this example did.
+    #
+    # Ad 52bee290, verbatim. Checked NOT to be in the golden set or the sealed
+    # set — two otherwise-ideal candidates for this slot were golden ads, and
+    # using one would have been training on the test set.
+    ("Vi søker tømrer i Tønsberg!",
+     "Som tømrer vet du at godt håndverk handler om mer enn å sette opp vegger.\n"
+     "Vi hjelper mennesker når uhellet er ute - etter vannskader, brann og storm.\n"
+     "Vi ser etter deg som:\n"
+     "Har fagbrev som tømrer.\n"
+     "Behersker norsk eller et annet skandinavisk språk.\n"
+     "Har førerkort klasse B.",
+     "no",
+     _f("scandinavian_accepted", "explicit_statement", "explicit_and_unambiguous",
+        spans=[("Behersker norsk eller et annet skandinavisk språk.", "no")],
+        skills=[{"phrase": "fagbrev som tømrer", "level": "required"}])),
+
     # 6. AUTHORISATION + a SEPARATE Nordic-language line. Both present, kept apart.
     ("Intensivsykepleier til Sørlandet",
      "Kvalifikasjoner:\n"
@@ -561,31 +617,55 @@ FEWSHOT = [
      "no",
      _f("unstated", "no_mention", "none",
         authorisation_required="Norsk autorisasjon som sykepleier",
+        # BOTH facts, kept apart: the autorisasjon is a professional LICENCE and
+        # goes to authorisation_required; the politiattest is VETTING and is
+        # what security_clearance_required is for. This example used to say
+        # False here, and it plus example 9 were the ONLY demonstrations of a
+        # politiattest ad in the whole few-shot — so the prose said "TRUE is the
+        # expected answer, 35.8% of ads" while every worked example said False.
+        # Measured consequence: recall 60%, 12 of 30 politiattest ads missed.
+        security_clearance_required=True,
         implicit_evidence=["journalforing", "brukerkontakt"])),
 
     # 8. NYNORSK - 762 ads carry markers; a bokmål-only reader misses 21%.
     ("Fagansvarleg i Eining for Miljø- og velferdstenester",
      "Kvalifikasjonar: Høgskuleutdanning innan helse.\n"
      "Ønskjeleg med vidareutdanning innan pedagogikk eller rettleiing.\n"
-     "God kunnskap i norsk, munnleg og skriftleg\n"
+     "Gode norskkunnskapar, både munnleg og skriftleg\n"
      "Førarkort kl.\n"
      "B.\n"
      "Gyldig politiattest må leverast før oppstart.",
      "no",
      _f("professional", "explicit_statement", "explicit_and_unambiguous",
-        spans=[("God kunnskap i norsk, munnleg og skriftleg", "no")],
+        # WAS "God kunnskap i norsk, munnleg og skriftleg" — a line that
+        # occurs in exactly ONE corpus advertisement, and that advertisement is
+        # in the golden set. The few-shot was showing the model the decisive
+        # sentence of a test item together with its answer. Replaced with
+        # boilerplate that appears in 57 ads, which demonstrates the same shape
+        # without naming any one of them.
+        spans=[("Gode norskkunnskapar, både munnleg og skriftleg", "no")],
+        # "Gyldig politiattest må leverast" and nothing else — the bare case
+        # the prose calls out as sufficient on its own. It said False.
+        security_clearance_required=True,
         implicit_evidence=["brukerkontakt"])),
 
     # 9. EXPLICITLY NOT REQUIRED - only ~5 such ads exist; the class is real but rare.
     ("Er du et nattmenneske? Vi søker tilkallingshjelp på natt",
      "Du er serviceinnstilt og liker å møte mennesker.\n"
-     "Du trenger ikke å snakke norsk, men du må kunne kommunisere godt på engelsk.\n"
+     "Norsk er ikke et krav som språk siden vi har flere ansatte fra flere nasjoner, men da må man kunne snakke og forstå engelsk bra.\n"
      "Andre språk er selvfølgelig en fordel.\n"
      "Send oss gjerne en kort søknad.",
      "no",
      _f("explicitly_not_required", "explicit_statement", "explicit_and_unambiguous",
-        spans=[("Du trenger ikke å snakke norsk, men du må kunne kommunisere godt på "
-                "engelsk.", "no")],
+        # WAS "Du trenger ikke å snakke norsk, men du må kunne kommunisere
+        # godt på engelsk." — ONE corpus ad, and that ad is golden. This class
+        # is genuinely rare (~5 ads), so the replacement is also a single-ad
+        # phrase — but that ad is in NEITHER the golden nor the sealed set,
+        # which is what makes it not leakage. Rarity is not the problem; being
+        # an evaluation item is.
+        spans=[("Norsk er ikke et krav som språk siden vi har flere ansatte "
+                "fra flere nasjoner, men da må man kunne snakke og forstå "
+                "engelsk bra.", "no")],
         stated_working_language="english")),
 
     # 10. ENGLISH-WRITTEN but SILENT. The verdict is still 'unstated' - accessibility
