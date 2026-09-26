@@ -260,6 +260,87 @@ for _f, _allowed in ENUMS.items():
     assert NEUTRAL[_f] in _allowed, f"{_f} repairs to a value not in its own enum"
 
 
+# Type and size constraints, DERIVED from TOOL. Declared there and enforced by
+# nothing: not by tool-use (which does not validate server-side), not here, not
+# by scoring. Measured over all 196 persisted records: zero violations — so
+# these are forward guards. But two of them RAISE rather than report, and a
+# raise inside census.run()'s loop loses a paid-for batch:
+#
+#   evidence_spans = ["bare string"]  -> AttributeError: 'str' has no 'get'
+#   application_language = ["both"]   -> TypeError: unhashable type
+#
+# A violation rate of 0 over 196 has a 95% upper bound near 1.5%; over the
+# census's 9,823 records that is up to ~150. "Latent" measures the sample, not
+# the risk.
+_PROPS = TOOL["input_schema"]["properties"]
+# Norwegian working life does not contain a 400-year career, and a negative
+# requirement is not a requirement. Bounds are this module's, not the schema's,
+# which declares only `integer`; recorded here rather than buried in a branch.
+_MIN_YEARS_MAX = 60
+
+
+def _type_ok(value, declared) -> bool:
+    """`declared` is TOOL's `type`, which may be a string or a list of them."""
+    names = declared if isinstance(declared, list) else [declared]
+    for name in names:
+        if name == "null" and value is None:
+            return True
+        if name == "string" and isinstance(value, str):
+            return True
+        # bool is a subclass of int in Python; the schema means them separately
+        if name == "integer" and isinstance(value, int) and not isinstance(value, bool):
+            return True
+        if name == "boolean" and isinstance(value, bool):
+            return True
+        if name == "array" and isinstance(value, list):
+            return True
+        if name == "object" and isinstance(value, Mapping):
+            return True
+    return False
+
+
+def _shape_errors(facets: Mapping) -> list[str]:
+    """Type, size and item-shape violations. Never raises, whatever it is given."""
+    out = []
+    for field, spec in _PROPS.items():
+        if field not in facets:
+            continue
+        value = facets[field]
+        declared = spec.get("type")
+        if declared and not _type_ok(value, declared):
+            out.append(f"shape:{field}:expected_{declared}_got_{type(value).__name__}")
+            continue                       # nothing further is meaningful
+        if value is None:
+            continue
+        if isinstance(value, list):
+            cap = spec.get("maxItems")
+            if cap is not None and len(value) > cap:
+                out.append(f"shape:{field}:maxItems_{cap}_got_{len(value)}")
+            items = spec.get("items") or {}
+            if items.get("type") == "object":
+                for i, item in enumerate(value):
+                    if not isinstance(item, Mapping):
+                        out.append(f"shape:{field}[{i}]:expected_object_got_"
+                                   f"{type(item).__name__}")
+                        continue
+                    for key, sub in (items.get("properties") or {}).items():
+                        sv = item.get(key)
+                        if sv is None:
+                            continue
+                        if sub.get("type") and not _type_ok(sv, sub["type"]):
+                            out.append(f"shape:{field}[{i}].{key}:expected_"
+                                       f"{sub['type']}_got_{type(sv).__name__}")
+                        cap = sub.get("maxLength")
+                        if cap is not None and isinstance(sv, str) and len(sv) > cap:
+                            out.append(f"shape:{field}[{i}].{key}:maxLength_{cap}"
+                                       f"_got_{len(sv)}")
+        if field == "min_years_experience" and isinstance(value, int) \
+                and not isinstance(value, bool):
+            if value < 0 or value > _MIN_YEARS_MAX:
+                out.append(f"shape:{field}:out_of_range_{value}")
+    return out
+
+
 def _member(v, allowed: frozenset) -> bool:
     """`v in frozenset` raises TypeError on a list or dict.
 
@@ -318,9 +399,15 @@ def validate(facets: dict, sent_text: str) -> dict:
     """Returns {ok, facets, demoted, reasons}. Demotion converts a precision
     error into a recall error INVISIBLY, so the caller must track the rate."""
     reasons = list(_coherence(facets))
+    reasons += _shape_errors(facets)
     reasons += _enum_errors(facets)
     kept = []
-    for e in facets.get("evidence_spans") or []:
+    spans = facets.get("evidence_spans")
+    for e in (spans if isinstance(spans, list) else []):
+        # A bare string here used to raise AttributeError and take the whole
+        # census down with it. Reported by _shape_errors above; skipped here.
+        if not isinstance(e, Mapping):
+            continue
         ok, why = _span_ok(e.get("span", ""), sent_text)
         (kept if ok else reasons).append(e if ok else f"span:{why}")
     out = dict(facets, evidence_spans=kept)
@@ -339,6 +426,28 @@ def validate(facets: dict, sent_text: str) -> dict:
     # consumer can interpret, and a downstream filter comparing against the enum
     # silently drops the ad. Demote so it is counted, visible in the demotion
     # rate, and never persisted as if it were a real verdict.
+    # A malformed field is not a weaker answer, it is an uninterpretable one —
+    # same argument as the enum case. Demote, and replace the field with a value
+    # its own schema permits so the persisted record is well-formed.
+    bad_shape = [r for r in reasons if r.startswith("shape:")]
+    if bad_shape:
+        for r in bad_shape:
+            field = r.split(":", 2)[1].split("[", 1)[0]
+            spec = _PROPS.get(field) or {}
+            declared = spec.get("type")
+            names = declared if isinstance(declared, list) else [declared]
+            if field in NEUTRAL:
+                out[field] = NEUTRAL[field]
+            elif "null" in names:
+                out[field] = None
+            elif "array" in names:
+                out[field] = []
+            elif "boolean" in names:
+                out[field] = False
+            else:
+                out[field] = None
+        reasons.append("demoted:invalid_shape")
+
     bad_enum = [r for r in reasons if r.startswith("enum:")]
     if bad_enum:
         for r in bad_enum:

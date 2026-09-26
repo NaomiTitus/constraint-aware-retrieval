@@ -125,6 +125,22 @@ def score(predictions: dict, golden: list) -> dict:
     per_level: dict[str, dict] = {}
     confusion: Counter = Counter()
     invalid_levels = 0
+    # WHAT THE VALIDATOR ALREADY KNOWS, which the eval was throwing away.
+    #
+    # `invalid_levels` reads like the integrity metric and run_pilot.py and
+    # run_sealed_eval.py print it as one. It is structurally dead for the
+    # pipeline: census.run() validates before persisting and census_validate
+    # REPAIRS an out-of-enum value to its field's neutral member, so by the
+    # time a prediction reaches here the illegal value is gone. It can only
+    # fire on predictions that bypassed validation.
+    #
+    # And the repair is then booked against the model. Measured on one record
+    # (level "beherske_norsk", golden `professional`, doc_lang en): raw gives
+    # invalid_levels=1, shown_wrongly=0; validated gives invalid_levels=0,
+    # shown_wrongly=1. Validation launders a schema breach into an ordinary
+    # accuracy miss. So read the validator's own verdict instead of inferring.
+    demoted = 0
+    demotion_reasons: Counter = Counter()
     hidden_wrongly = shown_wrongly = 0
     n_accessible = 0
     taxonomy_gap: list[str] = []
@@ -164,6 +180,11 @@ def score(predictions: dict, golden: list) -> dict:
 
         if got not in VALID_LEVELS:
             invalid_levels += 1
+        if p.get("demoted"):
+            demoted += 1
+            for r in p.get("_reasons") or []:
+                if r.startswith("demoted:"):
+                    demotion_reasons[r.split(":", 1)[1]] += 1
 
         slot = per_level.setdefault(want, {"n": 0, "correct": 0, "accuracy": 0.0})
         slot["n"] += 1
@@ -227,6 +248,13 @@ def score(predictions: dict, golden: list) -> dict:
         "pooled_accuracy_caveat": POOLED_CAVEAT,
         "per_level": per_level, "confusion": dict(confusion),
         "invalid_levels": invalid_levels,
+        "invalid_levels_caveat": (
+            "Structurally dead for the pipeline: census.run() always validates "
+            "before persisting and the validator repairs out-of-enum values. "
+            "Read `demoted` and `demotion_reasons` instead."),
+        "demoted": demoted,
+        "demotion_rate": (demoted / n_scored) if n_scored else 0.0,
+        "demotion_reasons": dict(demotion_reasons),
         "taxonomy_gap": taxonomy_gap,
         "accessibility": {
             "hidden_wrongly": hidden_wrongly, "shown_wrongly": shown_wrongly,

@@ -569,3 +569,73 @@ def test_9b_4_taxonomy_gap_runs_against_the_real_file():
     for uuid in r["taxonomy_gap"]:
         g = next(x for x in golden if x["uuid"] == uuid)
         assert "annotated_accessible" in g
+
+
+# ── 8 · the validator's own findings must reach the eval ────────────────────
+# `invalid_levels` LOOKS like the integrity metric and is printed as one by
+# run_pilot.py and run_sealed_eval.py. It is structurally dead for the
+# pipeline: census.run() always passes records through census_validate before
+# persisting, and the validator REPAIRS an out-of-enum value to the field's
+# neutral member. So by the time scoring sees a prediction, the illegal value
+# is gone and invalid_levels can only ever fire on predictions that bypassed
+# validation entirely.
+#
+# Worse, the repair is then booked against the MODEL. Measured on one record —
+# level "beherske_norsk", golden `professional`, doc_lang en:
+#
+#            invalid_levels   shown_wrongly   confusion
+#   raw            1               0          (professional -> beherske_norsk)
+#   validated      0               1          (professional -> unstated)
+#
+# So validation launders an invalid prediction into an ordinary accuracy miss,
+# and nothing anywhere counts the demotion. The eval must read what the
+# validator recorded.
+
+def test_8_1_demoted_records_are_counted_from_the_validators_own_reasons():
+    """A demoted prediction must show up as demoted, not merely as a miss."""
+    golden = [gold(1, "professional"), gold(2, "desirable")]
+    preds = {
+        "u1": pred("unstated") | {"demoted": True,
+                                  "_reasons": ["enum:norwegian_requirement_level='beherske_norsk'",
+                                               "demoted:invalid_enum_value"]},
+        "u2": pred("desirable"),
+    }
+    out = scoring.score(preds, golden)
+    assert out["demoted"] == 1
+    assert out["demotion_rate"] == pytest.approx(0.5)
+
+
+def test_8_2_demotion_reasons_are_broken_out_by_kind():
+    """`invalid_enum_value` and `verdict_lost_its_evidence` are different
+    failures and must not be pooled — one is a schema breach, the other is the
+    span guard doing its job."""
+    golden = [gold(1, "professional"), gold(2, "desirable"), gold(3, "fluent")]
+    preds = {
+        "u1": pred("unstated") | {"demoted": True,
+                                  "_reasons": ["demoted:invalid_enum_value"]},
+        "u2": pred("unstated") | {"demoted": True,
+                                  "_reasons": ["demoted:verdict_lost_its_evidence"]},
+        "u3": pred("fluent"),
+    }
+    out = scoring.score(preds, golden)
+    assert out["demotion_reasons"] == {"invalid_enum_value": 1,
+                                       "verdict_lost_its_evidence": 1}
+
+
+def test_8_3_a_repaired_record_is_not_silently_an_ordinary_miss():
+    """The whole point: the accuracy number alone cannot distinguish `the model
+    was wrong` from `the model emitted something illegal and we overwrote it`."""
+    golden = [gold(1, "professional", doc_lang="en")]
+    preds = {"u1": pred("unstated") | {"demoted": True,
+                                       "_reasons": ["demoted:invalid_enum_value"]}}
+    out = scoring.score(preds, golden)
+    assert out["accessibility"]["shown_wrongly"] == 1   # the repair's effect
+    assert out["demoted"] == 1                          # and its cause, visible
+
+
+def test_8_4_an_undemoted_run_reports_zero_not_absent():
+    """A metric that vanishes when clean is a metric nobody notices is missing."""
+    out = scoring.score({"u1": pred("professional")}, [gold(1, "professional")])
+    assert out["demoted"] == 0
+    assert out["demotion_rate"] == 0.0
+    assert out["demotion_reasons"] == {}

@@ -266,3 +266,72 @@ def test_a_required_enum_field_that_is_None_is_reported():
     f["norwegian_requirement_level"] = None
     out = v.validate(f, AD)
     assert any("norwegian_requirement_level" in r for r in out["reasons"]), out["reasons"]
+
+
+# ===========================================================================
+# TYPE AND SIZE CONSTRAINTS — declared in TOOL, enforced by nothing.
+#
+# Tool-use does not enforce them server-side, census_validate covered only
+# enums, and scoring covers one field. Measured over all 196 persisted
+# records: ZERO violations of any constraint below. So these are forward
+# guards, not a cleanup — but two of them CRASH rather than warn, and a crash
+# inside census.run()'s loop loses a paid-for batch:
+#
+#   evidence_spans = ["a bare string"]  -> AttributeError: 'str' has no 'get'
+#   application_language = ["both"]     -> TypeError: unhashable  (fixed above)
+#
+# The census is 9,823 clusters against the 196 that established "zero
+# violations". A rate of 0 over 196 has a 95% upper bound near 1.5%, which
+# over 9,823 records is up to ~150 of them. "Latent" is a statement about
+# sample size, not about safety.
+# ===========================================================================
+
+TYPE_CASES = [
+    ("evidence_spans", ["a bare string where an object belongs"], "shape"),
+    ("evidence_spans", [{"span": SPAN, "section_language": "no"}] * 5, "maxItems"),
+    ("skills", ["sykepleie"], "shape"),
+    ("skills", [{"phrase": f"s{i}", "level": "required"} for i in range(20)], "maxItems"),
+    ("implicit_evidence", "brukerkontakt", "type"),          # string, not a list
+    ("conflicting_statements", "true", "type"),              # string, not a bool
+    ("security_clearance_required", "false", "type"),
+    ("min_years_experience", "3", "type"),
+    ("min_years_experience", -5, "range"),
+    ("min_years_experience", 400, "range"),
+    ("authorisation_required", 123, "type"),
+]
+
+
+@pytest.mark.parametrize("field,value,kind", TYPE_CASES)
+def test_a_type_or_size_violation_is_reported_and_never_raises(field, value, kind):
+    out = v.validate(base() | {field: value}, AD)
+    assert any(field in r for r in out["reasons"]), (
+        f"{field}={value!r} ({kind}) passed validation silently: {out['reasons']}")
+    assert out["demoted"]
+
+
+@pytest.mark.parametrize("field,value,kind", TYPE_CASES)
+def test_a_malformed_record_does_not_crash_the_census(field, value, kind):
+    """census.run() does not guard validate(). One raise aborts the whole run
+    AFTER the batch is paid for, which is the expensive failure mode."""
+    v.validate(base() | {field: value}, AD)          # must simply not raise
+
+
+def test_the_persisted_corpus_violates_none_of_these():
+    """The grounding for calling them forward guards. If this ever fails, the
+    claim in the comment above is stale and must be re-measured, not edited."""
+    import json as _json
+    import duckdb as _duckdb
+    from pathlib import Path as _Path
+    db = _Path(__file__).resolve().parents[2] / "data" / "ads.duckdb"
+    if not db.exists():
+        pytest.skip("corpus not present")
+    con = _duckdb.connect(str(db), read_only=True)
+    rows = con.execute("SELECT uuid, facets FROM ad_facets").fetchall()
+    con.close()
+    assert rows, "no persisted facets to check"
+    bad = []
+    for uuid, fj in rows:
+        f = _json.loads(fj) if isinstance(fj, str) else fj
+        for r in v._shape_errors(f):
+            bad.append((uuid, r))
+    assert not bad, f"{len(bad)} persisted records violate a shape constraint: {bad[:5]}"
