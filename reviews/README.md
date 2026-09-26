@@ -101,6 +101,16 @@ instrument has not made an error; the instrument has.
 - Run the suite in the same command as the commit, not before it.
 - Never `git checkout --` to undo an experiment when the file also holds
   uncommitted work you want. Commit the good state first, then mutate.
+- **Check the suite by exit code, not by reading its tail.** `pytest -q | tail -2
+  && git commit` reports success over a red suite, because `tail` exits 0
+  whatever pytest did. One commit went in with two failures that way. Use:
+
+      pytest -q > out 2>&1; RC=$?; tail out; [ $RC -eq 0 ] || exit 1; git commit
+
+All three of these are the same mistake wearing different clothes: trusting a
+signal that cannot report the failure it is supposed to catch. It is the same
+mistake as the tests in `LIMITATIONS.md` §9 — a green check that was never
+wired to the thing it claimed to check.
 
 ## Reviews
 
