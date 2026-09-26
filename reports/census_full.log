@@ -1,19 +1,8 @@
 census-v15  corpus 10166  already cached 566  remaining 9600
-Traceback (most recent call last):
-  File "/Users/naomi/Documents/projects/finnno_smart_search/run_census.py", line 100, in <module>
-    main()
-    ~~~~^^
-  File "/Users/naomi/Documents/projects/finnno_smart_search/run_census.py", line 76, in main
-    out = census.run(ads, ac.AnthropicBatchClient(), con,
-                     limit=a.limit, max_spend_usd=a.max_spend,
-                     max_demotion_rate=a.max_demotion_rate, poll_seconds=10)
-  File "/Users/naomi/Documents/projects/finnno_smart_search/src/finn_smart_search/understanding/census.py", line 332, in run
-    got.update(_collect(client, client.submit_batch(requests),
-                                ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
-  File "/Users/naomi/Documents/projects/finnno_smart_search/src/finn_smart_search/ingest/anthropic_client.py", line 129, in submit_batch
-    r.raise_for_status()
-    ~~~~~~~~~~~~~~~~~~^^
-  File "/Users/naomi/miniconda3/lib/python3.13/site-packages/httpx/_models.py", line 829, in raise_for_status
-    raise HTTPStatusError(message, request=request, response=self)
-httpx.HTTPStatusError: Client error '413 Payload Too Large' for url 'https://api.anthropic.com/v1/messages/batches'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/413
+   splitting 9378 requests into 2 batches to stay under the byte cap
+
+census: 1249s  calls=9379  disk-cache hits=444  demoted=214 (2.3%)  spend=$22.59
+tokens: in=9,797,156 out=3,521,662 cache_read=125,771,387 cache_write=4,155,900
+PROMPT-CACHE HIT RATE 97%   <- the number that sets the bill
+$0.00241/ad   full corpus would be $24.48
+levels: {'unstated': 3707, 'professional': 3604, 'certified': 1122, 'desirable': 112, 'scandinavian_accepted': 490, 'conversational': 104, 'either_norwegian_or_english': 551, 'fluent': 383, 'explicitly_not_required': 93}

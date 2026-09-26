@@ -90,12 +90,64 @@ demotions. The caveat that belongs beside it is precision, not accuracy — with
 only 6 accessible ads the 95% interval on the hidden-wrongly rate is
 [0.00, 0.39].
 
-## 3. The sealed set cannot measure silence, which is the modal case
+## 3. The sealed set cannot measure silence — and the rate it was compared against was wrong
 
-Of the 28 held-out ads, only **3** are labelled `unstated`. The corpus rate
-is **74.6%**. The set was deliberately selected for ads that *do* say something
-about language, so it measures the rules and not the default — an extractor that
-over-fires on silent ads would not be caught here.
+Of the 28 held-out ads, only **3** are labelled `unstated`. The set was
+deliberately selected for ads that *do* say something about language, so it
+measures the rules and not the default; an extractor that over-fires on silent
+ads would not be caught here. That still stands.
+
+**What did not stand was the comparison.** This section previously recorded the
+corpus `unstated` rate as **74.6%**. That figure predated the census and was an
+estimate, not a measurement. The census of all 10,166 ads puts it at **36.5%** —
+wrong by a factor of two, and wrong in the direction that made the sealed set
+look less representative than it is.
+
+| level | ads | share |
+|---|---:|---:|
+| `unstated` | 3,707 | 36.5% |
+| `professional` | 3,604 | 35.5% |
+| `certified` | 1,122 | 11.0% |
+| `either_norwegian_or_english` | 551 | 5.4% |
+| `scandinavian_accepted` | 490 | 4.8% |
+| `fluent` | 383 | 3.8% |
+| `desirable` | 112 | 1.1% |
+| `conversational` | 104 | 1.0% |
+| `explicitly_not_required` | 93 | 0.9% |
+
+census-v15, 9,379 calls, $22.59, 2.3% demoted, 0 failures.
+
+## 3b. Nine point four per cent accessible — and a third of the corpus is blocked by a DEFAULT, not by evidence
+
+| | ads | share |
+|---|---:|---:|
+| accessible to an English speaker with no Norwegian | 956 | **9.4%** |
+| blocked by a STATED requirement | 5,703 | 56.1% |
+| **blocked by SILENCE alone** | **3,507** | **34.5%** |
+
+That third row is a design choice, not a finding. `derive_english_accessible`
+treats an `unstated` level on a Norwegian-written ad as inaccessible, on the
+reasoning that silence correlates negatively with accessibility in the care and
+retail roles that dominate the corpus. It is defensible and it is documented at
+the function — but **it decides the fate of more ads than every stated
+requirement for English combined**, so no accessibility number from this project
+should be quoted without it.
+
+The retrieval stage must NOT inherit the boolean. The plan's §6 design is a
+graded penalty (severity 0.5 for silence on a Norwegian-written ad, 0.1
+otherwise) precisely because hard-filtering silence destroys recall; the boolean
+exists for the eval's hidden/shown-wrongly metrics, where a binary is required.
+Keeping them separate is deliberate and easy to get wrong.
+
+**An independent figure disagrees, and the disagreement is worth reporting.**
+The search index's own aggregation over all 13,964 active ads puts
+`workLanguage: Engelsk` at **23.3%** — 2.5× the rate this census calls
+accessible. `workLanguage` is advertiser-self-reported and is a different
+attribute (an ad may declare Engelsk and still demand fluent Norwegian), so the
+two are not required to agree. The gap is the data-quality finding the project
+set out to produce, not an error to reconcile away — but it has not yet been
+analysed ad by ad, and until it is, 9.4% is this pipeline's number and 23.3% is
+the platform's.
 
 ## 4. Ten of fifteen extracted facets are scored by nothing
 
