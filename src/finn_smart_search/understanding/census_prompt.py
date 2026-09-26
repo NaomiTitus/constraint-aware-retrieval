@@ -31,7 +31,7 @@ REJECTED (measurement refuted the claim):
   * "språkmodell for barna" - 5 ads, not the 727 implied by occupation counts.
 """
 
-PROMPT_VERSION = "census-v10"
+PROMPT_VERSION = "census-v11"
 
 SYSTEM = """You extract language-requirement facts from Norwegian job advertisements for a \
 search engine whose users include people who speak English but no Norwegian.
@@ -175,6 +175,20 @@ in `application_language`, never in `norwegian_requirement_level`.
   `english_accepted`    English is accepted — including "skandinavisk ELLER \
                         engelsk", because that accepts English
   `unstated`            the ad says nothing about the application's language
+
+A clause naming a Scandinavian language UTEN Å NEVNE ENGELSK — "søknadstekst \
+og CV må vere på norsk eller eit anna skandinavisk språk", "vedlagt \
+dokumentasjon må være på skandinavisk" — is `norwegian_required`. It is NOT \
+`english_accepted`: nothing in it accepts English, and answering \
+`english_accepted` tells a seeker who reads no Norwegian that they may apply \
+in English when they may not. Measured: the model chose `english_accepted` \
+here when the prompt gave no rule. Danish and Swedish do qualify, which no \
+value expresses; `norwegian_required` is the closest of the three and is the \
+safe direction.
+
+A requirement to TRANSLATE the attachments is also this field: "attester må \
+vere oversatt til norsk", "dokumentasjon må foreligge på norsk" is \
+`norwegian_required`. Measured: recorded `unstated` on 3 advertisements.
 
 Do NOT put a level value here. `scandinavian_accepted`, \
 `either_norwegian_or_english`, `professional` and `both` belong to OTHER \

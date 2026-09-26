@@ -22,6 +22,8 @@ would omit the next one added — the same failure as every hardcoded pattern in
 this repo. Parametrising over the schema means a new enum field is covered the
 moment it exists, or the coverage test fails.
 """
+import re
+
 import pytest
 
 from finn_smart_search.understanding import census_validate as v
@@ -112,23 +114,43 @@ def test_a_missing_optional_enum_is_not_an_enum_error():
     assert not any("enum" in r for r in out["reasons"]), out["reasons"]
 
 
-def test_the_corpus_currently_holds_three_known_violations():
-    """Pins the finding so the fix can be shown to have worked, and so the
-    number cannot drift unnoticed before the census re-runs."""
+def test_the_corpus_holds_no_violation_outside_the_known_pre_v9_records():
+    """Pins the finding AND its intended end state.
+
+    The first version of this test asserted `== 3`, which made it a countdown
+    to a red suite: the moment the census re-runs under census-v9 or later the
+    three disappear and the test fails for the RIGHT reason, with no assertion
+    anywhere for the state we actually want. A test that must be edited when
+    the fix lands is not pinning the fix.
+
+    So: zero violations among records written by census-v9 or later, and at
+    most the three known ones among the older records still in the table."""
     import json
     import duckdb
     from tests.conftest import CORPUS
     if not CORPUS.exists():
         pytest.skip("needs the corpus")
     con = duckdb.connect(str(CORPUS), read_only=True)
-    bad = []
-    for (fac,) in con.execute("SELECT facets FROM ad_facets").fetchall():
+    rows = con.execute("SELECT prompt_version, facets FROM ad_facets").fetchall()
+    con.close()
+
+    def version_num(pv: str) -> int:
+        m = re.search(r"v(\d+)", pv or "")
+        return int(m.group(1)) if m else 0
+
+    current, legacy = [], []
+    for pv, fac in rows:
         d = json.loads(fac) if isinstance(fac, str) else fac
         for k, allowed in ENUM_FIELDS.items():
             if d.get(k) is not None and d[k] not in allowed:
-                bad.append((k, d[k]))
-    assert len(bad) == 3, f"known violations changed: {bad}"
-    assert all(k == "application_language" for k, _ in bad), bad
+                (current if version_num(pv) >= 9 else legacy).append((pv, k, d[k]))
+
+    # The end state, asserted rather than awaited.
+    assert not current, (
+        f"census-v9+ produced {len(current)} out-of-enum values: {current[:5]}")
+    # The finding, still pinned while pre-v9 rows remain in the table.
+    assert len(legacy) <= 3, f"pre-v9 violations grew: {legacy}"
+    assert all(k == "application_language" for _, k, _ in legacy), legacy
 
 
 # ===========================================================================

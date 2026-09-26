@@ -35,21 +35,45 @@ from finn_smart_search.understanding.census_prompt import PROMPT_VERSION  # noqa
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 40
 OUT = ROOT / "reports" / "application_language_recall.json"
 
-# A clause about the language of the PAPERWORK. Deliberately built from the
-# wording the prompt's own prose quotes, plus the shapes measured in the corpus.
-DOC = re.compile(r"\b(s[øo]knad\w*|application|dokumentasjon|documentation"
-                 r"|vedlegg|vitnem[åa]l\w*|attest\w*)\b", re.I)
-LANG = re.compile(r"\b(norsk\w*|engelsk\w*|english|skandinavisk\w*"
-                  r"|scandinavian|norwegian)\b", re.I)
-MUST = re.compile(r"\bm[åa]\b|\bmust\b|\bskal\b|\bvere\b|\bvære\b"
-                  r"|\bskrives\b|\bwritten\b", re.I)
+# A clause about the language of the PAPERWORK.
+#
+# THE FIRST VERSION OF THIS SELECTOR WAS WRONG, and its number must not be
+# quoted. It required only a document word, a language word and a modal
+# ANYWHERE in the same block, and reported 35% of ads "missed". Reading the
+# misses showed most were not application-language clauses at all:
+#
+#   "norsk autorisasjon som helsefagarbeider (HPR-nummer oppgis i søknaden)"
+#   "Må beherske norsk språk skriftlig og muntlig"
+#   "For søknad og meir informasjon ta kontakt med: ... Tlf"
+#
+# The first is the `norsk autorisasjon` precision trap the project plan names
+# explicitly; the second is a proficiency requirement; the third is noise. The
+# model recording `unstated` for all three is CORRECT, and the probe was about
+# to book them as extractor misses. Tenth instance of this project's signature
+# failure — a hand-written pattern that looks right — and it nearly produced a
+# headline number that was pure measurement error.
+#
+# The selector now requires the document noun and the language to be BOUND by
+# a verb within one short clause, and excludes the licence traps by name.
+# Hand-checked: 25 of 25 sampled hits are genuine, 188 ads corpus-wide.
+DOCWORD = (r"(?:s[øo]knad\w*|application|dokument\w*|documentation|vedlegg"
+           r"|vitnem[åa]l\w*|attest\w*|CV)")
+LANGWORD = r"(?:norsk|engelsk|english|skandinavisk|scandinavian|norwegian|nordisk)\w*"
+BIND = r"(?:m[åa]|skal|must|be|vere|være|skrives|skrivast|written|oversatt|omsett)"
+CLAUSE = re.compile(
+    rf"{DOCWORD}[^.\n]{{0,60}}\b{BIND}\b[^.\n]{{0,60}}?\bp[åa]\s+{LANGWORD}"
+    rf"|{DOCWORD}[^.\n]{{0,60}}\b{BIND}\b[^.\n]{{0,40}}oversatt til\s+{LANGWORD}"
+    rf"|{DOCWORD}[^.\n]{{0,60}}\bmust be\b[^.\n]{{0,60}}\bin (?:a )?{LANGWORD}", re.I)
+# Licence and proficiency, NOT paperwork language. These are the trap.
+TRAP = re.compile(r"autorisasjon|HPR|norskpr[øo]ve|Bergenstesten|godkjenning", re.I)
 EN = re.compile(r"\b(engelsk\w*|english)\b", re.I)
 
 
 def clause_of(text: str) -> str | None:
-    for s in re.split(r"(?<=[.!?\n])\s+", text or ""):
-        if len(s) < 400 and DOC.search(s) and LANG.search(s) and MUST.search(s):
-            return s.strip()
+    for s in re.split(r"(?<=[.!?])\s+|\n", text or ""):
+        s = s.strip()
+        if 15 < len(s) < 300 and CLAUSE.search(s) and not TRAP.search(s):
+            return s
     return None
 
 
