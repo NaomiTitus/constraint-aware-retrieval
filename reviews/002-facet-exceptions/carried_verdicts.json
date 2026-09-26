@@ -1,24 +1,462 @@
 [
- {"n":1,"uuid":"5c77547e-796f-4218-b22d-b8ebfb409d49","field":"application_language","value_judged":"english_accepted","fact":"yes","value_ok":"yes","note":"","at":"2026-09-26T12:45:24.030Z"},
- {"n":2,"uuid":"a8a6e077-4902-4e0c-bc28-2abf17684fe9","field":"application_language","value_judged":"english_accepted","fact":"yes","value_ok":"yes","note":"","at":"2026-09-26T12:45:58.915Z"},
- {"n":3,"uuid":"c514de15-9fbe-4728-8f68-b601e347478c","field":"application_language","value_judged":"english_accepted","fact":"yes","value_ok":"yes","note":"","at":"2026-09-26T12:46:17.524Z"},
- {"n":4,"uuid":"da25361c-98be-4cb1-849c-0823f6bffe21","field":"application_language","value_judged":"english_accepted","fact":"yes","value_ok":"yes","note":"","at":"2026-09-26T12:47:04.425Z"},
- {"n":5,"uuid":"9e8bfbf3-da94-4ac0-9b3e-347fa71fa118","field":"conflicting_statements","value_judged":"True","fact":"yes","value_ok":"yes","note":"","at":"2026-09-26T12:47:44.077Z"},
- {"n":6,"uuid":"28b383a5-bcea-4fce-bfe7-ee495a099386","field":"evidence_strength","value_judged":"explicit_and_unambiguous","fact":"yes","value_ok":"yes","note":"","at":"2026-09-26T12:48:58.149Z"},
- {"n":7,"uuid":"7c68d2ed-d4a3-4406-ba56-66e1a1b0fe9f","field":"evidence_strength","value_judged":"explicit_but_hedged","fact":"yes","value_ok":"yes","note":"","at":"2026-09-26T12:49:27.463Z"},
- {"n":8,"uuid":"871e0793-a497-4c50-8c72-e8ce19e77f35","field":"evidence_strength","value_judged":"explicit_and_unambiguous","fact":"yes","value_ok":"yes","note":"","at":"2026-09-26T12:50:04.100Z"},
- {"n":9,"uuid":"8ee2b304-ce82-401e-9b4c-247660eb28d2","field":"evidence_strength","value_judged":"explicit_but_hedged","fact":"yes","value_ok":"yes","note":"","at":"2026-09-26T12:50:16.110Z"},
- {"n":10,"uuid":"94a95ce1-6090-4341-ba0c-58ca86390725","field":"evidence_strength","value_judged":"explicit_but_hedged","fact":"yes","value_ok":"yes","note":"","at":"2026-09-26T12:50:43.547Z"},
- {"n":11,"uuid":"9e8bfbf3-da94-4ac0-9b3e-347fa71fa118","field":"evidence_strength","value_judged":"explicit_but_hedged","fact":"yes","value_ok":"yes","note":"","at":"2026-09-26T12:51:19.870Z"},
- {"n":12,"uuid":"0e0e7599-474c-41e9-a4ff-c8137aafc171","field":"relocation_support","value_judged":"offered","fact":"no","value_ok":"no","note":"Housing not relocation, travel to work - should be unstated","at":"2026-09-26T12:59:15.296Z"},
- {"n":13,"uuid":"13897fd3-870b-4c59-8f26-1052af7bf75d","field":"relocation_support","value_judged":"offered","fact":"no","value_ok":"no","note":"Housing not relocation, and travel expenses while working - should be unstated","at":"2026-09-26T12:59:42.138Z"},
- {"n":14,"uuid":"1760997c-564c-4d03-8c87-237d9495e5c4","field":"relocation_support","value_judged":"offered","fact":"no","value_ok":"no","note":"Housing not relocation - should be unstated","at":"2026-09-26T13:00:02.872Z"},
- {"n":15,"uuid":"1bbbf724-004c-40aa-9812-57c49085547c","field":"relocation_support","value_judged":"offered","fact":"no","value_ok":"no","note":"Housing not relocation, and travel expenses while working - should be unstated","at":"2026-09-26T13:00:14.307Z"},
- {"n":16,"uuid":"29ef5a88-466e-49be-ac1b-8703158dd736","field":"relocation_support","value_judged":"offered","fact":"no","value_ok":"no","note":"should be unstated","at":"2026-09-26T13:00:46.857Z"},
- {"n":17,"uuid":"2b0e41aa-bece-4bec-994b-de13621a45f4","field":"relocation_support","value_judged":"offered","fact":"no","value_ok":"no","note":"Housing and travel costs related to work - no relocation is offerred","at":"2026-09-26T13:00:57.534Z"},
- {"n":18,"uuid":"4012c5f7-6a80-4734-8c60-89542fabfd72","field":"relocation_support","value_judged":"offered","fact":"no","value_ok":"no","note":"Housing not relocation - should be unstated","at":"2026-09-26T13:01:21.461Z"},
- {"n":19,"uuid":"4fd9186c-16a6-4900-ab28-d05b3ad5d971","field":"relocation_support","value_judged":"offered","fact":"yes","value_ok":"yes","note":"Housing not relocation - should be unstated","at":"2026-09-26T13:01:37.750Z"},
- {"n":20,"uuid":"502a8ece-024a-466d-8f6f-21c219d94305","field":"relocation_support","value_judged":"offered","fact":"no","value_ok":"no","note":"Housing not relocation, and travel expenses while working - should be unstated","at":"2026-09-26T13:01:50.871Z"},
- {"n":21,"uuid":"61aee276-8d75-4f57-a7af-6f2b81a592de","field":"relocation_support","value_judged":"offered","fact":"no","value_ok":"no","note":"unstated","at":"2026-09-26T13:02:28.226Z"},
- {"n":22,"uuid":"73173c57-d6c6-4ccd-b639-923f33c6f779","field":"relocation_support","value_judged":"offered","fact":"no","value_ok":"no","note":"Housing not relocation- should be unstated","at":"2026-09-26T13:02:53.059Z"}
+ {
+  "n": 1,
+  "uuid": "5c77547e-796f-4218-b22d-b8ebfb409d49",
+  "field": "application_language",
+  "value_judged": "english_accepted",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:33:38.320Z"
+ },
+ {
+  "n": 2,
+  "uuid": "a8a6e077-4902-4e0c-bc28-2abf17684fe9",
+  "field": "application_language",
+  "value_judged": "english_accepted",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:22:47.275Z"
+ },
+ {
+  "n": 3,
+  "uuid": "c514de15-9fbe-4728-8f68-b601e347478c",
+  "field": "application_language",
+  "value_judged": "english_accepted",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:23:11.598Z"
+ },
+ {
+  "n": 4,
+  "uuid": "da25361c-98be-4cb1-849c-0823f6bffe21",
+  "field": "application_language",
+  "value_judged": "english_accepted",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:23:31.998Z"
+ },
+ {
+  "n": 5,
+  "uuid": "9e8bfbf3-da94-4ac0-9b3e-347fa71fa118",
+  "field": "conflicting_statements",
+  "value_judged": "False",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "It should ",
+  "at": "2026-09-26T13:24:59.689Z"
+ },
+ {
+  "n": 6,
+  "uuid": "28b383a5-bcea-4fce-bfe7-ee495a099386",
+  "field": "evidence_strength",
+  "value_judged": "explicit_and_unambiguous",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:25:15.435Z"
+ },
+ {
+  "n": 7,
+  "uuid": "7c68d2ed-d4a3-4406-ba56-66e1a1b0fe9f",
+  "field": "evidence_strength",
+  "value_judged": "explicit_but_hedged",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:25:17.398Z"
+ },
+ {
+  "n": 8,
+  "uuid": "871e0793-a497-4c50-8c72-e8ce19e77f35",
+  "field": "evidence_strength",
+  "value_judged": "explicit_and_unambiguous",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:25:19.711Z"
+ },
+ {
+  "n": 9,
+  "uuid": "8ee2b304-ce82-401e-9b4c-247660eb28d2",
+  "field": "evidence_strength",
+  "value_judged": "explicit_but_hedged",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:25:22.478Z"
+ },
+ {
+  "n": 10,
+  "uuid": "94a95ce1-6090-4341-ba0c-58ca86390725",
+  "field": "evidence_strength",
+  "value_judged": "explicit_but_hedged",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:25:25.177Z"
+ },
+ {
+  "n": 11,
+  "uuid": "9e8bfbf3-da94-4ac0-9b3e-347fa71fa118",
+  "field": "evidence_strength",
+  "value_judged": "explicit_and_unambiguous",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:25:42.152Z"
+ },
+ {
+  "n": 12,
+  "uuid": "0e0e7599-474c-41e9-a4ff-c8137aafc171",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "Housing not relocation, travel to work - should be unstated",
+  "at": "2026-09-26T13:26:15.008Z"
+ },
+ {
+  "n": 13,
+  "uuid": "13897fd3-870b-4c59-8f26-1052af7bf75d",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "Housing not relocation, and travel expenses while working - should be unstated",
+  "at": "2026-09-26T13:26:28.806Z"
+ },
+ {
+  "n": 14,
+  "uuid": "1760997c-564c-4d03-8c87-237d9495e5c4",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "Housing not relocation - should be unstated",
+  "at": "2026-09-26T13:26:30.872Z"
+ },
+ {
+  "n": 15,
+  "uuid": "1bbbf724-004c-40aa-9812-57c49085547c",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "Housing not relocation, and travel expenses while working - should be unstated",
+  "at": "2026-09-26T13:26:33.260Z"
+ },
+ {
+  "n": 16,
+  "uuid": "29ef5a88-466e-49be-ac1b-8703158dd736",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "should be unstated",
+  "at": "2026-09-26T13:26:35.251Z"
+ },
+ {
+  "n": 17,
+  "uuid": "2b0e41aa-bece-4bec-994b-de13621a45f4",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "Housing and travel costs related to work - no relocation is offerred",
+  "at": "2026-09-26T13:26:37.234Z"
+ },
+ {
+  "n": 18,
+  "uuid": "4012c5f7-6a80-4734-8c60-89542fabfd72",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "Housing not relocation - should be unstated",
+  "at": "2026-09-26T13:26:38.709Z"
+ },
+ {
+  "n": 19,
+  "uuid": "4fd9186c-16a6-4900-ab28-d05b3ad5d971",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "Housing not relocation - should be unstated",
+  "at": "2026-09-26T13:27:05.526Z"
+ },
+ {
+  "n": 20,
+  "uuid": "502a8ece-024a-466d-8f6f-21c219d94305",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "Housing not relocation, and travel expenses while working - should be unstated",
+  "at": "2026-09-26T13:27:35.506Z"
+ },
+ {
+  "n": 21,
+  "uuid": "61aee276-8d75-4f57-a7af-6f2b81a592de",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "unstated",
+  "at": "2026-09-26T13:27:43.190Z"
+ },
+ {
+  "n": 22,
+  "uuid": "73173c57-d6c6-4ccd-b639-923f33c6f779",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "Housing not relocation- should be unstated",
+  "at": "2026-09-26T13:28:04.496Z"
+ },
+ {
+  "n": 23,
+  "uuid": "73dbef6d-9ee1-41a0-96aa-f10fac14057f",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:28:32.209Z"
+ },
+ {
+  "n": 24,
+  "uuid": "77b18456-16bc-40bc-b76a-0fd2883a3777",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:28:44.806Z"
+ },
+ {
+  "n": 25,
+  "uuid": "7ec4e215-ad17-4a1b-bcab-a456ee4b6ad4",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:28:58.851Z"
+ },
+ {
+  "n": 26,
+  "uuid": "8d803e29-c700-42c4-928d-96f0805146ee",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:29:22.714Z"
+ },
+ {
+  "n": 27,
+  "uuid": "a8a6e077-4902-4e0c-bc28-2abf17684fe9",
+  "field": "relocation_support",
+  "value_judged": "unstated",
+  "fact": "no",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:33:56.722Z"
+ },
+ {
+  "n": 28,
+  "uuid": "abd8df36-560f-4f26-97d0-e533ce33b03b",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "unstated",
+  "at": "2026-09-26T13:34:31.143Z"
+ },
+ {
+  "n": 29,
+  "uuid": "c572ef69-a857-45f3-8dbf-9f3b1d1ec086",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "unstated",
+  "at": "2026-09-26T13:34:50.364Z"
+ },
+ {
+  "n": 30,
+  "uuid": "e2bee038-2c6a-4dca-a367-a3513522cfd3",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "unstated",
+  "at": "2026-09-26T13:35:20.578Z"
+ },
+ {
+  "n": 31,
+  "uuid": "e49b2ef2-a1fd-473d-8cd7-85b48f7a9e35",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:38:45.698Z"
+ },
+ {
+  "n": 32,
+  "uuid": "f87380f0-32ad-4693-8f30-cf8366f2394f",
+  "field": "relocation_support",
+  "value_judged": "offered",
+  "fact": "no",
+  "value_ok": "no",
+  "note": "unstated",
+  "at": "2026-09-26T13:39:08.654Z"
+ },
+ {
+  "n": 33,
+  "uuid": "28b383a5-bcea-4fce-bfe7-ee495a099386",
+  "field": "security_clearance_required",
+  "value_judged": "True",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:40:10.697Z"
+ },
+ {
+  "n": 34,
+  "uuid": "339cd78d-7ac3-43a1-9396-879d1827e62d",
+  "field": "security_clearance_required",
+  "value_judged": "True",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:40:27.341Z"
+ },
+ {
+  "n": 35,
+  "uuid": "3a591889-1c89-4071-92ea-7335f5f9f67c",
+  "field": "security_clearance_required",
+  "value_judged": "True",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:40:48.327Z"
+ },
+ {
+  "n": 36,
+  "uuid": "5221e5c8-bfb9-488c-876f-09926c1e6e1f",
+  "field": "security_clearance_required",
+  "value_judged": "True",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:40:58.281Z"
+ },
+ {
+  "n": 37,
+  "uuid": "6fc41f40-9c5b-4047-9467-9e87f7474285",
+  "field": "security_clearance_required",
+  "value_judged": "True",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:41:11.058Z"
+ },
+ {
+  "n": 38,
+  "uuid": "7c540360-4f25-445c-b6dc-4a5bc24fa3b7",
+  "field": "security_clearance_required",
+  "value_judged": "True",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:41:19.208Z"
+ },
+ {
+  "n": 39,
+  "uuid": "871e0793-a497-4c50-8c72-e8ce19e77f35",
+  "field": "security_clearance_required",
+  "value_judged": "True",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:41:31.153Z"
+ },
+ {
+  "n": 40,
+  "uuid": "90c9cd3b-439f-4e47-82a6-460afe2b85da",
+  "field": "security_clearance_required",
+  "value_judged": "True",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:42:00.485Z"
+ },
+ {
+  "n": 41,
+  "uuid": "9ccea10f-98ac-4ebe-a516-da611198d97e",
+  "field": "security_clearance_required",
+  "value_judged": "True",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:42:18.979Z"
+ },
+ {
+  "n": 42,
+  "uuid": "a089137a-1ef4-4c4b-a119-74f1bf0506ea",
+  "field": "security_clearance_required",
+  "value_judged": "True",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:42:27.657Z"
+ },
+ {
+  "n": 43,
+  "uuid": "bdd4b8cb-3507-4270-9878-cb1e8a6a85b9",
+  "field": "security_clearance_required",
+  "value_judged": "True",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:42:39.628Z"
+ },
+ {
+  "n": 44,
+  "uuid": "f6c7506d-f9a6-4111-9447-884943444d1d",
+  "field": "security_clearance_required",
+  "value_judged": "True",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:42:49.109Z"
+ },
+ {
+  "n": 45,
+  "uuid": "ff8cce34-dba1-40cb-9ff2-7a0a41544719",
+  "field": "security_clearance_required",
+  "value_judged": "True",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:42:56.814Z"
+ },
+ {
+  "n": 46,
+  "uuid": "abd8df36-560f-4f26-97d0-e533ce33b03b",
+  "field": "visa_sponsorship",
+  "value_judged": "explicitly_not_offered",
+  "fact": "yes",
+  "value_ok": "yes",
+  "note": "",
+  "at": "2026-09-26T13:43:29.792Z"
+ }
 ]

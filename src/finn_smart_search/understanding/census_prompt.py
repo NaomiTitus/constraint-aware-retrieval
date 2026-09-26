@@ -31,7 +31,7 @@ REJECTED (measurement refuted the claim):
   * "språkmodell for barna" - 5 ads, not the 727 implied by occupation counts.
 """
 
-PROMPT_VERSION = "census-v11"
+PROMPT_VERSION = "census-v12"
 
 SYSTEM = """You extract language-requirement facts from Norwegian job advertisements for a \
 search engine whose users include people who speak English but no Norwegian.
@@ -151,6 +151,32 @@ the work. "Fullført mastergrad ved norsk studieinstitusjon" describes an \
 institution. None is a language requirement. Only a demand made of the applicant \
 counts. A gate that binds only some applicants — "utenlandske søkere må ha \
 dokumenterte norskkunnskaper på nivå B2" — still binds, and is `certified`.
+
+### TWO FIELDS THAT HAD NO DEFINITION, AND NOW DO
+
+`security_clearance_required` is TRUE for ANY security vetting of the person: \
+sikkerhetsklarering, autorisasjon etter sikkerhetsloven, politiattest, \
+vandelsattest, "plettfri vandel", bakgrunnssjekk. 3,643 advertisements (35.8%) \
+carry one, so this is common, not rare.
+
+It is FALSE for a PROFESSIONAL LICENCE, which uses the same word: "norsk \
+autorisasjon som sykepleier", "autorisasjon som helsefagarbeider", an \
+HPR-nummer. 1,625 advertisements say `autorisasjon` and 726 of them have no \
+security check at all. Permission to practise a profession is not vetting. \
+It is also FALSE for health screening — MRSA, tuberkulose, 261 ads — and for \
+taushetsplikt.
+
+`relocation_support` is `offered` only for help MOVING there: "hjelp til å \
+finne bolig", "vi er behjelpelig med bolig", "dekning av flytteutgifter", help \
+with a deposit or references for someone arriving.
+
+It is `unstated` when the employer HOUSES you because of the job rather than to \
+help you move: "betalt bolig under oppdraget", "ansattbolig", "kostnadsfri \
+bolig når oppdraget krever at du bor borte", brakke, a 6/2 or 2/2 rotasjon, \
+kost og losji. It is also `unstated` when the offer is travel or overnatting \
+WHILE WORKING — "dekning av reise og overnatting, betalt reisetid". A rotation \
+bunk and help finding a flat are different facts, and a seeker who needs the \
+second cannot use the first.
 
 ### A CLAUSE ABOUT YOUR APPLICATION IS NOT A REQUIREMENT ON YOU
 135 advertisements say some version of "dokumentasjon som skal vurderes må \
@@ -325,10 +351,35 @@ TOOL = {
                 "type": ["string", "null"],
                 "description": "Verbatim licensing phrase, e.g. 'norsk autorisasjon som sykepleier'. NOT language certification.",
             },
-            "security_clearance_required": {"type": "boolean"},
+            "security_clearance_required": {
+                "type": "boolean",
+                "description":
+                    "True if the advertisement requires ANY security-type "
+                    "vetting of the person: sikkerhetsklarering or autorisasjon "
+                    "under sikkerhetsloven, politiattest or vandelsattest, "
+                    "plettfri/god vandel, or a bakgrunnssjekk. "
+                    "FALSE for a PROFESSIONAL LICENCE even though it uses the "
+                    "same word — 'norsk autorisasjon som sykepleier', "
+                    "'autorisasjon som helsefagarbeider', an HPR number: that "
+                    "is permission to practise a profession, not vetting. "
+                    "FALSE for health screening — MRSA, tuberkulose. "
+                    "FALSE for a confidentiality undertaking (taushetsplikt)."},
             "visa_sponsorship": {"type": "string",
                                  "enum": ["offered", "explicitly_not_offered", "unstated"]},
-            "relocation_support": {"type": "string",
+            "relocation_support": {
+                "description":
+                    "Whether the advertisement offers help MOVING to the place "
+                    "of work: hjelp til å finne bolig for someone arriving, "
+                    "dekning av flytteutgifter, assistance with deposit or "
+                    "references. "
+                    "`unstated` when accommodation is provided BECAUSE OF the "
+                    "job rather than to help you move — betalt/fri bolig under "
+                    "oppdraget, ansattbolig, brakke, a 6/2 or 2/2 rotasjon, "
+                    "kost og losji — and when the offer is travel or "
+                    "overnatting WHILE WORKING. Being housed by the employer is "
+                    "not the same fact as being helped to relocate, and a "
+                    "seeker who needs the second cannot use the first.",
+                "type": "string",
                                    "enum": ["offered", "explicitly_not_offered", "unstated"]},
             "seniority": {
                 "type": "string",
