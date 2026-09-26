@@ -158,3 +158,79 @@ def test_scrub_facets_leaves_evidence_spans_ALONE():
               "skills": []}
     out = pii.scrub_facets(facets)
     assert out["evidence_spans"][0]["span"] == "Ring 48157761 for spørsmål"
+
+
+# ---------------------------------------------------------------------------
+# GROUPING BLINDNESS — found by measuring the corpus, not by reading the code.
+#
+# The pattern above ENUMERATES groupings (2-2-2-2, 3-2-3, bare-8). Ads do not
+# restrict themselves to those. Measured over all 10,166 ads by matching each
+# ad's own `contactList` phone digits against the scrubbed `description_text`:
+# 18 contact phones survived in 15 ads, every one a grouping the enumeration
+# does not list.
+#
+# The fixture that justified the old pattern was sampled from `contactList`
+# VALUES. The leak is in how the BODY writes the number, which is a different
+# artefact — STANDARDS.md §3.0 applied one layer up from where it was applied.
+#
+# Each pair below is verbatim: the contactList value, and the rendering of that
+# same number in that ad's description_text.
+LEAKED_IN_BODY = [
+    ("+47 99518681",  "995 18681"),    # 3-5
+    ("+4798244776",   "982 447 76"),   # 3-3-2
+    ("45205365",      "4520 5365"),    # 4-4
+    ("97086084",      "97 086 084"),   # 2-3-3
+    ("905 15 152",    "90515 152"),    # 5-3
+    ("+47 41529304",  "415 29304"),    # 3-5
+    ("+4795927567",   "959 27567"),    # 3-5
+    ("94194115",      "941 941 15"),   # 3-3-2
+    ("+4790503566",   "905 035 66"),   # 3-3-2
+    ("+ 47 776 26614", "+ 47 776 26614"),  # spaced country code, 3-5
+]
+
+
+@pytest.mark.parametrize("listed,in_body", LEAKED_IN_BODY)
+def test_contact_phone_is_redacted_however_the_body_groups_it(listed, in_body):
+    """A number known from contactList must not survive in the body text."""
+    contacts = [{"name": "Test Kontakt", "phone": listed}]
+    text = f"Spørsmål om stillingen rettes til Test Kontakt, {in_body}."
+    out = pii.scrub(text, contacts)
+    assert in_body not in out, f"{in_body!r} survived (contactList {listed!r})"
+    assert pii.PHONE_REDACTION in out
+
+
+# Numbers NOT in contactList are still phones and still contact details. These
+# are verbatim from the corpus; each has a cue word or a +47 prefix.
+CUED_PHONES = [
+    "For eventuell veiledning, kontakt servicekontoret tlf: 78 97 76 00.",
+    "ta kontakt på tlf. +47 413 52 617 for en uforpliktende prat",
+    "kan du kontakte Adecco på telefon 23 29 00 00.",
+    "eller på TLF: 915 60 156.",
+    "tlf. 928 02 537",
+    "Tlf.: 95361613",
+]
+
+
+@pytest.mark.parametrize("line", CUED_PHONES)
+def test_cued_phone_numbers_are_redacted_in_any_grouping(line):
+    out = pii.scrub(line, [])
+    assert pii.PHONE_REDACTION in out, line
+    assert not __import__("re").search(r"\d[\s.-]?\d[\s.-]?\d[\s.-]?\d[\s.-]?"
+                                       r"\d[\s.-]?\d[\s.-]?\d[\s.-]?\d", out), out
+
+
+# The precision side. These carry 8 digits with separators and are NOT phones.
+# Verbatim from the corpus; a general 8-digit rule matches all of them, which is
+# why the rule is anchored on a cue or a +47 prefix rather than left free.
+NOT_PHONES_IN_CONTEXT = [
+    "Kveldsvakt: Kl 1430-2000",
+    "Workplace Ålesundsvegen 1136 6240 Ørskog Norway",
+    "Dagskift: kl 07.30-16.00",
+    "Perioden: 28.10.2026 - 30.01.2027",
+    "Stillingen er ledig i perioden 2026-2028",
+]
+
+
+@pytest.mark.parametrize("line", NOT_PHONES_IN_CONTEXT)
+def test_eight_digit_runs_without_a_phone_cue_are_left_alone(line):
+    assert pii.PHONE_REDACTION not in pii.scrub(line, []), line

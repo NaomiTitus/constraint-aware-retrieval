@@ -89,6 +89,35 @@ def _restore(text: str, dates: list[str]) -> str:
     return text
 
 
+# AD-SCOPED PHONE TARGETS — the general rule the enumeration above is not.
+#
+# The pattern above enumerates groupings. Real bodies use others: measured over
+# all 10,166 ads, 18 contactList phones survived in 15 ads as 3-5, 3-3-2, 4-4,
+# 2-3-3 and 5-3 groupings. Enumerating harder is the same mistake again, and a
+# CONTEXT-FREE general 8-digit rule is not available: measured on the corpus it
+# also matches 1,100 non-phones — shift times (`Kl 1430-2000`), postcodes
+# (`1136 6240 Ørskog`) and year ranges.
+#
+# So the general rule is scoped to what this ad's contactList already declares.
+# The digits are known to be a phone number, so ANY rendering of them is one and
+# no context test is needed. 94.2% of ads carry a contactList; where one is
+# absent the enumerated pattern is still the floor.
+def _phone_targets(contacts: Iterable[Mapping[str, Any]] | None) -> list[re.Pattern]:
+    out = []
+    for c in contacts or []:
+        digits = re.sub(r"\D", "", (c.get("phone") or ""))
+        # A contactList value can hold several numbers ("+47 92099272 +47 78942585").
+        for nat in {digits[i:i + 8] for i in range(0, max(len(digits) - 7, 1), 8)} | {digits[-8:]}:
+            if len(nat) != 8:
+                continue
+            # the same 8 digits, however the body separates them, with an
+            # optional country code in front
+            body = r"[\s.\u00a0-]{0,2}".join(nat)
+            out.append(re.compile(r"(?<![\d\w])(?:(?:\+|00)[\s.\u00a0-]{0,2}47[\s.\u00a0-]{0,2})?"
+                                  + body + r"(?!\d)"))
+    return out
+
+
 def _name_targets(contacts: Iterable[Mapping[str, Any]] | None) -> list[str]:
     out = []
     for c in contacts or []:
@@ -108,6 +137,8 @@ def contains_pii(text: str | None,
     masked, _ = _mask_non_phones(text)
     if EMAIL.search(masked) or PHONE.search(masked):
         return True
+    if any(rx.search(masked) for rx in _phone_targets(contacts)):
+        return True
     return any(n in text for n in _name_targets(contacts))
 
 
@@ -122,6 +153,8 @@ def scrub(text: str | None,
     masked, dates = _mask_non_phones(text)
     masked = EMAIL.sub(EMAIL_REDACTION, masked)
     masked = PHONE.sub(PHONE_REDACTION, masked)
+    for rx in _phone_targets(contacts):
+        masked = rx.sub(PHONE_REDACTION, masked)
     out = _restore(masked, dates)
     for n in _name_targets(contacts):
         out = out.replace(n, NAME_REDACTION)

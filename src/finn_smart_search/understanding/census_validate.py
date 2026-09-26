@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import re
 from collections import defaultdict
+from collections.abc import Mapping
 
 from .census_prompt import HEAD_CHARS, TAIL_CHARS, TOOL
 
@@ -213,6 +214,66 @@ def _coherence(f: dict) -> list[str]:
 ENUMS = {k: frozenset(p["enum"])
          for k, p in TOOL["input_schema"]["properties"].items() if "enum" in p}
 
+# Every enum field is `required` and `{"type": "string"}` in TOOL, so a missing
+# or null value is a schema violation, not an omission. Derived, not asserted.
+REQUIRED_ENUMS = frozenset(ENUMS) & frozenset(TOOL["input_schema"].get("required") or ())
+
+# NESTED enums. `ENUMS` above walks `properties` ONE level, and three enums in
+# TOOL live below that: a span's `section_language`, a skill's `level`, and
+# `implicit_evidence`, whose ITEMS carry the enum rather than the field. All
+# three accepted junk silently.
+#
+# The guard test meant to prove the derivation complete asserted
+# `len(ENUM_FIELDS) >= 8`, and there are exactly 8 top-level enum fields — so it
+# certified the blind spot, because it re-derived the list with the SAME
+# one-level accessor the code used. A test that shares the code's accessor is
+# not independent of the code.
+#
+#   path -> (kind, key within the item, allowed values)
+#   "items" = the field is a list whose ITEMS are the enum
+#   "key"   = the field is a list of objects, one of whose KEYS is the enum
+def _nested() -> dict:
+    out = {}
+    for field, spec in TOOL["input_schema"]["properties"].items():
+        items = (spec or {}).get("items")
+        if not isinstance(items, dict):
+            continue
+        if "enum" in items:
+            out[field] = ("items", None, frozenset(items["enum"]))
+        for key, sub in (items.get("properties") or {}).items():
+            if "enum" in sub:
+                out[f"{field}.{key}"] = ("key", key, frozenset(sub["enum"]))
+    return out
+
+
+NESTED_ENUMS = _nested()
+
+# What an out-of-enum value repairs TO. Not every enum carries `unstated`: the
+# first version wrote `"unstated" if "unstated" in enum else None`, which
+# repaired `evidence_basis` and `evidence_strength` to None — and both are
+# required, non-nullable strings, so the "repaired" record violated the very
+# schema the repair exists to satisfy. It was also undetectable on a second
+# pass, because None reads as absent.
+NEUTRAL = {"evidence_basis": "no_mention", "evidence_strength": "none"}
+for _f, _allowed in ENUMS.items():
+    NEUTRAL.setdefault(_f, "unstated")
+    assert NEUTRAL[_f] in _allowed, f"{_f} repairs to a value not in its own enum"
+
+
+def _member(v, allowed: frozenset) -> bool:
+    """`v in frozenset` raises TypeError on a list or dict.
+
+    Measured: `application_language: ["both"]` aborted the whole census, because
+    census.run() does not guard validate(). The shape matters — the neighbouring
+    field `implicit_evidence` IS an array, so borrowing a neighbour's SHAPE is
+    the same failure class as borrowing its vocabulary, which is the failure
+    this function was written for. An unhashable value is never a member.
+    """
+    try:
+        return v in allowed
+    except TypeError:
+        return False
+
 
 def _enum_errors(facets: dict) -> list[str]:
     """Out-of-enum values, which tool-use does NOT reject server-side.
@@ -230,8 +291,26 @@ def _enum_errors(facets: dict) -> list[str]:
     out = []
     for field, allowed in ENUMS.items():
         v = facets.get(field)
-        if v is not None and v not in allowed:
+        if v is None:
+            # required and non-nullable in TOOL: absent IS a violation, and the
+            # first version skipped it. A missing `norwegian_requirement_level`
+            # then reached derive_english_accessible and raised KeyError inside
+            # census.run()'s loop, after the batch was already paid for.
+            if field in REQUIRED_ENUMS:
+                out.append(f"enum:{field}=None")
+            continue
+        if not _member(v, allowed):
             out.append(f"enum:{field}={v!r}")
+
+    for path, (kind, key, allowed) in NESTED_ENUMS.items():
+        seq = facets.get(path.split(".", 1)[0])
+        if not isinstance(seq, list):
+            continue
+        for item in seq:
+            val = item if kind == "items" else (
+                item.get(key) if isinstance(item, Mapping) else None)
+            if val is not None and not _member(val, allowed):
+                out.append(f"enum:{path}={val!r}")
     return out
 
 
@@ -264,7 +343,12 @@ def validate(facets: dict, sent_text: str) -> dict:
     if bad_enum:
         for r in bad_enum:
             field = r.split(":", 1)[1].split("=", 1)[0]
-            out[field] = "unstated" if "unstated" in ENUMS[field] else None
+            if field in NEUTRAL:                 # top-level scalar: repairable
+                out[field] = NEUTRAL[field]
+            # A nested violation (`evidence_spans.section_language`) is reported
+            # and demotes the record, but is NOT rewritten: the right repair
+            # depends on the item, and guessing one is the move that produced a
+            # None in a required string field the first time.
         reasons.append("demoted:invalid_enum_value")
     return {"ok": not reasons, "facets": out,
             "demoted": any(r.startswith("demoted:") for r in reasons), "reasons": reasons}
