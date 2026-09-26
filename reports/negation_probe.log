@@ -2,3 +2,28 @@ loading sentence-transformers/paraphrase-multilingual-mpnet-base-v2 via ONNX (CP
 Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 Fetching 5 files:  20%|██        | 1/5 [00:01<00:05,  1.43s/it]Fetching 5 files:  60%|██████    | 3/5 [00:01<00:00,  2.06it/s]Fetching 5 files:  80%|████████  | 4/5 [00:07<00:02,  2.42s/it]Fetching 5 files: 100%|██████████| 5/5 [03:44<00:00, 73.37s/it]Fetching 5 files: 100%|██████████| 5/5 [03:44<00:00, 44.94s/it]
 embedding 10166 ads on CPU — this is the slow part…
+embedded in 2712s -> embeddings_nb_sbert.npz
+
+=== CELL 1 & 2: paired personas, dense only ===
+pair    cosine  tau@50  overlap@10    blocking in top-10
+p1       0.906  -0.211        5/10                  4/10
+p2       0.870   0.236        2/10                  4/10
+p3       0.947   0.102        8/10                  4/10
+p4       0.913   0.221        5/10                  4/10
+p5       0.935  -0.229        8/10                  2/10
+
+mean cosine 0.914   mean overlap@10 5.6/10   mean blocking in top-10 3.6/10
+
+=== CELL 3: does STATING the constraint make it worse? ===
+  p1: mean similarity to Norwegian-DEMANDING ads — stating the constraint 0.3144 vs saying nothing 0.2472   WORSE
+  p2: mean similarity to Norwegian-DEMANDING ads — stating the constraint 0.3002 vs saying nothing 0.2532   WORSE
+  p3: mean similarity to Norwegian-DEMANDING ads — stating the constraint 0.2495 vs saying nothing 0.2183   WORSE
+  p4: mean similarity to Norwegian-DEMANDING ads — stating the constraint 0.2870 vs saying nothing 0.2672   WORSE
+  p5: mean similarity to Norwegian-DEMANDING ads — stating the constraint 0.2027 vs saying nothing 0.1457   WORSE
+
+stating 'I do not speak Norwegian' moved the seeker CLOSER to ads that demand it on 5 of 5 personas
+
+written reports/negation_probe.json
+
+VERDICT: the premise HOLDS if cosine is high and overlap@10 is high — a bi-encoder cannot see the negation.
+         If cosine is low and overlap small, the thesis is wrong and the constraint stage is unnecessary.

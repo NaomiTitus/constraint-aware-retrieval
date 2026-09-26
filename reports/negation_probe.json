@@ -1,0 +1,73 @@
+{
+ "model": "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+ "n_ads": 10166,
+ "pairs": [
+  {
+   "pair_id": "p1",
+   "cosine": 0.9060598015785217,
+   "kendall_tau": -0.21142857142857144,
+   "overlap_at_10": 5,
+   "blocking_in_top10": 4
+  },
+  {
+   "pair_id": "p2",
+   "cosine": 0.8701537847518921,
+   "kendall_tau": 0.2359183673469388,
+   "overlap_at_10": 2,
+   "blocking_in_top10": 4
+  },
+  {
+   "pair_id": "p3",
+   "cosine": 0.9472702741622925,
+   "kendall_tau": 0.10204081632653061,
+   "overlap_at_10": 8,
+   "blocking_in_top10": 4
+  },
+  {
+   "pair_id": "p4",
+   "cosine": 0.9133809804916382,
+   "kendall_tau": 0.22122448979591836,
+   "overlap_at_10": 5,
+   "blocking_in_top10": 4
+  },
+  {
+   "pair_id": "p5",
+   "cosine": 0.934674859046936,
+   "kendall_tau": -0.22938775510204082,
+   "overlap_at_10": 8,
+   "blocking_in_top10": 2
+  }
+ ],
+ "killer_cell": [
+  {
+   "pair_id": "p1",
+   "stated": 0.3143770396709442,
+   "silent": 0.24720498919487,
+   "stating_made_it_worse": true
+  },
+  {
+   "pair_id": "p2",
+   "stated": 0.3001869022846222,
+   "silent": 0.25324347615242004,
+   "stating_made_it_worse": true
+  },
+  {
+   "pair_id": "p3",
+   "stated": 0.2495190054178238,
+   "silent": 0.21830680966377258,
+   "stating_made_it_worse": true
+  },
+  {
+   "pair_id": "p4",
+   "stated": 0.28703367710113525,
+   "silent": 0.2672324776649475,
+   "stating_made_it_worse": true
+  },
+  {
+   "pair_id": "p5",
+   "stated": 0.20273128151893616,
+   "silent": 0.14570046961307526,
+   "stating_made_it_worse": true
+  }
+ ]
+}
