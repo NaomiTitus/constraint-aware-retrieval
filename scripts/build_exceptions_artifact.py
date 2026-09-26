@@ -224,6 +224,15 @@ const WHY = {"value_changed": "The extractor now records a DIFFERENT value than 
 const Q1 = [["yes", "Yes — the ad says it", "the fact is in the text"],
             ["no", "No — the ad does not", "nothing in the ad supports it"],
             ["unsure", "Unsure", "say why in the note"]];
+// A row whose value is the SILENT one asserts nothing, so "is the fact in the
+// ad" has no answer — both buttons read wrong. The useful question for these
+// is the false-negative one: did the extractor just lose something real? The
+// answer that SUPPORTS the extraction is "No" in both wordings, which keeps
+// the two sets of answers comparable when they are counted later.
+const Q1_SILENT = [
+  ["yes", "Yes — the ad DOES state something", "the extractor has missed it"],
+  ["no", "No — the ad is silent", "nothing here to record"],
+  ["unsure", "Unsure", "say why in the note"]];
 const Q2 = [["yes", "Yes — right field, right value", ""],
             ["no", "No — wrong field or wrong value", "e.g. belongs elsewhere"],
             ["unsure", "Unsure", "say why in the note"]];
@@ -297,8 +306,15 @@ function render() {
         <div class="navbtns" style="margin-top:8px">
           <button class="act primary" id="confirmcarry">Confirm — unchanged</button>
         </div></div>` : ""}
-      <p class="qlabel">1 · Is the fact in the advertisement?
-        <span>Ignore which field it was filed under — just: does the ad say it?</span></p>
+      <p class="qlabel">${it.silent_value
+        ? `1 · Does the advertisement state anything about
+             <code>${esc(it.field)}</code>?
+           <span>This row records SILENCE, so there is no claim to check. The
+             question is the other way round: is there something in the ad the
+             extractor has missed?</span>`
+        : `1 · Is the fact in the advertisement?
+           <span>Ignore which field it was filed under — just: does the ad say
+             it?</span>`}</p>
       <div class="verdicts" id="vs1"></div>
       <p class="qlabel">2 · Is <code>${esc(it.value)}</code> the right value for
         <code>${esc(it.field)}</code>?
@@ -320,7 +336,8 @@ function render() {
     <div class="card" id="expcard" hidden>
       <h3>Results</h3><p class="hintline">Copy from here.</p>
       <textarea id="out"></textarea></div>`;
-  [["vs1", Q1, "fact"], ["vs2", Q2, "value_ok"]].forEach(([id, opts, key]) => {
+  [["vs1", it.silent_value ? Q1_SILENT : Q1, "fact"],
+   ["vs2", Q2, "value_ok"]].forEach(([id, opts, key]) => {
     const host = document.getElementById(id);
     opts.forEach(([k, lbl, hint]) => {
       const b = document.createElement("button");
@@ -375,7 +392,7 @@ document.addEventListener("keydown", e => {
   if (e.key === "j") go(1);
   if (e.key === "k") go(-1);
   const i = parseInt(e.key, 10);
-  if (i >= 1 && i <= 3) { rec(ITEMS[cur].n).fact = Q1[i - 1][0];
+  if (i >= 1 && i <= 3) { rec(ITEMS[cur].n).fact = Q1[i - 1][0];   // same keys
     save(ITEMS[cur].n); render(); }
   if (i >= 4 && i <= 6) { rec(ITEMS[cur].n).value_ok = Q2[i - 4][0];
     save(ITEMS[cur].n); render(); }

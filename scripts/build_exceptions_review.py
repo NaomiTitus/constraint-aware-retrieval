@@ -33,6 +33,11 @@ sys.path.insert(0, "src")
 from finn_smart_search import pii                                  # noqa: E402
 from finn_smart_search.understanding.census_prompt import TOOL     # noqa: E402
 
+# The value each field takes when the advertisement says nothing. `unstated`
+# for the enums that have it, plus the two that spell silence differently and
+# the booleans, whose silence is False.
+SILENT_VALUES = {"unstated", "none", "no_mention", "False"}
+
 # Derived, not transcribed: a hand-copied enum is the bug this review found.
 ENUMS = {k: list(v["enum"])
          for k, v in TOOL["input_schema"]["properties"].items() if "enum" in v}
@@ -196,6 +201,12 @@ def main() -> None:
             "carried": _carry(carried.get((r["uuid"], r["field"])),
                               str(r["value"])),
             "changed": bool(r.get("changed")),
+            # A row whose value is the field's SILENT one — the ad says
+            # nothing — cannot be judged with "is the fact in the ad", because
+            # there is no asserted fact. It gets its own first question. Two
+            # rows reached this state by the prompt fix moving them off a rare
+            # value, and the reviewer hit it immediately.
+            "silent_value": str(r["value"]) in SILENT_VALUES,
             "legal_values": ENUMS.get(r["field"]),
             "value_is_legal": (r["field"] not in ENUMS
                                or str(r["value"]) in ENUMS[r["field"]]),
