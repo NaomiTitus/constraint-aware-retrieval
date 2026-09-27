@@ -167,7 +167,8 @@ const toks = s => norm(s).split(" ").filter(w=>w.length>2 && !STOP.has(w));
 // ── the query parser: free text -> typed S ───────────────────────────────────
 function parse(q){
   const low = " "+norm(q)+" ";
-  const S = {occupation:null, styrk:[], norwegian:null, place:null, terms:[], evidence:{}};
+  const S = {occupation:null, styrk:[], occExact:false, norwegian:null, place:null,
+             terms:[], evidence:{}};
 
   // LANGUAGE. A seeker states a capability LEVEL, never a negation — "I do not
   // speak Norwegian" is the level `none`. Absence of any statement stays null,
@@ -214,7 +215,8 @@ function parse(q){
       if(!best || label.length>best.length) best=label;
     }
   }
-  if(best){ S.occupation=best; S.styrk=GAZ[best]||[]; S.evidence.occupation=best; }
+  if(best){ S.occupation=best; S.styrk=GAZ[best]||[]; S.evidence.occupation=best;
+            S.occExact=true; }
   // TOKEN fallback — the case that matters most. ESCO's English label for
   // `sykepleier` is "nurse responsible for general care", so a seeker typing
   // `nurse` matches no whole label. The token index maps it to the STYRK codes of
@@ -223,7 +225,7 @@ function parse(q){
   if(!S.styrk.length){
     for(const w of toks(q)){
       const codes = TOKENS[w] || GAZ[w];
-      if(codes && codes.length){ S.occupation=w; S.styrk=codes;
+      if(codes && codes.length){ S.occupation=w; S.styrk=codes; S.occExact=false;
         S.evidence.occupation=w+" (token)"; break; }
     }
   }
@@ -259,20 +261,53 @@ function score(S, lam){
   for(const ad of ADS){
     // lexical: title + occupation labels + skills, term overlap (a stand-in for
     // BM25, which needs the full body text the licence does not let us ship)
-    const hay = norm(ad.t+" "+ad.o+" "+ad.e+" "+(ad.k||[]).join(" ")+" "+ad.c);
+    // The English GLOSSES are searched alongside the Norwegian phrases: that is
+    // what lets "computer vision" match an advertisement that says
+    // "erfaring med maskinsyn", which no amount of Norwegian text matching can do.
+    const hay = " "+norm(ad.t+" "+ad.o+" "+ad.e+" "+(ad.k||[]).join(" ")+" "
+                     +(ad.g||[]).join(" ")+" "+ad.c)+" ";
+    // WORD BOUNDARIES, not substrings. `hay.includes("nurse")` matched `nursery`,
+    // so a query for a nurse returned a kindergarten manager first — the term was
+    // "found" inside an unrelated word. Padding both sides and matching on space
+    // boundaries is the cheap fix; a Norwegian compound is still reachable because
+    // the occupation predicate and the skill glosses carry that load, not this.
     let hits=0; const matched=[];
-    for(const t of S.terms){ if(hay.includes(t)){ hits++; matched.push(t); } }
+    for(const t of S.terms){ if(hay.includes(" "+t+" ")){ hits++; matched.push(t); } }
     let base = hits/Math.max(S.terms.length,1);
 
     // occupation as a PREDICATE over metadata, not a scored term
     let prox=null;
     if(S.styrk.length){
       prox=Math.max(...S.styrk.map(c=>prefixProx(c,ad.s)));
-      // Occupation DOMINATES, because it is a hard constraint and the remaining
-      // lexical signal is a weak stand-in for BM25 over body text the licence does
-      // not let us ship. At 0.45/0.55 a wrong-occupation advertisement in the right
-      // city outranked a right-occupation advertisement elsewhere.
-      base = prox*0.78 + base*0.22;
+      // HOW MUCH THE OCCUPATION PREDICATE IS TRUSTED SCALES WITH HOW SPECIFICALLY
+      // THE PHRASE RESOLVED, and treating those the same was a real defect.
+      //
+      // `tømrer` hits an exact ESCO label and lands on 7115 — a strong signal worth
+      // dominating the ranking. `engineer` resolves only as a bare TOKEN, to six
+      // broad codes spanning 145 advertisements, and weighting that at 0.78 made a
+      // generic word behave like a hard constraint: an "AI engineer with Python and
+      // computer vision" query could not rank a data-engineering advertisement above
+      // an HVAC one, because the HVAC ad was inside the six codes and the data one
+      // was not.
+      //
+      // So a token fallback carries less, and the skills text carries more. A weak
+      // resolution should not outrank direct evidence.
+      if(S.occExact || S.styrk.length <= 2){
+        // A phrase that hit an exact ESCO label, or resolved to one or two codes,
+        // is strong evidence and leads the ranking.
+        const w = S.occExact ? 0.78 : 0.62;
+        base = prox*w + base*(1-w);
+      }else{
+        // A BARE TOKEN resolving to many codes is a BONUS, never a gate, and
+        // treating it as a gate was a real defect. `engineer` lands on six broad
+        // codes spanning 145 advertisements — and the word `engineer` is ALREADY one
+        // of the lexical terms, so gating on it double-counts the same weak signal.
+        // Worse, it made those 145 unbeatable: an "AI engineer with Python and
+        // computer vision" query could not rank a data-engineering advertisement
+        // above an HVAC one, because the HVAC ad sat inside the codes and the data
+        // one did not. As a bonus the direct evidence leads and the taxonomy nudges.
+        base = base + prox*0.18;
+      }
     }
     if(base<=0) continue;
     // LOCATION AS A PREDICATE, not a keyword bonus. Graded: exact municipality 1.0,
@@ -306,7 +341,9 @@ function score(S, lam){
 function render(S, res, lam){
   const p=document.getElementById("parsed");
   const bits=[];
-  if(S.occupation) bits.push(`<span class="chip hard"><b>occupation</b> ${S.occupation}${S.styrk.length?" → STYRK "+S.styrk.slice(0,3).join(", "):""}</span>`);
+  if(S.occupation) bits.push(`<span class="chip hard"><b>occupation</b> ${S.occupation}`+
+    `${S.styrk.length?" → STYRK "+S.styrk.slice(0,3).join(", "):""}`+
+    `${S.occExact?"":" <i>(broad match — weighted down)</i>"}</span>`);
   if(S.norwegian!==null) bits.push(`<span class="chip hard"><b>Norwegian</b> ${S.norwegian} <i>“${S.evidence.language}”</i></span>`);
   else bits.push(`<span class="chip"><b>Norwegian</b> not stated → stage contributes nothing</span>`);
   if(S.place) bits.push(`<span class="chip hard"><b>place</b> ${S.place.phrase}`+

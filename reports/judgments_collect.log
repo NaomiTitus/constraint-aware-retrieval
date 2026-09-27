@@ -101,3 +101,14 @@ collecting existing batch msgbatch_01WKA1tR8r4BzJnSNu7PD1LT — nothing resubmit
   [ 5400s] in_progress
   [ 5460s] in_progress
   [ 5520s] in_progress
+  [ 5580s] in_progress
+  [ 5640s] in_progress
+  [ 5700s] in_progress
+  [ 5760s] in_progress
+  [ 5820s] ended
+
+judged     327 of 346
+errored    19
+REJECTED   0 (0.0%) failed validation
+
+written eval/judgments.json

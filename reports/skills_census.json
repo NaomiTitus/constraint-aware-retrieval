@@ -1,7 +1,7 @@
 {
  "prompt_version": "skills-v1",
  "model": "claude-haiku-4-5",
- "built_at": "2026-09-27T14:55:19+0200",
+ "built_at": "2026-09-27T15:03:29+0200",
  "n_ads": 10166,
  "n_skills": 66392,
  "n_zero": 164,

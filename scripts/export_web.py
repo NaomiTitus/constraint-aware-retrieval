@@ -40,9 +40,24 @@ DEMOTED_LEVELS = ("professional", "certified", "fluent", "conversational",
                   "scandinavian_accepted")
 
 
+SKILLS_CENSUS = ROOT / "reports" / "skills_census.json"
+
+
 def main() -> None:
     import duckdb
     from finn_smart_search.retrieval import occupation as occ
+
+    # The skills-v1 re-run when it exists, the census column otherwise. Kept in its
+    # own file rather than merged into ad_facets: that row's prompt_version says
+    # census-v15 and a mixed row would carry neither version honestly (§4).
+    new_skills: dict[str, list[dict]] = {}
+    skills_source = "census-v15 (32.8% of ads)"
+    if SKILLS_CENSUS.exists():
+        blob = json.loads(SKILLS_CENSUS.read_text(encoding="utf-8"))
+        new_skills = blob["skills"]
+        skills_source = (f"{blob['prompt_version']} / {blob['model']} — "
+                         f"{blob['n_skills']:,} skills, "
+                         f"{blob['n_zero'] / blob['n_ads']:.1%} of ads with none")
 
     con = duckdb.connect(str(ROOT / "data" / "ads.duckdb"), read_only=True)
     rows = con.execute("""SELECT a.uuid, a.title, a.expires, a.extent,
@@ -73,8 +88,18 @@ def main() -> None:
          cat, raw_facets) in rows:
         f = json.loads(raw_facets) if isinstance(raw_facets, str) else raw_facets
         lvl = f.get("norwegian_requirement_level") or "unstated"
-        skills = [s.get("phrase", "") for s in (f.get("skills") or [])
-                  if s.get("phrase")]
+        # BOTH the verbatim phrase AND its English gloss. The gloss is the MATCH
+        # KEY — that is the entire reason skills-v1 produces one — and shipping only
+        # the Norwegian phrase would leave an English query term matching Norwegian
+        # skill text, which is the cross-language failure D18 measured.
+        src = new_skills.get(uuid) or (f.get("skills") or [])
+        skills, glosses = [], []
+        for sk in src[:12]:
+            ph, gl = sk.get("phrase", ""), sk.get("gloss_en", "")
+            if ph:
+                skills.append(ph)
+            if gl and gl.lower() != ph.lower():
+                glosses.append(gl)
         ads.append({
             "u": uuid[:8],                        # short id; the URL carries the full
             "t": title or "",
@@ -87,7 +112,8 @@ def main() -> None:
             "l": lvl,
             "w": f.get("stated_working_language") or "unstated",
             "a": bool(f.get("english_accessible")),
-            "k": skills[:8],
+            "k": skills,
+            "g": glosses,
             "x": expires.strftime("%Y-%m-%d") if expires else "",
             "ext": extent or "",
             "eng": engagement or "",
@@ -138,7 +164,7 @@ def main() -> None:
         "built_at": __import__("time").strftime("%Y-%m-%d"),
         "n_ads": len(ads),
         "snapshot": "2026-09-24",
-        "skills_source": "census-v15 (populated on 32.8% of ads; see LIMITATIONS §15)",
+        "skills_source": skills_source,
         "levels_demoted": list(DEMOTED_LEVELS),
         "ads": ads,
     }
@@ -164,8 +190,11 @@ def main() -> None:
           f"not just the first")
     print(f"ads with a county:     {with_county} ({with_county/len(ads):.1%})")
     n_sk = sum(1 for a in ads if a["k"])
-    print(f"ads with >=1 skill:    {n_sk} ({n_sk/len(ads):.1%}) "
-          f"— the census column, not the re-prompt")
+    tot = sum(len(a["k"]) for a in ads)
+    print(f"ads with >=1 skill:    {n_sk} ({n_sk/len(ads):.1%})")
+    print(f"skills shipped:        {tot:,} ({tot/len(ads):.2f}/ad) + "
+          f"{sum(len(a['g']) for a in ads):,} English glosses")
+    print(f"skills source:         {skills_source}")
     print("NOT exported, per DATA_LICENSE.md: description_text, employer name, "
           "contact details")
 
