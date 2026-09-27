@@ -433,7 +433,24 @@ docs/            index.html  data/index.json      <- the GitHub Pages demo
 reports/         every probe, census and ablation log, kept including the wrong ones
 ```
 
-## Reproducing
+## Running it
+
+**The demo needs nothing installed.** It is live at
+**[naomititus.github.io/finnno_smart_search](https://naomititus.github.io/finnno_smart_search/)**
+— GitHub Pages serves a 2.9 MB gzipped index as a static file, and all search runs in the
+visitor's browser. No server, no API key, no vector database, nothing to spin up.
+
+To serve it locally you need a static file server, **not** a double-click: the page
+`fetch()`es `data/index.json`, which browsers block over `file://`.
+
+```bash
+python3 -m http.server 8000 --directory docs   # then open localhost:8000
+```
+
+## Rebuilding from source
+
+These are for regenerating the index, not for running the demo. They need the licensed NAV
+feed, an `ANTHROPIC_API_KEY`, and the gitignored `data/` directory.
 
 ```bash
 pip install -e ".[dev]"
