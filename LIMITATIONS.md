@@ -353,6 +353,13 @@ Raw output: `reports/negation_probe.json`, `reports/negation_probe.log`.
 
 ## 13. Cell 2 confirmed the asymmetry and disconfirmed the reason given for it
 
+> **PARTLY RETRACTED — see §14.** The "334 ads state the absence in words" figure
+> below is wrong: that pattern over-fires, and an audit puts the true count near
+> **19**, below the 166 `tømrer` ads. The inequality this section built on
+> therefore reverses, and its conclusion that document-side **scarcity is not the
+> mechanism** does not stand. The enrichment table and the power-guard finding are
+> unaffected. §14 carries the corrected account.
+
 Cell 1b closed with a refined hypothesis: query-side dilution is symmetric, but
 its *consequence* is not, because `"nurse"` survives retrieval on document-side
 occupation signal while `"I do not speak Norwegian"` has **"nothing to survive
@@ -412,3 +419,151 @@ about this corpus, and it is the one the README should make.
 
 Raw output: `reports/consequence_asymmetry.json`, `.log`.
 Probe: `scripts/probe_consequence_asymmetry.py`.
+
+## 14. The §13 follow-up: the pattern over-fired, and the real mechanism is silence
+
+§13 logged one open question as the highest-value item in this file: 334 ads
+matched a lexical "Norwegian not required" pattern while the census labelled only
+93 `explicitly_not_required`, and either the pattern over-fires or the census
+under-fires by 3.6×. It was load-bearing for §3b's 9.4% headline. Answering it
+overturned part of §13 and produced a better mechanism than the one it replaced.
+
+### The pattern over-fires; the census does not under-fire
+
+| | ads |
+|---|---:|
+| lexical hits **L** | 334 |
+| census `explicitly_not_required` **C** | 93 |
+| **L ∩ C** | **11** |
+| L only | 323 |
+| C only | 82 |
+
+Jaccard **0.026** — the two were measuring almost unrelated things.
+
+The cause is structural. Norwegian ads put qualifications in one bullet list, and
+`"X er en fordel, men ikke et krav"` is a stock phrase in it. So the negation
+attaches to experience, a driving licence, a forklift certificate or church
+membership while a Norwegian requirement sits a few words away:
+
+> `Erfaring fra arbeid med barn er ønskelig, men ikke et krav. Du må kunne snakke godt norsk for å kommunisere med barn og foreldre`
+
+Lexically an absence; semantically the opposite — experience optional, Norwegian
+**mandatory**. The census called it `professional` and was right.
+
+**Hand audit, 36 windows across all nine census levels L fires on.** True
+positives appear in exactly two strata — `desirable` and the 11 already agreeing.
+All 27 sampled hits under `professional`, `certified`,
+`either_norwegian_or_english`, `unstated`, `fluent`, `conversational` and
+`scandinavian_accepted` were false.
+
+| | count |
+|---|---:|
+| estimated true absences | **19** of 334 |
+| 95% upper bound | 152 |
+| `tømrer` ads, for comparison | 166 |
+
+Even at the upper bound the count sits below 166, so **§13's inequality reverses
+and its "scarcity is not the mechanism" conclusion is retracted.**
+
+### `explicitly_not_required` is a misnomer for what is in it
+
+**82 of the 93 contain no explicit negation of Norwegian at all**, and **81 of
+those 82** have an evidence span mentioning English:
+
+> `Are fluent in English, as it is DESMI's corporate language`
+> `Competence in English is a requirement for all applicants to the PhD program`
+
+The census inferred the absence from a positive English-only working language.
+That inference is defensible; it is not what the level's name asserts. Meanwhile
+the ads that *do* explicitly negate Norwegian — `Knowledge of Norwegian is an
+advantage, but not a requirement` — are labelled **`desirable`**. Whether those
+belong in the accessible population is an unmade labelling decision that moves
+§3b's 9.4%.
+
+### The mechanism: the seeker negates Norwegian, the ad affirms English
+
+| | mention `norsk`/`norwegian` |
+|---|---:|
+| ads DEMANDING Norwegian | 5,525 / 5,703 — **96.9%** |
+| ads not requiring it | 63 / 93 — **67.7%** |
+
+The query's own `norsk` token pulls it toward the ads that discuss Norwegian,
+which are precisely the ones that demand it, while a third of the ads that would
+serve the seeker never mention Norwegian at all. **That is cell 3's result — the
+constraint made things worse on 5 of 5 personas — with a mechanism attached.**
+
+Discrimination over all 93 accessible vs all 5,703 demanding, replacing §13's
+underpowered top-10 recovery metric:
+
+| query | whole-ad AUC | span-level AUC |
+|---|---:|---:|
+| `Jeg snakker flytende norsk.` | 0.441 | 0.137 |
+| `Jeg snakker ikke norsk.` | 0.393 | 0.170 |
+| `I speak fluent Norwegian.` | 0.426 | 0.140 |
+| `I do not speak Norwegian.` | 0.386 | 0.178 |
+| **polarity delta (NO / EN)** | **−0.048 / −0.040** | **+0.033 / +0.037** |
+
+Absolute AUC is confounded — the 93 skew academic and offshore, the 5,703 skew
+health and retail, and a one-line query carries no occupation signal. The paired
+polarity delta holds topic fixed and is the interpretable number.
+
+### The confounding objection was raised, tested, and is partly sustained
+
+An ad states fifteen facets; language is one. So every whole-ad number above may
+measure **document noise** rather than negation. Tested by indexing the census's
+extracted language span alone — the bi-encoder's best possible shot, and a real
+alternative architecture to the typed-constraint stage.
+
+**It half-works, and the sign is not the story.** The polarity delta flips
+**positive** (+0.033, +0.037): once noise is removed, negating the query does move
+it toward the right ads. Document noise was a genuine confound. But **absolute AUC
+collapses from 0.441 to 0.14–0.18** — an index that ranks the accessible ads in
+the bottom fifth — and the delta is below a 0.05 materiality floor. Stripping the
+job content removed the only material the query and the ad shared: the accessible
+ad's span is about **English**, the query is about **Norwegian**. Span-level
+indexing sharpens the vocabulary mismatch it was meant to fix.
+
+So the architecture conclusion stands **for a corrected reason**. Negation is not
+literally unrepresentable — a small, correctly-signed signal exists. It is far too
+weak to cross the vocabulary gap between a seeker negating Norwegian and an ad
+affirming English. A typed predicate has no gap to cross.
+
+### The generalised claim, and it is the strongest one in this file
+
+Language is one facet. Across every constraint facet the census records, **"not
+required" is expressed as silence, not as a negation:**
+
+| facet | silent | explicitly absent |
+|---|---:|---:|
+| `visa_sponsorship` | 10,106 — 99.4% | 35 — 0.34% |
+| `relocation_support` | 9,819 — 96.6% | **8 — 0.08%** |
+| `stated_working_language` | 9,688 — 95.3% | — |
+| `application_language` | 9,610 — 94.5% | — |
+| `norwegian_requirement_level` | 3,707 — 36.5% | 93 — 0.91% |
+
+**An advertisement states the requirements it has and never enumerates the ones it
+lacks.** There is no vector for a sentence that was never written. This is a
+property of the corpus, not of this encoder, and no model of any size changes it —
+which is why the claim generalises beyond language to every facet the retrieval
+stage will need.
+
+And it fixes the ceiling. Span-level retrieval needs a span: of the 3,707 ads
+silent on language, **only 100 have any span to embed**. That population is
+unreachable by better embedding at any granularity. It needs a *policy* — which is
+what `retrieval/constraints.py` makes tunable, and why severity for silence is
+0.5 rather than 1.0.
+
+### Still open
+
+- Whether `desirable` ads that say "Norwegian is not required" should count as
+  accessible. Unmade, and it moves §3b's 9.4%.
+- The audit is 36 ads read by the gloss method of §1, not a Norwegian speaker.
+  The `unstated` stratum contains conditional exemptions ("the language
+  requirement does not apply if you have five years in a Norwegian kindergarten")
+  scored ambiguous rather than true; a native reader might score them otherwise.
+- `explicitly_not_required` should probably be renamed, or split from the
+  English-inferred cases. Either changes the census schema, so it is not a
+  drive-by fix.
+
+Raw output: `reports/absence_signal_adjudication.json`, `reports/span_level_ceiling.json`, `.log` for both.
+Probes: `scripts/adjudicate_absence_signal.py`, `scripts/probe_span_level_ceiling.py`.

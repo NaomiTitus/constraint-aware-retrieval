@@ -45,14 +45,24 @@ estimates. The 74.6% figure was wrong by a factor of two.
   Norwegian-demanding ads versus staying silent. The negation is not merely invisible to
   the encoder — the extra tokens about Norwegian pull the seeker *toward* the ads they rule
   out. This is the single strongest argument for a separate constraint stage.
-- **More data would not fix it — and that is the architectural argument.** 334 ads say
-  Norwegian is *not* required, more than the 166 that say `tømrer`. A query for `tømrer`
-  pulls its own ads to **7.1×** the base rate; the query *"jeg snakker ikke norsk"* reaches
-  **1.1× — chance**. The signal is present and dense retrieval cannot use it, because an ad
-  stating an absence states it as a negation too, and pooling averages it away on *both*
-  sides. Two averaged-away negations cannot meet in a metric space. See
-  [LIMITATIONS.md](LIMITATIONS.md) §13 — including the half of the original hypothesis this
-  disproved.
+- **Absence is expressed by silence, and silence has no vector.** An ad states the
+  requirements it *has* and never enumerates the ones it *lacks*: `visa_sponsorship` is
+  99.4% unstated, `relocation_support` has **8** ads saying it is not offered, and 36.5% of
+  ads say nothing about language at all. Only 93 (0.9%) state that Norwegian is not
+  required. No encoder of any size can match a sentence that was never written — this is a
+  property of the corpus, not the model, and it holds for **every** constraint facet, not
+  just language. See [LIMITATIONS.md](LIMITATIONS.md) §14.
+- **Embedding the requirement sentence instead of the whole ad does not rescue it.** Since
+  an ad states fifteen facets, the whole-ad numbers could be measuring document noise. They
+  partly were: indexing the extracted language span alone flips the polarity signal the
+  right way (+0.03 AUC). But absolute AUC falls from **0.44 to 0.14** — the accessible ads
+  land in the bottom fifth — because the accessible ad's span is about *English* while the
+  seeker's query is about *Norwegian*. Stripping the job content removed the only
+  vocabulary they shared. §14.
+- **The seeker negates Norwegian; the ad that would serve them affirms English.** 96.9% of
+  Norwegian-demanding ads contain `norsk`, against 67.7% of the accessible ones. The query's
+  own `norsk` token pulls it toward the ads that impose the requirement — which is *why*
+  stating the constraint makes results worse.
 - **What pooling erases is any single clause, not negation specifically.** Padding a query
   to realistic length drives cosine to 0.999, but a one-word *content* swap — nurse vs
   carpenter, Oslo vs Bergen — is erased at the same rate (margins of 0.004, noise). The

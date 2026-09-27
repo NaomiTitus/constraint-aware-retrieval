@@ -1,0 +1,69 @@
+{
+ "model": "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+ "n_ads": 10166,
+ "silence_census": {
+  "visa_sponsorship": {
+   "silent": 10106,
+   "silent_share": 0.9940979736376155,
+   "explicit_absent": 35
+  },
+  "relocation_support": {
+   "silent": 9819,
+   "silent_share": 0.9658666142042102,
+   "explicit_absent": 8
+  },
+  "stated_working_language": {
+   "silent": 9688,
+   "silent_share": 0.9529805233130041,
+   "explicit_absent": null
+  },
+  "application_language": {
+   "silent": 9610,
+   "silent_share": 0.9453078890419044,
+   "explicit_absent": null
+  },
+  "norwegian_requirement_level": {
+   "silent": 3707,
+   "silent_share": 0.36464686208931735,
+   "explicit_absent": 93
+  }
+ },
+ "ceiling": {
+  "ads_with_span": 6557,
+  "accessible_with_span": 93,
+  "unstated_total": 3707,
+  "unstated_with_span": 100
+ },
+ "auc": {
+  "no_positive": {
+   "whole_ad": 0.4409582925462992,
+   "span": 0.13740279483131615
+  },
+  "no_negated": {
+   "whole_ad": 0.3927720660212413,
+   "span": 0.17037569337958064
+  },
+  "en_positive": {
+   "whole_ad": 0.42592037239269476,
+   "span": 0.14045828594492948
+  },
+  "en_negated": {
+   "whole_ad": 0.3859405914450021,
+   "span": 0.1775428947571922
+  }
+ },
+ "polarity_delta": {
+  "no": {
+   "whole_ad": -0.048186226525057885,
+   "span": 0.03297289854826449
+  },
+  "en": {
+   "whole_ad": -0.03997978094769267,
+   "span": 0.03708460881226272
+  }
+ },
+ "span_fixes_polarity": true,
+ "span_improves_polarity": true,
+ "span_auc_usable": false,
+ "span_delta_material": false
+}

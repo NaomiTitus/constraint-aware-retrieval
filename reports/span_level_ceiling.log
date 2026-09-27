@@ -1,0 +1,69 @@
+=== CELL A: ACROSS EVERY FACET, 'NOT REQUIRED' IS SILENCE ===
+
+  An ad states the requirements it HAS. It does not enumerate the ones it LACKS.
+
+  facet                            silent   share  explicitly absent   share
+  visa_sponsorship                  10106  99.4%                 35   0.34%
+  relocation_support                 9819  96.6%                  8   0.08%
+  stated_working_language            9688  95.3%                 --      --
+  application_language               9610  94.5%                 --      --
+  norwegian_requirement_level        3707  36.5%                 93   0.91%
+
+  There is no vector for a sentence that was never written. This is not a limitation
+  of THIS encoder — it is a property of the data, and it holds for every facet.
+
+=== CELL C: THE CEILING SPAN-LEVEL RETRIEVAL CANNOT PASS ===
+
+  ads with a language evidence span at all: 6557 of 10166 (64.5%)
+  of the 93 `explicitly_not_required`: 93 have a span (100%)
+  of the 3707 `unstated`:              100 have a span (3%)
+
+  An ad that never mentions language has no sentence to extract and no sentence to
+  embed. Span-level indexing cannot reach it by construction — only a DECISION about
+  how to treat silence can, which is what `retrieval/constraints.py` makes tunable.
+
+=== CELL B: SPAN-LEVEL DISCRIMINATION ===
+
+  93 accessible + 5703 demanding = 5796 ads; 5794 have a span.
+  span embeddings from cache: (5796, 768)
+  usable: 93 accessible spans vs 5701 demanding spans
+
+  query                                     whole-ad  span-level   change
+  NO positive — Jeg snakker flytende n         0.441       0.137   -0.304
+  NO negated — Jeg snakker ikke norsk          0.393       0.170   -0.222
+  EN positive — I speak fluent Norwegi         0.426       0.140   -0.285
+  EN negated — I do not speak Norwegi          0.386       0.178   -0.208
+
+  PAIRED POLARITY DELTA — negated minus positive, topic held fixed.
+  A bi-encoder that handled negation would make this POSITIVE: saying 'not' should
+  move you TOWARD the ads that do not require it.
+
+           whole-ad   span-level
+  NO         -0.048       +0.033
+  EN         -0.040       +0.037
+
+written reports/span_level_ceiling.json
+
+=== VERDICT ===
+  PARTLY SUSTAINED, AND THE SIGN IS NOT THE STORY.
+    The polarity delta DOES flip positive on spans (+0.033 NO, +0.037 EN),
+    so negation is WEAKLY representable once document noise is removed. Document noise
+    was a real confound and the objection was correct to raise it.
+    BUT absolute AUC COLLAPSES from 0.441 whole-ad to 0.178 at span level.
+    An index like this ranks the accessible ads in the bottom fifth (0.14-0.18).
+    Removing the job content removed the ONLY material the query and the ad shared:
+    the accessible ad's span talks about ENGLISH, the query talks about NORWEGIAN.
+    Span-level indexing sharpens the vocabulary mismatch it was meant to fix.
+    The delta is also below the 0.05 materiality floor, so it is a direction, not
+    a usable signal.
+
+  SO THE ARCHITECTURE CONCLUSION STANDS, FOR A CORRECTED REASON. Negation is not
+  literally unrepresentable — a small correctly-signed signal exists. It is far too
+  weak to overcome the vocabulary gap between a seeker negating Norwegian and an ad
+  affirming English. A typed predicate does not have to overcome anything.
+
+  AND THE CEILING IS UNMOVED EITHER WAY: 3707 ads (36.5%) say nothing about
+  language at all, and only 100 of them have any span to embed. No encoder reaches
+  that population at any granularity, because there is no text. It needs a policy —
+  which is what `constraints.py` makes tunable, and why severity for silence is 0.5
+  rather than 1.0.

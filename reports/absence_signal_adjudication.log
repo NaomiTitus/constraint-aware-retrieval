@@ -1,0 +1,76 @@
+=== AGREEMENT: the lexical pattern vs the census label ===
+
+  lexical hits L                     334
+  census explicitly_not_required C    93
+  L and C agree                       11
+  L only                             323
+  C only                              82
+
+  Jaccard 0.026 — the two measure almost different things.
+
+=== WHAT THE CENSUS SAID ABOUT EACH LEXICAL HIT ===
+
+  census level                    hits  audited  true   prec.  95% up  est. true
+  professional                     160        6     0     0%    39%         0
+  either_norwegian_or_english       52        6     0     0%    39%         0
+  certified                         45        6     0     0%    39%         0
+  unstated                          25        3     0     0%    56%         0
+  fluent                            14        3     0     0%    56%         0
+  conversational                    13        3     0     0%    56%         0
+  explicitly_not_required           11        3     3   100%   100%        11
+  desirable                          8        3     3   100%   100%         8
+  scandinavian_accepted              6        3     0     0%    56%         0
+
+  ESTIMATED TRUE LEXICAL ABSENCES: 19 (95% upper bound 152) out of 334 hits
+  COMPARE `tømrer`: 166 ads.
+  Even at the 95% UPPER bound the count is below 166. §13's inequality REVERSES,
+  and its 'scarcity is not the mechanism' conclusion is retracted.
+
+=== IS `explicitly_not_required` WHAT ITS NAME SAYS? ===
+
+  93 ads carry the level. 82 contain NO explicit negation of Norwegian.
+  Of those, 81 have an evidence span mentioning English.
+  The census inferred the absence from a POSITIVE English requirement — defensible,
+  but not what the level's name asserts. Ads that DO explicitly negate Norwegian
+  ('an advantage, but not a requirement') are labelled `desirable` instead.
+
+=== THE MECHANISM: do the accessible ads even DISCUSS Norwegian? ===
+
+  accessible (not required)       63/   93 mention norsk/norwegian ( 67.7%)
+  DEMANDING Norwegian           5525/ 5703 mention norsk/norwegian ( 96.9%)
+
+  The seeker negates NORWEGIAN. The ad that would serve them affirms ENGLISH, and a
+  third of the time never says `norsk` at all. The query's own `norsk` token pulls it
+  toward the ads that discuss Norwegian — the blocking ones. That is cell 3's result
+  (stating the constraint made it WORSE on 5 of 5) with a mechanism attached.
+
+=== DISCRIMINATION: 93 accessible vs 5,703 demanding, AUC ===
+    0.50 = indistinguishable.  BELOW 0.50 = prefers the blocking ads.
+
+  query                                            AUC
+  NO positive — Jeg snakker flytende norsk.      0.441
+  NO negated  — Jeg snakker ikke norsk.          0.393
+  EN positive — I speak fluent Norwegian.        0.426
+  EN negated  — I do not speak Norwegian.        0.386
+  english-positive                               0.297
+
+  PAIRED DELTA (the controlled quantity — topic held fixed, only the polarity moves):
+    NO  negating the language claim moves AUC -0.048
+    EN  negating the language claim moves AUC -0.040
+
+  Absolute AUC below 0.5 is NOT clean evidence on its own: the 93 skew academic and
+  offshore while the 5,703 skew health and retail, and a one-line query carries no
+  occupation signal to control that. The delta is the interpretable number.
+
+written reports/absence_signal_adjudication.json
+
+=== WHAT THIS SETTLES ===
+  1. THE PATTERN OVER-FIRES; THE CENSUS DOES NOT UNDER-FIRE. §13's 334 is retracted,
+     and with it §13's claim that document-side scarcity is not the mechanism.
+  2. `explicitly_not_required` is a misnomer: 82 of 93 contain no explicit negation.
+     The level is inferred from positive English requirements.
+  3. The genuine negations sit in `desirable`, so the taxonomy boundary between
+     `desirable` and `explicitly_not_required` is doing real work on §3b's 9.4%.
+  4. STILL OPEN: whether `desirable` ads that say 'Norwegian not required' should count
+     as accessible. That is a labelling decision, it is unmade, and it moves the
+     headline number.

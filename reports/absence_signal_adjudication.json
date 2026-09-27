@@ -1,0 +1,102 @@
+{
+ "n_ads": 10166,
+ "n_lexical": 334,
+ "n_census": 93,
+ "n_both": 11,
+ "n_lexical_only": 323,
+ "n_census_only": 82,
+ "strata": {
+  "professional": {
+   "hits": 160,
+   "audited": 6,
+   "true": 0,
+   "precision": 0.0,
+   "precision_hi95": 0.3903430336530645
+  },
+  "either_norwegian_or_english": {
+   "hits": 52,
+   "audited": 6,
+   "true": 0,
+   "precision": 0.0,
+   "precision_hi95": 0.3903430336530645
+  },
+  "certified": {
+   "hits": 45,
+   "audited": 6,
+   "true": 0,
+   "precision": 0.0,
+   "precision_hi95": 0.3903430336530645
+  },
+  "unstated": {
+   "hits": 25,
+   "audited": 3,
+   "true": 0,
+   "precision": 0.0,
+   "precision_hi95": 0.5615060804490177
+  },
+  "fluent": {
+   "hits": 14,
+   "audited": 3,
+   "true": 0,
+   "precision": 0.0,
+   "precision_hi95": 0.5615060804490177
+  },
+  "conversational": {
+   "hits": 13,
+   "audited": 3,
+   "true": 0,
+   "precision": 0.0,
+   "precision_hi95": 0.5615060804490177
+  },
+  "explicitly_not_required": {
+   "hits": 11,
+   "audited": 3,
+   "true": 3,
+   "precision": 1.0,
+   "precision_hi95": 1.0
+  },
+  "desirable": {
+   "hits": 8,
+   "audited": 3,
+   "true": 3,
+   "precision": 1.0,
+   "precision_hi95": 1.0
+  },
+  "scandinavian_accepted": {
+   "hits": 6,
+   "audited": 3,
+   "true": 0,
+   "precision": 0.0,
+   "precision_hi95": 0.5615060804490177
+  }
+ },
+ "estimated_true_positives": 19.0,
+ "estimated_true_positives_hi95": 151.88551231488057,
+ "n_occupation_b": 166,
+ "cell2_inequality_reversed": true,
+ "census_only_no_explicit_negation": 82,
+ "census_only_mentioning_english": 81,
+ "vocabulary": {
+  "accessible (not required)": {
+   "n": 93,
+   "mentioning": 63,
+   "share": 0.6774193548387096
+  },
+  "DEMANDING Norwegian": {
+   "n": 5703,
+   "mentioning": 5525,
+   "share": 0.968788357005085
+  }
+ },
+ "auc": {
+  "no_positive": 0.44103367591854126,
+  "no_negated": 0.3928228681753991,
+  "en_positive": 0.425987831343247,
+  "en_negated": 0.38599001845849856,
+  "english-positive": 0.297310036785016
+ },
+ "auc_paired_delta": {
+  "no": -0.04821080774314218,
+  "en": -0.03999781288474846
+ }
+}
