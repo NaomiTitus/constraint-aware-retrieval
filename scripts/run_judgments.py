@@ -124,11 +124,21 @@ def build_everything(model: str):
         order = sorted(range(len(scores)), key=lambda i: -scores[i])[:k]
         return [(i, float(scores[i])) for i in order if scores[i] > 0.0]
 
+    import duckdb as _dd
+    _fr = con.execute("""SELECT a.uuid, f.facets, l.doc_lang FROM ads a
+                         JOIN ad_facets f USING (uuid) JOIN ad_language l USING (uuid)
+                         ORDER BY a.uuid""").fetchall()
+    ad_facets_seq = [(json.loads(r[1]) if isinstance(r[1], str) else r[1], r[2])
+                     for r in _fr]
+    from finn_smart_search.retrieval import constraints as K
+
     rankings: dict[str, dict[str, list]] = {}
+    bm_parse_full: dict[str, list[float]] = {}
     for pid in dev:
         raw = " ".join(people[pid]["query"].split())
         bm_raw = list(idx.score(raw))
         bm_parse = list(idx.score(parse_query(pid)))
+        bm_parse_full[pid] = bm_parse
         rankings[pid] = {
             "bm25_raw": topk(bm_raw),
             "bm25_parse": topk(bm_parse),
@@ -139,13 +149,38 @@ def build_everything(model: str):
             "dense": topk(list(emb @ encode(raw))),
         }
 
+    # ROUND 2 ADDS THE ARM THE FIRST POOL WAS MISSING (LIMITATIONS §17). The first
+    # five arms were all UNCONSTRAINED, so the proposed system was never put in
+    # front of the judge, and the constrained ranking promotes documents nothing
+    # pooled — 17% of its top-10 had no grade. Pooling it now is the fix; the judge,
+    # the prompt version and the protocol are unchanged, so nothing is re-registered.
+    #
+    # Soft (λ=0.7) and hard (λ=1.0) are both pooled because E6 names them as separate
+    # rungs on the ladder, and they promote different documents.
+    for pid in dev:
+        prof = gp.to_seeker_profile(parses[pid], people)
+        for lam, name in ((0.7, "constr_soft"), (1.0, "constr_hard")):
+            adj = occ.apply_esco(list(bm_parse_full[pid]), ad_occs,
+                                 occ.esco_from_gold_parse(parses[pid], esco_gaz))
+            adj = K.apply(adj, ad_facets_seq, prof, lam=lam)
+            rankings[pid][name] = topk(adj)
+
     pools = P.build_pools(people, rankings)          # raises on a sealed persona
+    # Do not pay twice for a pair the first round already judged.
+    already: set[str] = set()
+    if OUT_JUDGMENTS.exists():
+        prior = json.loads(OUT_JUDGMENTS.read_text(encoding="utf-8"))
+        already = {j["pair_id"] for j in prior.get("judgments", [])}
+        print(f"prior      {len(already)} pairs already judged — skipping those")
+
     requests = []
     index_of_pair: dict[str, tuple[str, int]] = {}
     for pid, ads in pools.items():
         for ad_i in ads:
             pair_id = J.make_pair_id(pid, ad_i)
             index_of_pair[pair_id] = (pid, ad_i)
+            if pair_id in already:
+                continue
             requests.append(J.build_request(
                 pair_id=pair_id,
                 persona_query=" ".join(people[pid]["query"].split()),

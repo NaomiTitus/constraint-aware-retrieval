@@ -916,5 +916,43 @@ constrained arm's top-10**, about 130 further pairs at roughly $2. Nothing about
 judge, the protocol or the metrics needs to change; the pool was simply drawn before
 the arm existed.
 
-Until that round runs, the honest statement is: **the problem is measured and
-confirmed by an isolated judge; the fix is not yet measured at all.**
+**That round has now run.** 30 further pairs, $0.41, same judge and same
+`judge-v1` prompt — so nothing was re-registered and the protocol's one-revision
+allowance is still unspent. 357 judgments total, **0 rejected across both rounds**,
+and every arm is now **100% judged**.
+
+### The result, with the constrained arm in the pool
+
+| arm | CVR@10 | nDCG@10 | MRR@10 | ΔCVR |
+|---|---:|---:|---:|---:|
+| BM25 raw query | 0.115 | 0.675 | 0.923 | +0.225 |
+| BM25 gold parse | 0.154 | **0.798** | 0.962 | +0.275 |
+| + STYRK occupation | 0.162 | 0.788 | 0.942 | +0.300 |
+| + ESCO occupation | 0.154 | 0.784 | 0.962 | +0.250 |
+| **+ constraints soft λ=0.7** | **0.077** | 0.735 | 0.949 | **+0.050** |
+| **+ constraints hard λ=1.0** | **0.077** | 0.728 | 0.942 | **+0.050** |
+| dense | 0.277 | 0.383 | 0.560 | +0.375 |
+
+**CVR@10 falls by half — 0.154 → 0.077 — for a 6% nDCG cost.** That is the
+architectural claim, measured against relevance judgments by a judge that never saw
+the extractor's output.
+
+**ΔCVR_paired collapses from +0.250 to +0.050.** Before the constraint stage,
+stating "I do not speak Norwegian" produced *more* violations on every arm. After
+it, the paired difference is a fifth of its size and the ranking barely distinguishes
+the two variants — which is what a system that has already removed the violations
+should look like.
+
+Three honest readings that travel with it:
+
+- **Soft and hard are indistinguishable on CVR** (both 0.077), and hard costs
+  slightly more nDCG. On this evidence λ=0.7 dominates λ=1.0, so hard-filtering buys
+  nothing — which is the design's own argument, since hard-filtering silence would
+  cost 3,507 advertisements.
+- **ΔCVR is still positive, not negative.** The protocol's target was "strongly
+  negative". +0.050 means the constraint is largely neutralised, not reversed, and
+  p1 and p4 still show +0.20 individually. The claim this supports is *"the stage
+  removes most of the harm"*, not *"the system prefers accessible work"*.
+- **Thirteen dev personas, four intact pairs.** No confidence intervals are computed
+  and none should be quoted; E7 pre-registers bootstrap CIs on every adjacent-rung
+  delta and they have not been run.

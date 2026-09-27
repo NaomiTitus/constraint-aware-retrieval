@@ -27,6 +27,27 @@ evidence that led here, and they are recorded in full in
 Encoder used throughout: `paraphrase-multilingual-mpnet-base-v2` via ONNX Runtime — **not**
 nb-sbert-base, which this project has never run (§12).
 
+## Headline result
+
+The constraint stage **halves the constraint-violation rate** at a 6% relevance cost,
+measured against 357 relevance judgments produced by an LLM judge that never sees the
+extractor's output, under a protocol committed before any ablation ran.
+
+| arm | CVR@10 | nDCG@10 | ΔCVR paired |
+|---|---:|---:|---:|
+| BM25 over the parsed query | 0.154 | **0.798** | +0.275 |
+| + occupation as a predicate | 0.154 | 0.784 | +0.250 |
+| **+ constraint stage (λ=0.7)** | **0.077** | 0.735 | **+0.050** |
+| dense retrieval | 0.277 | 0.383 | +0.375 |
+
+`CVR@10` is the share of the top ten that demand something the seeker said they do
+not have. `ΔCVR` is the paired difference between a seeker who states the constraint
+and one who does not: **before the constraint stage it is strongly positive on every
+arm** — saying "I do not speak Norwegian" made results *worse* — and the stage
+collapses it to +0.050. The dense channel is the worst arm on every measure, which is
+the negative result the architecture argument rests on. See
+[LIMITATIONS.md](LIMITATIONS.md) §17 for what these numbers do not support.
+
 ## The demo
 
 **`docs/index.html` — a static GitHub Pages page.** Type a sentence, get a ranking
