@@ -226,7 +226,46 @@ def test_a_judgment_carries_the_prompt_version_that_produced_it():
 def test_the_request_envelope_records_the_prompt_version_too():
     """So a submitted batch can be reconciled with the prompt it was built from,
     even before any result comes back."""
-    req = J.build_request("p1::abc", PERSONA, TITLE, AD, model="claude-sonnet-5")
+    req = J.build_request("p1_nurse-4821", PERSONA, TITLE, AD, model="claude-opus-5")
     assert req["judge_prompt_version"] == J.JUDGE_PROMPT_VERSION
-    assert req["custom_id"] == "p1::abc"
+    assert req["custom_id"] == "p1_nurse-4821"
     assert req["params"]["tool_choice"]["name"] == J.JUDGE_TOOL_NAME
+
+
+# ── the Batch API's custom_id contract, learned from a live 400 ────────────────
+
+def test_a_pair_id_with_a_colon_is_rejected_at_build_time():
+    """GROUNDED IN AN ACTUAL API REJECTION, not the docs. Submitting 346 requests
+    whose ids used `::` returned:
+
+        400 requests.0.custom_id: String should match pattern '^[a-zA-Z0-9_-]{1,64}$'
+
+    The API rejects the ENTIRE batch for one bad id and the 400 does not say which
+    request was at fault, so this has to fail locally."""
+    with pytest.raises(ValueError, match="Batch API pattern"):
+        J.build_request("p1_nurse::4821", PERSONA, TITLE, AD, model="claude-opus-5")
+
+
+def test_make_pair_id_produces_an_id_the_api_accepts():
+    pid = J.make_pair_id("p1_sykepleier_no_norsk", 4821)
+    assert pid == "p1_sykepleier_no_norsk-4821"
+    assert J.PAIR_ID.match(pid)
+
+
+def test_every_dev_persona_id_yields_a_legal_pair_id():
+    """The real persona ids, not invented ones: the longest is 32 characters and a
+    corpus index is up to 5 digits, so the 64-character ceiling has headroom — but
+    it is asserted rather than assumed."""
+    from tests.conftest import ROOT
+    import yaml
+    people = yaml.safe_load(
+        (ROOT / "eval" / "personas.yaml").read_text(encoding="utf-8"))["personas"]
+    for p in people:
+        pid = J.make_pair_id(p["id"], 10165)
+        assert J.PAIR_ID.match(pid), pid
+        assert len(pid) <= 64
+
+
+def test_a_pair_id_over_the_length_ceiling_is_rejected():
+    with pytest.raises(ValueError, match="Batch API pattern"):
+        J.make_pair_id("x" * 70, 1)

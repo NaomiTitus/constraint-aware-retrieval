@@ -55,6 +55,28 @@ _NBSP = {0x00A0: " "}
 
 _AUTHORISATION = re.compile(r"autoris|authoris|authoriz", re.IGNORECASE)
 
+# The Batch API's own constraint, learned from a live 400 rather than from the docs:
+#   requests.0.custom_id: String should match pattern '^[a-zA-Z0-9_-]{1,64}$'
+# So a pair id may not contain a colon, and the separator between persona and
+# advertisement has to be a hyphen or underscore. Enforced at build time because a
+# whole 346-request batch is rejected for one bad id, and the failure arrives as an
+# opaque 400 with no indication of which field is wrong.
+PAIR_ID = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
+
+
+def make_pair_id(persona_id: str, ad_index: int) -> str:
+    """The canonical pair id: persona, hyphen, corpus row index.
+
+    An index rather than a uuid because persona ids run to 32 characters and a uuid
+    is 36, which together exceed the API's 64-character ceiling.
+    """
+    pair_id = f"{persona_id}-{ad_index}"
+    if not PAIR_ID.match(pair_id):
+        raise ValueError(
+            f"pair id {pair_id!r} does not match the Batch API pattern "
+            f"{PAIR_ID.pattern}; a whole batch is rejected for one bad id")
+    return pair_id
+
 
 class JudgeValidationError(ValueError):
     """A judgment that would corrupt the metric if it were stored."""
@@ -227,12 +249,23 @@ def validate_judgment(judgment: Judgment, ad_text: str) -> None:
 def build_request(pair_id: str, persona_query: str, ad_title: str, ad_text: str,
                   model: str) -> dict[str, Any]:
     """One Batch API request envelope, in the shape `build_batch` expects."""
+    if not PAIR_ID.match(pair_id):
+        raise ValueError(
+            f"pair id {pair_id!r} does not match the Batch API pattern "
+            f"{PAIR_ID.pattern}; the API rejects the ENTIRE batch for one bad id, "
+            f"with a 400 that does not say which request was at fault")
     return {
         "custom_id": pair_id,
         "judge_prompt_version": JUDGE_PROMPT_VERSION,
         "params": {
             "model": model,
-            "max_tokens": 1024,
+            # NOT 1024. Thinking is on by default on the Opus 5 family and
+            # thinking tokens count against this ceiling, so a low cap truncates
+            # mid-structure — and `parse_judgment` maps a `max_tokens` stop to
+            # `errored` rather than salvaging it, so every truncation is a lost
+            # judgment. Batch billing is on tokens actually produced, so a high
+            # ceiling costs nothing unless it is used.
+            "max_tokens": 8192,
             "tools": [judge_tool_schema()],
             "tool_choice": {"type": "tool", "name": JUDGE_TOOL_NAME},
             "messages": [{"role": "user",
