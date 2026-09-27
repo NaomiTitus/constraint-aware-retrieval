@@ -567,3 +567,88 @@ what `retrieval/constraints.py` makes tunable, and why severity for silence is
 
 Raw output: `reports/absence_signal_adjudication.json`, `reports/span_level_ceiling.json`, `.log` for both.
 Probes: `scripts/adjudicate_absence_signal.py`, `scripts/probe_span_level_ceiling.py`.
+
+## 15. The skills facet was under-extracted by the prompt, and its new gate was written by a model, not a person
+
+### The defect, and it is extraction rather than absence
+
+`ad_facets.skills` is populated on **32.8%** of the corpus. That is not what
+advertisers wrote — it is what the prompt asked for. Measured:
+
+| | ads |
+|---|---:|
+| zero skills extracted | **6,828** |
+| …of those, carrying a requirements list 8+ lines long | **6,459 — 94.6%** |
+| skills-array length distribution | 1 → 2,044 ads · 2 → 722 · **8 (the cap) → 11** |
+
+The qualifications are in the text and were not taken. Two measured causes:
+
+1. **Nine of the fifteen few-shot examples show `skills: []`**, and all six
+   non-empty ones contain only certificates — `Truckførerbevis T4`,
+   `Førerkort klasse D`, `YSK`, `fagbrev som tømrer`, `Infodoc journalsystem`. The
+   prompt taught that "skills" means *named licences*, which is exactly why the
+   modal non-zero count is 1 and only 11 ads of 10,166 ever reached the cap of 8.
+2. **Nothing scored the field.** The golden set covers five keys —
+   `norwegian_requirement_level`, `stated_working_language`,
+   `authorisation_required`, `conflicting_statements`, `evidence_span` — and
+   `skills` is not among them. This is §11's mechanism precisely: a regression gate
+   that cannot see a field cannot certify it.
+
+`min_years_experience` has the same shape: **3,005 ads (29.6%) state a number of
+years** and the census populated **619 (6.1%)**. Part of that is a deliberate
+narrowing in the schema (*"null if experience is merely 'ønskelig'"*) and part is
+that **13 of 15 few-shots show `None`**.
+
+### This corrects a claim made earlier in this file
+
+§14 and the gold-parse ceiling work reported 54% population-weighted coverage and
+described it as "a property of what advertisers wrote… no encoder and no parser
+raises it". **That is partly wrong.** A meaningful share of it is a property of the
+census prompt and is recoverable by re-prompting.
+
+### The new gate was labelled by Claude Opus, not by a human, and that is a real limitation
+
+**The project owner could not validate 44 advertisements of Norwegian within the
+time available, and enlisted Claude Opus to label the golden skills set in order to
+prove the concept.** `eval/golden_skills.json` records this in the file itself:
+`labelled_by: claude-opus-5`, `provisional: true`.
+
+**What that buys, measured on the same 44 advertisements:**
+
+| | skills | ads with zero |
+|---|---:|---:|
+| census `skills` | 38 | 26 of 44 |
+| Opus labels | **144** | **2 of 44** |
+| lift | **3.8×** | |
+
+**What it does not buy, stated plainly.** An LLM gate over LLM extraction measures
+**agreement between two models, not accuracy.** Any figure computed against this
+file is an **upper bound**, and it must be reported the way
+`JUDGING_PROTOCOL.md` requires a low-κ judge to be reported: named as such and
+downweighted. §3.1's clearest row is `test_9_1` — a test that set the field it then
+asserted on and measured nothing for weeks — and an LLM labelling the gate for an
+LLM extractor is the same shape.
+
+**What makes it better than nothing rather than worse.** Every label carries a
+phrase copied **verbatim** from the advertisement, and
+`tests/unit/test_golden_skills.py` asserts that every one of the 144 is findable in
+its own ad. So a human can audit any row in seconds without re-reading the corpus,
+and the labels are falsifiable rather than merely plausible. Eight further tests
+assert that no credential, language requirement or personal quality leaked into the
+labels — the three categories that outnumber real skills in this corpus.
+
+**Two advertisements are labelled with zero skills** and that is deliberate: one is
+a three-line cleaning advert whose only requirement is a driving licence. Padding
+them would teach the prompt to invent, which is the failure this exercise exists to
+fix in the other direction.
+
+### What is owed before any number from this is quoted
+
+- A human pass over the 144 labels, or a defined subset, by someone who reads
+  Norwegian. Until then the file is provisional and says so.
+- The census re-run itself has **not** happened. `skills` in the corpus is still the
+  32.8% column; nothing downstream has changed.
+- Note that **no current retrieval arm reads `ad_facets.skills`** — `constraints.py`
+  reads only `norwegian_requirement_level` and `stated_working_language`. So this
+  defect has cost nothing measured *yet*, and equally the fix buys nothing until
+  D7's `skill_coverage` exists to consume it.

@@ -1,0 +1,22 @@
+personas   13 dev
+pool       346 unique (persona, advertisement) pairs
+per persona min 19 max 39
+prompt     1,785,884 chars ~= 446,471 input tokens
+est. cost  ~$1.12 input + ~$3.46 output = ~$4.58 at batch rates (50% of standard)
+model      claude-opus-5
+prompt ver judge-v1
+truncated  16 of 346 advertisements hit the 10,000-char cap
+
+collecting existing batch msgbatch_01WKA1tR8r4BzJnSNu7PD1LT — nothing resubmitted
+  [    0s] in_progress
+  [   60s] in_progress
+  [  120s] in_progress
+  [  180s] in_progress
+  [  240s] in_progress
+  [  300s] in_progress
+  [  360s] in_progress
+  [  420s] in_progress
+  [  480s] in_progress
+  [  540s] in_progress
+  [  600s] in_progress
+  [  660s] in_progress
