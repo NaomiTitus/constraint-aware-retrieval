@@ -1,11 +1,19 @@
 # Smart Search — constraint-aware job search over Norwegian job ads
 
-**Job search that treats what you *lack* as a fact about the world, not as words to
-match.** Type a sentence in English or Norwegian. The constraints in it — the language a job
-demands, where it is, the experience it expects — are extracted as typed metadata and
-evaluated as **predicates**, so a job you cannot take ranks as one you cannot take. Every
-result shows its own reasoning: what the parser understood, the occupation code it resolved
-to, which skills matched, and why it was penalised.
+**Say what you can't do, and this listens.** Type *"I'm a nurse in Bergen and I don't speak
+Norwegian"* and you get nursing jobs in and around Bergen, each one marked with whether the
+language will shut you out. For that query the answer is brutal: of 1,151 nursing and care
+ads, **exactly one** is open to an English speaker, and it isn't in Bergen. The point is that
+you're told in the first screen instead of finding out a thousand ads later. Ask as a
+software developer and 28% are open.
+
+Ordinary keyword search gets this backwards. It matches words, so *mentioning* Norwegian
+drags you toward the jobs that demand it — measured here, saying you don't speak it made
+results **worse** for 5 out of 5 test seekers. So this doesn't match text. It pulls your
+sentence apart into the things it actually asks for — the language, the place, the kind of
+work, the experience — and checks each one against what the ad requires. Every result shows
+its working: what was understood, the job type it matched, which of your skills it found, and
+why anything was pushed down.
 
 **[▶ Live demo](https://naomititus.github.io/finnno_smart_search/)** · **[What these numbers do
 not support](LIMITATIONS.md)** · [Architecture](ARCHITECTURE.md) · [Decision log](DECISIONS.md)

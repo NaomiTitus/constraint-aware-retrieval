@@ -1556,3 +1556,36 @@ than about the size of the multiplier.
 directly and thoroughly. The page is a second implementation with no test of the same
 property — the eighth entry for STANDARDS §3.1, and the clearest argument yet for §22's
 outstanding item.
+
+## 25. Accessibility is not spread evenly: 28% of IT ads, 1 of 1,151 care ads
+
+Rewriting the README's opening sentence required checking whether its own example was true.
+It was not, and the correction is a better finding than the claim it replaced.
+
+The draft promised a seeker who says *"I'm a nurse in Bergen and I don't speak Norwegian"*
+would get "nursing jobs near Bergen you could actually apply for". Measured against
+`ad_facets.english_accessible`:
+
+| field | ads | accessible to an English speaker | share |
+|---|---:|---:|---:|
+| software / IT | 217 | 61 | **28.1%** |
+| construction trades | 245 | 59 | **24.1%** |
+| teaching | 824 | 4 | 0.5% |
+| **nursing / care** | **1,151** | **1** | **0.1%** |
+
+The single accessible care advertisement is a *service assistant* in Nesbyen, not a nurse,
+and not in Bergen. **So the README's headline example was false**, and the corpus-wide 9.4%
+figure conceals a range of roughly 300× across fields.
+
+**What the query does do, verified.** It parses `occupation=nurse`, `place=bergen` resolving
+to Vestland, `norwegian=none`; returns 5 of 5 care roles with the top three in Bergen and
+ranks 4–5 in the same county at the 0.55 near-miss; and marks every one of them
+`sev = 0.50` — the silence default, because none states a language requirement either way.
+That is the system working correctly. It is not the same as finding accessible work.
+
+**Two things this changes.** The opening now states the bleak answer rather than implying a
+good one, because being told in the first screen is the actual product value when the honest
+answer is "almost nothing". And §17's CVR@10 result should be read knowing the metric's
+headroom is field-dependent: a constraint stage has far more to fix in care work, where
+almost everything violates, than in IT, where more than a quarter of ads are already
+workable.
