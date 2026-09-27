@@ -120,6 +120,13 @@ const STOP = new Set(("i am a an the with and or for of in on at my me you we ou
  "only language språk skandinavisk nordisk fluent flytende").split(" "));
 
 let ADS=[], GAZ={}, GAZKEYS=[], TOKENS={}, TITLES={};
+// TERM RARITY. A flat weight let a generic word decide the ranking: `engineer`
+// appears in 179 advertisements and `plc` in 10, yet a title hit on either scored
+// the same, so a go-to-market sales role titled "GTM Engineer" outranked three
+// genuine automation matches. Document frequency is counted once at load from the
+// shipped index — the same IDF idea the server-side BM25 already uses.
+let DF={}, NDOC=1;
+function idf(t){ return Math.log(1 + NDOC/((DF[t]||0)+1)); }
 // Location, ported from retrieval/location.py. Municipality -> its county, built
 // from the shipped index so a name only resolves if some advertisement carries it.
 let MUNI={}, COUNTIES=new Set();
@@ -305,12 +312,17 @@ function score(S, lam){
     // "found" inside an unrelated word. Padding both sides and matching on space
     // boundaries is the cheap fix; a Norwegian compound is still reachable because
     // the occupation predicate and the skill glosses carry that load, not this.
+    // Each term contributes its RARITY, scaled by which field it was found in.
+    // Rare-and-in-the-title is the strongest evidence; common-and-in-a-skill-list
+    // the weakest. Normalised by the total rarity available so the score stays
+    // comparable across queries of different length.
     let hits=0; const matched=[];
     for(const t of S.terms){
       const inT=hayT.includes(" "+t+" "), inS=hayS.includes(" "+t+" ");
-      if(inT||inS){ hits += inT ? 1.0 : 0.55; matched.push(inT?t:t+"*"); }
+      if(inT||inS){ hits += idf(t) * (inT ? 1.0 : 0.55); matched.push(inT?t:t+"*"); }
     }
-    let base = hits/Math.max(S.terms.length,1);
+    const avail = S.terms.reduce((s,t)=>s+idf(t), 0) || 1;
+    let base = hits/avail;
 
     // occupation as a PREDICATE over metadata, not a scored term
     let prox=null;
@@ -374,10 +386,15 @@ function score(S, lam){
     // this pulls the workable ones UP, which is a different and complementary move.
     // It fires only when the seeker actually said they lack Norwegian, so a seeker
     // who said nothing is unaffected — the non-effect rule.
+    // ONE BOOST, NOT TWO. These were stacked — english_accessible (+0.22) AND
+    // stated_working_language (+0.10) — but `english_accessible` is DERIVED partly
+    // from the working language, so stacking counted the same evidence twice and
+    // gave English-written advertisements 1.32x against 1.22x for others. That
+    // difference was enough to put a go-to-market sales role titled "GTM Engineer"
+    // above three genuine automation matches.
     let boost=1.0;
     if(S.norwegian==="none" || S.norwegian==="basic"){
-      if(ad.a) boost += 0.22;                         // derived english_accessible
-      if(ad.w==="english"||ad.w==="both") boost += 0.10;   // stated working language
+      if(ad.a || ad.w==="english" || ad.w==="both") boost = 1.22;
     }
     out.push({ad, final: base*boost*(1-lam*sev), prox, sev, matched, lprox,
               boosted: boost>1.0});
@@ -499,6 +516,12 @@ async function getJSON(path){
   }
   ADS=idx.ads; GAZ=gaz.labels; TOKENS=gaz.tokens; TITLES=gaz.titles||{};
   GAZKEYS=Object.keys(GAZ).sort((a,b)=>b.length-a.length);
+  NDOC=ADS.length;
+  for(const a of ADS){
+    const seen=new Set(norm(a.t+" "+a.o+" "+a.e+" "+(a.k||[]).join(" ")+" "
+                            +(a.g||[]).join(" ")).split(" "));
+    for(const w of seen) if(w) DF[w]=(DF[w]||0)+1;
+  }
   for(const a of ADS) for(const [m,c] of (a.L||[])){
     const nm=normPlace(m), nc=normPlace(c);
     if(nc) COUNTIES.add(nc);

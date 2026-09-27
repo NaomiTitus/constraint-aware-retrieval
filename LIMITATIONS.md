@@ -1214,3 +1214,48 @@ phrase, and landed correctly **because the lexical terms `python` and `sql` carr
 it**. That is consistent with the bootstrap finding that the occupation predicate is
 not distinguishable — the separation is real, and the lexical channel is doing more
 of the work than the taxonomy is.
+
+## 19. A sales role ranked first for an automation query. Three causes, two mine.
+
+Query: *"electrical automation engineer, plc programming. I don't speak norwegian"*.
+**`GTM Engineer`** — a go-to-market *sales* role — ranked first.
+
+**Cause 1, upstream and not fixable here.** `ad_taxonomy` assigned that
+advertisement `tekniker, instrumentering`, **STYRK 3114** — electronics technician.
+The ESCO-derived title standardisation saw "Engineer" and classified a commercial
+role as technical. The occupation predicate then scored it `prox=1` **correctly given
+the data it was handed.** No ranking change repairs a wrong label; the advertisement
+genuinely claims to be an instrumentation role in the corpus.
+
+**Cause 2, mine: flat term weights.** `plc` appears in **10 advertisements**
+(idf 6.93) and `engineer` in 179 (idf 4.06), yet a title hit on either scored the
+same 1.0. The most discriminating word in the query was worth the same as the most
+generic. Terms are now weighted by document frequency, computed once at load — the
+same IDF idea the server-side BM25 already used and the browser did not.
+
+**Cause 3, mine: the English boosts double-counted.** `english_accessible` (+0.22)
+and `stated_working_language` (+0.10) were stacked, giving English-written
+advertisements **1.32×** against 1.22× for everything else. But `english_accessible`
+is *derived partly from* the working language — the same evidence counted twice, and
+that margin alone flipped the pair.
+
+After both fixes: `automasjonsingeniør` ranks 1–2, `ingeniør, elektro` 3, GTM drops
+to 4. No regressions on nurse, tømrer or data engineer.
+
+### The finding underneath it
+
+Disabling the occupation predicate entirely produces the **correct** ranking for this
+query — `Maritim elektriker` first, control-system roles behind it, GTM absent from
+the top five. The predicate was *actively harmful* here, because it propagated an
+upstream labelling error at full confidence.
+
+That agrees with the bootstrap (§17): the occupation rung is **not distinguishable**
+from BM25 on the parsed query, on either metric. Three separate observations now
+point the same way — the interval, the `data engineer` case where the lexical terms
+did the work, and this one where the predicate actively hurt.
+
+**The component is not yet earning its place.** What it needs is not another
+heuristic but a way to know when to distrust itself: `automation engineer` resolves
+to six codes spanning industrial engineers, electronics technicians, electricians
+*and building caretakers*, and nothing downstream knows that set is too broad to act
+on confidently.
