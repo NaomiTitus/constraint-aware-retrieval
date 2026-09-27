@@ -54,10 +54,19 @@ def main() -> None:
                           JOIN ad_taxonomy t USING (uuid)
                           JOIN ad_facets f USING (uuid)
                           ORDER BY a.uuid""").fetchall()
-    loc: dict[str, str] = {}
-    for uuid, muni in con.execute(
-            "SELECT uuid, municipal FROM ad_locations").fetchall():
-        loc.setdefault(uuid, (muni or "").title())
+    # ALL of an advertisement's locations, not the first. 7.1% of ads carry more
+    # than one (12,003 rows over 10,165 uuids), and `setdefault` kept only the
+    # first — silently dropping 722 ads that DO list the city a seeker asked for.
+    # County travels too: it covers 99.8% of ads against municipality's 99.1% and
+    # is what gives `retrieval/location.py` its same-county tier.
+    loc: dict[str, list[tuple[str, str]]] = {}
+    for uuid, muni, county in con.execute(
+            "SELECT uuid, municipal, county FROM ad_locations").fetchall():
+        pair = ((muni or "").title(), (county or "").title())
+        if pair != ("", ""):
+            loc.setdefault(uuid, [])
+            if pair not in loc[uuid]:
+                loc[uuid].append(pair)
 
     ads = []
     for (uuid, title, expires, extent, engagement, occ_no, occ_en, styrk,
@@ -73,7 +82,8 @@ def main() -> None:
             "e": occ_en or "",
             "s": styrk or "",
             "c": cat or "",
-            "m": loc.get(uuid, ""),
+            "m": (loc.get(uuid) or [("", "")])[0][0],   # primary, for display
+            "L": loc.get(uuid, []),                       # every (municipal, county)
             "l": lvl,
             "w": f.get("stated_working_language") or "unstated",
             "a": bool(f.get("english_accessible")),
@@ -148,8 +158,13 @@ def main() -> None:
           f"({len(label_styrk)} bilingual labels, {len(token_index)} tokens)")
     for probe in ("nurse", "sykepleier", "carpenter", "tømrer", "scientist", "teacher"):
         print(f"    {probe:12s} -> STYRK {token_index.get(probe) or label_styrk.get(probe) or 'UNRESOLVED'}")
+    multi = sum(1 for a in ads if len(a["L"]) > 1)
+    with_county = sum(1 for a in ads if any(c for _, c in a["L"]))
+    print(f"\nads with >1 location:  {multi} ({multi/len(ads):.1%}) — all shipped, "
+          f"not just the first")
+    print(f"ads with a county:     {with_county} ({with_county/len(ads):.1%})")
     n_sk = sum(1 for a in ads if a["k"])
-    print(f"\nads with at least one skill: {n_sk} ({n_sk/len(ads):.1%}) "
+    print(f"ads with >=1 skill:    {n_sk} ({n_sk/len(ads):.1%}) "
           f"— the census column, not the re-prompt")
     print("NOT exported, per DATA_LICENSE.md: description_text, employer name, "
           "contact details")

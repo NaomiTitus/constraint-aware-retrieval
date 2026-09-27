@@ -34,6 +34,7 @@ import re
 import unicodedata
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import Any
 
 # Structural, not fitted. Exact municipality, same county, anywhere else.
 EXACT, SAME_COUNTY, ELSEWHERE = 1.0, 0.55, 0.0
@@ -124,7 +125,8 @@ class LocationGazetteer:
         self.counties = frozenset(counties)
 
     @classmethod
-    def build_from_rows(cls, rows: Iterable[Sequence[object]]) -> LocationGazetteer:
+    def build_from_rows(
+            cls, rows: Iterable[tuple[str | None, str | None]]) -> LocationGazetteer:
         """`rows` are (municipal, county) pairs, one per ad location row."""
         muni: dict[str, str] = {}
         counties: set[str] = set()
@@ -166,7 +168,7 @@ class LocationGazetteer:
         return c
 
 
-def from_gold_parse(parse, gaz: LocationGazetteer) -> LocationConstraint | None:
+def from_gold_parse(parse: Any, gaz: LocationGazetteer) -> LocationConstraint | None:
     """None when no location was stated — never a default.
 
     `location.anywhere` is honoured as such: `p6` states it, and treating it as an

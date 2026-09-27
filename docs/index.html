@@ -77,7 +77,8 @@
   <a data-q="I am a nurse looking for work in Bergen. I do not speak Norwegian.">nurse, Bergen, no Norwegian</a> ·
   <a data-q="Looking for data scientist jobs. I only speak English. I have skills in Python and data engineering.">data scientist, English only</a> ·
   <a data-q="Jeg er tømrer med fagbrev og ti års erfaring. Jeg snakker norsk.">tømrer (Norwegian)</a> ·
-  <a data-q="I am a primary school teacher. I do not speak Norwegian.">teacher, no Norwegian</a>
+  <a data-q="I am a primary school teacher. I do not speak Norwegian.">teacher, no Norwegian</a> ·
+  <a data-q="I am an electrical engineer with PLC and automation experience, looking for work in Trondheim.">engineer in Trondheim</a>
 </p>
 
 <div id="parsed" class="parsed" hidden></div>
@@ -95,7 +96,7 @@
   watch the ranking change.</p>
   <p><b>Honest limitations.</b> Skills come from the original census and are present
   on only 32.8% of ads; a re-prompt measured 8× better recall but has not been run
-  over the corpus. Location matching is keyword-only. No relevance judgments have
+  over the corpus. Location is a graded predicate over the corpus's own municipality and county names (exact 1.0, same county 0.55), and every location an ad lists is checked. No relevance judgments have
   been applied to this ranking yet, so nothing here is a measured quality claim.
   Ad text, employer names and contact details are deliberately not redistributed —
   each result links to the original advertisement on arbeidsplassen.no. Corpus
@@ -120,6 +121,44 @@ const STOP = new Set(("i am a an the with and or for of in on at my me you we ou
  "only language språk skandinavisk nordisk fluent flytende").split(" "));
 
 let ADS=[], GAZ={}, GAZKEYS=[], TOKENS={};
+// Location, ported from retrieval/location.py. Municipality -> its county, built
+// from the shipped index so a name only resolves if some advertisement carries it.
+let MUNI={}, COUNTIES=new Set();
+const EXACT=1.0, SAME_COUNTY=0.55;
+// "the Oslo area", "Bergen og omegn". `Oslo-området` is a real gold-parse value and
+// matches no municipality verbatim, so without this a stated place silently fails.
+const AREA=/\s*(?:-|\s)?(?:området|omradet|område|omrade|omegn|og omegn|regionen|region|kommune|sentrum|area)\s*$/i;
+const ANYWHERE=/^(anywhere|hele landet|norge|norway|any)$/i;
+function normPlace(x){
+  let s=String(x||"").toLowerCase().normalize("NFKC")
+    .replace(/[^\p{L}\p{N}\s-]/gu," ").replace(/\s+/g," ").trim();
+  let prev=null;
+  while(prev!==s){ prev=s; s=s.replace(AREA,"").replace(/^[\s-]+|[\s-]+$/g,""); }
+  return s;
+}
+function resolvePlace(phrase){
+  const k=normPlace(phrase);
+  if(!k) return null;
+  if(ANYWHERE.test(k)) return {phrase, anywhere:true};
+  const isM = k in MUNI, isC = COUNTIES.has(k);
+  if(!isM && !isC) return null;
+  return {phrase, muni:isM?k:null, county:isC?k:null,
+          parent: isM?MUNI[k]:null, anywhere:false};
+}
+// The BEST of an advertisement's locations — 527 ads list more than one, and
+// first-match would drop the ones that DO offer the city the seeker asked for.
+function placeProx(c, locs){
+  if(!c) return null;
+  if(c.anywhere) return EXACT;
+  let best=0;
+  for(const [m,cty] of (locs||[])){
+    const nm=normPlace(m), nc=normPlace(cty);
+    if(c.muni && nm===c.muni) return EXACT;
+    if(c.county && nc===c.county) return EXACT;   // a county query covers all of it
+    if(c.parent && nc===c.parent) best=Math.max(best, SAME_COUNTY);
+  }
+  return best;
+}
 
 const norm = s => s.toLowerCase().normalize("NFKC").replace(/[^\p{L}\p{N}\s-]/gu," ")
   .replace(/\s+/g," ").trim();
@@ -166,14 +205,22 @@ function parse(q){
     }
   }
 
-  // PLACE. Keyword only, and the page says so — there is no location predicate yet.
-  const places=[...new Set(ADS.map(a=>a.m).filter(Boolean))];
-  for(const p of places){ if(p && low.includes(" "+p.toLowerCase())){ S.place=p; break; } }
+  // PLACE, resolved against the corpus's own municipality and county names. Longest
+  // first, so `Nordre Follo` wins over a substring of it.
+  const names=[...Object.keys(MUNI), ...COUNTIES].sort((a,b)=>b.length-a.length);
+  for(const n of names){
+    if(n.length>3 && low.includes(" "+n)){ S.place=resolvePlace(n); break; }
+  }
+  if(!S.place){
+    const m=low.match(/\b(?:in|i|at|near|rundt|omkring)\s+([\p{L}-]{4,})/u);
+    if(m) S.place=resolvePlace(m[1]);
+  }
+  if(S.place) S.evidence.place=S.place.phrase;
 
   // The place word is handled STRUCTURALLY below, so it must not also sit in the
   // lexical bag: double-counting it let a Bergen advertisement in the wrong
   // occupation outrank a nurse advertisement elsewhere.
-  const drop = new Set([best, S.place && S.place.toLowerCase()].filter(Boolean));
+  const drop = new Set([best, S.place && normPlace(S.place.phrase)].filter(Boolean));
   S.terms = toks(q).filter(w=>!drop.has(w));
   return S;
 }
@@ -204,8 +251,15 @@ function score(S, lam){
       // city outranked a right-occupation advertisement elsewhere.
       base = prox*0.78 + base*0.22;
     }
-    if(S.place && ad.m===S.place) base += .14;
     if(base<=0) continue;
+    // LOCATION AS A PREDICATE, not a keyword bonus. Graded: exact municipality 1.0,
+    // same county 0.55, elsewhere 0. Fails OPEN when nothing was stated or the name
+    // did not resolve, like every other stage here.
+    let lprox=null;
+    if(S.place){
+      lprox=placeProx(S.place, ad.L);
+      base = base*(1 - lam + lam*lprox);
+    }
 
     // language: graded severity x speaker discount x lambda. EXACTLY 0 when the
     // seeker said nothing — the non-effect the whole design protects.
@@ -219,7 +273,7 @@ function score(S, lam){
         sev = s*disc;
       }
     }
-    out.push({ad, final: base*(1-lam*sev), prox, sev, matched});
+    out.push({ad, final: base*(1-lam*sev), prox, sev, matched, lprox});
   }
   out.sort((a,b)=>b.final-a.final);
   return out;
@@ -232,7 +286,8 @@ function render(S, res, lam){
   if(S.occupation) bits.push(`<span class="chip hard"><b>occupation</b> ${S.occupation}${S.styrk.length?" → STYRK "+S.styrk.slice(0,3).join(", "):""}</span>`);
   if(S.norwegian!==null) bits.push(`<span class="chip hard"><b>Norwegian</b> ${S.norwegian} <i>“${S.evidence.language}”</i></span>`);
   else bits.push(`<span class="chip"><b>Norwegian</b> not stated → stage contributes nothing</span>`);
-  if(S.place) bits.push(`<span class="chip"><b>place</b> ${S.place}</span>`);
+  if(S.place) bits.push(`<span class="chip hard"><b>place</b> ${S.place.phrase}`+
+    `${S.place.anywhere?" (anywhere)":S.place.county&&!S.place.muni?" — county":""}</span>`);
   if(S.terms.length) bits.push(`<span class="chip"><b>skills / terms</b> ${S.terms.join(", ")}</span>`);
   p.innerHTML=`<h3>What the parser understood</h3>${bits.join(" ")}`;
   p.hidden=false;
@@ -250,6 +305,9 @@ function render(S, res, lam){
     if(r.sev>=.9) bg.push(`<span class="b no">requires Norwegian</span>`);
     else if(r.sev>=.4) bg.push(`<span class="b sf">Norwegian likely needed</span>`);
     else if(S.norwegian==="none" && a.a) bg.push(`<span class="b ok">English accessible</span>`);
+    if(r.lprox===EXACT && S.place && !S.place.anywhere) bg.push(`<span class="b ok">in ${a.m||"the area"}</span>`);
+    else if(r.lprox===SAME_COUNTY) bg.push(`<span class="b sf">same county</span>`);
+    else if(r.lprox===0 && S.place && !S.place.anywhere) bg.push(`<span class="b no">wrong area</span>`);
     if(a.l==="unstated" && r.sev>0) bg.push(`<span class="b n">silent on language</span>`);
     for(const m of r.matched.slice(0,4)) bg.push(`<span class="b n">${m}</span>`);
     return `<li class="${r.sev>=.9?"blocked":""}">
@@ -293,6 +351,11 @@ async function getJSON(path){
   }
   ADS=idx.ads; GAZ=gaz.labels; TOKENS=gaz.tokens;
   GAZKEYS=Object.keys(GAZ).sort((a,b)=>b.length-a.length);
+  for(const a of ADS) for(const [m,c] of (a.L||[])){
+    const nm=normPlace(m), nc=normPlace(c);
+    if(nc) COUNTIES.add(nc);
+    if(nm && !(nm in MUNI)) MUNI[nm]=nc||"";
+  }
   document.getElementById("stat").textContent =
     `${idx.n_ads.toLocaleString()} ads · snapshot ${idx.snapshot} · ${GAZKEYS.length} bilingual occupation labels`;
   document.getElementById("go").onclick=run;
