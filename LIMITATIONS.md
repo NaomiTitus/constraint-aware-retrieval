@@ -797,6 +797,48 @@ the data-engineering ads up — but weakly, because `DATA_LICENSE.md` forbids sh
 body text, so the browser has titles and taxonomy labels rather than BM25 over the
 advertisement.
 
+### CORRECTION, same day: ESCO has the concept, it just names it unusably
+
+The claim above — "ESCO has no vocabulary for AI job titles" — is **too strong and
+partly wrong**. ESCO does carry the concept:
+
+    ICT intelligent systems designer   /   utvikler av IKT-intelligenssystemer
+
+and `ad_taxonomy` already assigns it correctly: the advertisement titled
+**`Software AI Engineer` carries STYRK 2511** today, derived from ESCO. So the
+taxonomy is not missing the job.
+
+**What fails is the lookup, and the measurement is stark.** Zero ESCO labels contain
+`ai`, `ml` or `artificial` as a word. So `ai engineer` shares **no token at all**
+with its own ESCO label — worse than the `nurse` case in D18's outcome, where at
+least one token was shared. No amount of token or containment matching can bridge a
+zero-overlap gap.
+
+**The corpus supplies the synonym the taxonomy does not.** Indexing the employers'
+own title vocabulary against the STYRK codes those advertisements carry gives
+`ai` → 2511, 2310, 2512 across 27 advertisements — learned from what employers
+write, not from a hand-built synonym list. That tier now ships (3,849 title tokens)
+and fires only when ESCO resolves nothing.
+
+**It does not fix the query that prompted it, and that is worth stating.** "AI
+engineer with Python and computer vision" still resolves on the ESCO token
+`engineer` — which appears earlier and wins — so the title tier never fires.
+
+### Where the tuning stopped, and why
+
+Ranking the tiers by "fewest codes = most specific" was tried and **reverted**: a
+rare noisy title token resolves to exactly one code and wins on that measure, so
+`analysis` beat `ai` and the query returned PhD positions. Code count is not
+specificity.
+
+Three heuristics were tried on this one query in one sitting — weight by resolution
+type, bonus-not-gate for broad tokens, tier competition by code count — and each
+fixed the visible case while breaking another. **That is fitting to a single
+query by eye, which is exactly what `eval/JUDGING_PROTOCOL.md` was pre-registered to
+prevent.** Tuning stopped there. The arms are in place and the judgments will say
+which resolution order is right; until then the order is ESCO-first,
+title-as-fallback, documented rather than optimised.
+
 ### What the λ slider shows on this query, which is the thesis working
 
 | λ | top-10 |

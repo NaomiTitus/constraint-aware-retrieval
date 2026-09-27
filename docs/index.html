@@ -120,7 +120,7 @@ const STOP = new Set(("i am a an the with and or for of in on at my me you we ou
  "not dont don speak speaks speaking snakker snakke norwegian norsk english engelsk "+
  "only language språk skandinavisk nordisk fluent flytende").split(" "));
 
-let ADS=[], GAZ={}, GAZKEYS=[], TOKENS={};
+let ADS=[], GAZ={}, GAZKEYS=[], TOKENS={}, TITLES={};
 // Location, ported from retrieval/location.py. Municipality -> its county, built
 // from the shipped index so a name only resolves if some advertisement carries it.
 let MUNI={}, COUNTIES=new Set();
@@ -167,7 +167,8 @@ const toks = s => norm(s).split(" ").filter(w=>w.length>2 && !STOP.has(w));
 // ── the query parser: free text -> typed S ───────────────────────────────────
 function parse(q){
   const low = " "+norm(q)+" ";
-  const S = {occupation:null, styrk:[], occExact:false, norwegian:null, place:null,
+  const S = {occupation:null, styrk:[], occExact:false, occFromTitle:false,
+             norwegian:null, place:null,
              terms:[], evidence:{}};
 
   // LANGUAGE. A seeker states a capability LEVEL, never a negation — "I do not
@@ -222,12 +223,32 @@ function parse(q){
   // `nurse` matches no whole label. The token index maps it to the STYRK codes of
   // every label containing it: a candidate set, because choosing one would be a
   // guess the word does not support.
+  // ESCO tokens first, in sentence order. Ranking the tiers by "fewest codes" was
+  // tried and REVERTED: a rare noisy title token resolves to exactly one code and
+  // wins on that measure, so `analysis` beat `ai` and the query returned PhD
+  // positions. Code count is not specificity.
   if(!S.styrk.length){
     for(const w of toks(q)){
       const codes = TOKENS[w] || GAZ[w];
       if(codes && codes.length){ S.occupation=w; S.styrk=codes; S.occExact=false;
-        S.evidence.occupation=w+" (token)"; break; }
+        S.evidence.occupation=w+" (ESCO token)"; break; }
     }
+  }
+  // Then the employers' own title vocabulary, as a FALLBACK rather than a
+  // competitor. ESCO calls an AI engineer an "ICT intelligent systems designer" —
+  // zero shared tokens with what a seeker types, and no ESCO label contains `ai` as
+  // a word at all. But `Software AI Engineer` IS an advertisement title already
+  // carrying STYRK 2511, so the corpus supplies the synonym the taxonomy does not.
+  // It only fires when ESCO resolved nothing, because it is the noisier source and
+  // choosing between them by eye is what the relevance judgments are for.
+  if(!S.styrk.length){
+    let hit=null;
+    for(const w of toks(q)){
+      const codes=TITLES[w];
+      if(codes && codes.length && (!hit || w.length>hit[0].length)) hit=[w,codes];
+    }
+    if(hit){ S.occupation=hit[0]; S.styrk=hit[1]; S.occExact=false;
+             S.occFromTitle=true; S.evidence.occupation=hit[0]+" (ad titles)"; }
   }
 
   // PLACE, resolved against the corpus's own municipality and county names. Longest
@@ -343,7 +364,7 @@ function render(S, res, lam){
   const bits=[];
   if(S.occupation) bits.push(`<span class="chip hard"><b>occupation</b> ${S.occupation}`+
     `${S.styrk.length?" → STYRK "+S.styrk.slice(0,3).join(", "):""}`+
-    `${S.occExact?"":" <i>(broad match — weighted down)</i>"}</span>`);
+    `${S.occExact?"":S.occFromTitle?" <i>(from employers\u2019 own titles)</i>":" <i>(broad match — weighted down)</i>"}</span>`);
   if(S.norwegian!==null) bits.push(`<span class="chip hard"><b>Norwegian</b> ${S.norwegian} <i>“${S.evidence.language}”</i></span>`);
   else bits.push(`<span class="chip"><b>Norwegian</b> not stated → stage contributes nothing</span>`);
   if(S.place) bits.push(`<span class="chip hard"><b>place</b> ${S.place.phrase}`+
@@ -409,7 +430,7 @@ async function getJSON(path){
     document.getElementById("go").disabled=true;
     return;
   }
-  ADS=idx.ads; GAZ=gaz.labels; TOKENS=gaz.tokens;
+  ADS=idx.ads; GAZ=gaz.labels; TOKENS=gaz.tokens; TITLES=gaz.titles||{};
   GAZKEYS=Object.keys(GAZ).sort((a,b)=>b.length-a.length);
   for(const a of ADS) for(const [m,c] of (a.L||[])){
     const nm=normPlace(m), nc=normPlace(c);

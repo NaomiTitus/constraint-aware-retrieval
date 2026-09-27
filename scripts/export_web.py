@@ -29,6 +29,7 @@ page can say so rather than implying otherwise.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -160,6 +161,45 @@ def main() -> None:
         top = sorted(codes.items(), key=lambda kv: -kv[1])[:6]
         token_index[tok] = [c for c, _ in top]
 
+    # A THIRD RESOLUTION TIER, BUILT FROM THE EMPLOYERS' OWN WORDS.
+    #
+    # ESCO has the AI-engineer concept — `ICT intelligent systems designer`,
+    # `utvikler av IKT-intelligenssystemer` — and calls it something no job seeker
+    # would ever type. Measured: ZERO ESCO labels contain `ai`, `ml` or `artificial`
+    # as a word, so `ai engineer` shares no token at all with its own ESCO label and
+    # neither exact nor token matching can reach it.
+    #
+    # The corpus solves this itself. `Software AI Engineer` IS an advertisement
+    # title, and `ad_taxonomy` already assigned it STYRK 2511. So indexing the
+    # employers' own title vocabulary against the codes those advertisements carry
+    # bridges seeker language to taxonomy without inventing a synonym list: the
+    # corpus supplies the synonyms.
+    #
+    # Titles are noisy ("Lyst til å jobbe med AI i et av Nordens største mediehus"),
+    # so a token must appear in at least two advertisements and keeps only the codes
+    # it points at most often.
+    TITLE_NOISE = NOISE | set(
+        "vi er du en et jobb stilling søker søkes til med som har vil ledig "
+        "nye vår våre deg din ditt oss the a an and of in at or for to we you "
+        "your our new job jobs position role work".split())
+    title_tok: dict[str, dict[str, int]] = {}
+    for _uuid, _t, _x, _e, _g, occ_no_, occ_en_, styrk_, _c, _f in rows:
+        if not styrk_:
+            continue
+        for word in re.findall(r"[^\W_]+", (_t or "").lower(), re.UNICODE):
+            if len(word) < 2 or word in TITLE_NOISE:
+                continue
+            b = title_tok.setdefault(word, {})
+            b[str(styrk_)] = b.get(str(styrk_), 0) + 1
+    title_index = {}
+    for word, codes in title_tok.items():
+        total = sum(codes.values())
+        if total < 2 or len(codes) > 25:
+            continue
+        top = sorted(codes.items(), key=lambda kv: -kv[1])[:5]
+        # only codes carrying at least a tenth of the token's advertisements
+        title_index[word] = [c for c, n in top if n / total >= 0.10]
+
     index = {
         "built_at": __import__("time").strftime("%Y-%m-%d"),
         "n_ads": len(ads),
@@ -173,7 +213,8 @@ def main() -> None:
         json.dumps(index, ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8")
     (OUT_DIR / "occupations.json").write_text(
-        json.dumps({"labels": label_styrk, "tokens": token_index},
+        json.dumps({"labels": label_styrk, "tokens": token_index,
+                    "titles": title_index},
                    ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8")
 
@@ -182,8 +223,13 @@ def main() -> None:
     print(f"docs/data/index.json        {sz/1e6:.2f} MB  ({len(ads)} ads)")
     print(f"docs/data/occupations.json  {gz/1e6:.2f} MB  "
           f"({len(label_styrk)} bilingual labels, {len(token_index)} tokens)")
-    for probe in ("nurse", "sykepleier", "carpenter", "tømrer", "scientist", "teacher"):
-        print(f"    {probe:12s} -> STYRK {token_index.get(probe) or label_styrk.get(probe) or 'UNRESOLVED'}")
+    print(f"    + {len(title_index)} tokens from employers' own advertisement titles")
+    for probe in ("nurse", "tømrer", "ai", "ml", "vision", "scientist"):
+        via = ("esco-label" if probe in label_styrk else
+               "esco-token" if probe in token_index else
+               "ad-title" if probe in title_index else "UNRESOLVED")
+        codes = label_styrk.get(probe) or token_index.get(probe) or title_index.get(probe)
+        print(f"    {probe:10s} {via:12s} {codes or ''}")
     multi = sum(1 for a in ads if len(a["L"]) > 1)
     with_county = sum(1 for a in ads if any(c for _, c in a["L"]))
     print(f"\nads with >1 location:  {multi} ({multi/len(ads):.1%}) — all shipped, "
