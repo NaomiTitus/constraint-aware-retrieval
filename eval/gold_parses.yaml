@@ -1,0 +1,117 @@
+# Gold parses — the seeker side, set S. Schema and reasoning: GOLD_PARSE_SCHEMA.md
+#
+# Hand-authored BEFORE any retrieval ran. Every `evidence` value is a verbatim
+# substring of that persona's frozen `query` in personas.yaml, checked
+# character-for-character by tests/unit/test_gold_parse.py. If the seeker did not
+# say it, it is not here — an oracle written in the corpus's vocabulary instead of
+# the seeker's would delete the vocabulary mismatch LIMITATIONS §14 measured and
+# flatter retrieval by construction.
+#
+# ABSENCE MEANS NOT STATED. A facet with no row is a distinct state from every
+# stated value. For language that becomes `language_constraint=None` and severity
+# of exactly 0.0 — 3,507 ads hang on it.
+#
+# THREE WORKED EXAMPLES, chosen to stress the schema rather than to be easy. The
+# remaining 17 personas follow the same shape.
+
+gold_parses:
+
+  # ── a paired negation variant: the case the project started from ───────────
+  - persona_id: p1_sykepleier_no_norsk
+    constraints:
+      - facet: occupation
+        value: nurse
+        priority: hard
+        evidence: "I am a nurse"
+        ad_side: occupation
+      - facet: skill
+        value: hospital and nursing-home experience
+        priority: soft
+        evidence: "hospital and nursing-home experience"
+        ad_side: skills
+      # The whole point of the project, and note what it is NOT: it is not a
+      # negation. It is the capability level the seeker HAS.
+      - facet: language.norwegian
+        value: none
+        priority: hard
+        evidence: "I do not speak Norwegian"
+        ad_side: norwegian_requirement_level
+      - facet: contract.permanence
+        value: permanent
+        priority: soft
+        evidence: "a permanent position"
+        ad_side: null
+      # STATED AND UNSCOREABLE. The census extracts no shift facet, so a perfect
+      # parser and a perfect encoder still cannot honour this. `ad_side: null`
+      # makes that visible in `coverage()` instead of silently unmet.
+      - facet: contract.shift
+        value: day
+        priority: soft
+        evidence: "preferably day shifts"
+        ad_side: null
+
+  # ── a control: the `norsk autorisasjon` trap, and NO language constraint ───
+  #
+  # This parse is the one most likely to be authored wrongly, which is why it is
+  # here. The query contains the word `norsk` — inside `norsk autorisasjon`, a
+  # LICENSING credential. A parse that records `language.norwegian` from it turns
+  # a control persona into a constrained one, and the non-effect the four controls
+  # exist to protect is gone. `check_against_personas` raises on exactly that.
+  - persona_id: c2_sykepleier_authorisation_only
+    constraints:
+      - facet: occupation
+        value: sykepleier
+        priority: hard
+        evidence: "Jeg er sykepleier"
+        ad_side: occupation
+      - facet: credential.authorisation
+        value: norsk autorisasjon
+        priority: hard
+        evidence: "norsk autorisasjon"
+        ad_side: authorisation_required
+      - facet: credential.authorisation
+        value: HPR-nummer
+        priority: hard
+        evidence: "HPR-nummer"
+        ad_side: authorisation_required
+      - facet: location.place
+        value: Trondheim
+        priority: hard
+        evidence: "i Trondheim"
+        ad_side: null
+      - facet: contract.permanence
+        value: permanent
+        priority: soft
+        evidence: "fast stilling"
+        ad_side: null
+      - facet: contract.shift
+        value: day
+        priority: soft
+        evidence: "gjerne dagvakt"
+        ad_side: null
+      # NO language.* row. Deliberate and load-bearing: this seeker said nothing
+      # about language, so the language stage must contribute exactly nothing.
+
+  # ── the sealed negative control: Norwegian genuinely required (D17) ────────
+  - persona_id: p11_barnevernspedagog
+    constraints:
+      - facet: occupation
+        value: social worker
+        priority: hard
+        evidence: "I am a qualified social worker"
+        ad_side: occupation
+      - facet: skill
+        value: child welfare and family support
+        priority: soft
+        evidence: "experience in child welfare and family support"
+        ad_side: skills
+      - facet: language.norwegian
+        value: none
+        priority: hard
+        evidence: "I do not speak Norwegian"
+        ad_side: norwegian_requirement_level
+      - facet: contract.permanence
+        value: permanent
+        priority: soft
+        evidence: "a permanent position"
+        ad_side: null
