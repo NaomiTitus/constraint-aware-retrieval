@@ -218,3 +218,55 @@ def test_hard_constraints_are_tracked_separately_in_coverage(parses):
     cov = gp.coverage(parses.values())
     assert cov["n_hard"] > 0
     assert cov["n_hard_scoreable"] <= cov["n_hard"]
+
+
+def test_every_dev_persona_has_a_parse(parses, personas):
+    """The dev oracle cannot be run on a persona with no S. A dev persona added
+    later without a parse would silently shrink the ideal-case eval rather than
+    failing it."""
+    dev = {i for i, p in personas.items() if p["split"] == "dev"}
+    missing = sorted(dev - set(parses))
+    assert not missing, f"dev personas with no gold parse: {missing}"
+
+
+def test_every_parse_names_a_persona_that_still_exists(parses, personas):
+    """A parse for a renamed or removed persona would load and score nothing."""
+    orphans = sorted(set(parses) - set(personas))
+    assert not orphans, f"parses with no persona: {orphans}"
+
+
+def test_both_variants_of_a_parsed_pair_are_parsed(parses, personas):
+    """A pair is only a controlled comparison if BOTH sides have an S. Parsing one
+    variant and not the other would make the paired test compare a parsed seeker
+    against nothing."""
+    by_pair: dict[str, list[str]] = {}
+    for pid in parses:
+        pair = personas[pid].get("pair_id")
+        if pair:
+            by_pair.setdefault(pair, []).append(pid)
+    half = {k: v for k, v in by_pair.items() if len(v) != 2}
+    assert not half, f"pairs with only one variant parsed: {half}"
+
+
+def test_paired_variants_differ_only_in_the_language_constraint(parses, personas):
+    """The personas differ ONLY in the language sentence, so their parses must
+    differ only in `language.*`. If anything else diverges, the gold parse has
+    introduced a confound the frozen queries do not have — and the paired
+    comparison would no longer isolate language."""
+    by_pair: dict[str, list[str]] = {}
+    for pid in parses:
+        pair = personas[pid].get("pair_id")
+        if pair:
+            by_pair.setdefault(pair, []).append(pid)
+    for pair, ids in by_pair.items():
+        if len(ids) != 2:
+            continue
+        shapes = []
+        for pid in sorted(ids):
+            shapes.append(sorted(
+                (c.facet, c.priority) for c in parses[pid].constraints
+                if not c.facet.startswith("language.")))
+        assert shapes[0] == shapes[1], (
+            f"pair {pair}: the two parses differ outside language.*\n"
+            f"  {sorted(ids)[0]}: {shapes[0]}\n"
+            f"  {sorted(ids)[1]}: {shapes[1]}")

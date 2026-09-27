@@ -11,8 +11,13 @@
 # stated value. For language that becomes `language_constraint=None` and severity
 # of exactly 0.0 — 3,507 ads hang on it.
 #
-# THREE WORKED EXAMPLES, chosen to stress the schema rather than to be easy. The
-# remaining 17 personas follow the same shape.
+# STATUS: all 13 DEV personas are parsed. The 7 SEALED personas are a separate
+# pass — authoring their parses reads only frozen query text and does not touch
+# the seal, but it is kept separate so the dev oracle can be run first.
+#
+# The first three below were written to stress the schema rather than to be easy:
+# a paired negation variant, the `norsk autorisasjon` control, and the sealed
+# negative control.
 
 gold_parses:
 
@@ -115,3 +120,200 @@ gold_parses:
         priority: soft
         evidence: "a permanent position"
         ad_side: null
+
+# ════════════════════════════════════════════════════════════════════════════
+# THE REMAINING DEV PERSONAS. Sealed parses are a separate pass.
+#
+# ONE CONVENTION, RECORDED BECAUSE IT IS A JUDGMENT AND IT MOVES A NUMBER.
+# `Jeg snakker flytende norsk` is explicit and maps to `fluent`. An unqualified
+# `Jeg snakker norsk` does not state a level, and it is read as `fluent` here on
+# two grounds: an unqualified claim to speak a language is ordinarily a claim to
+# use it at work, and the query itself is written in idiomatic Norwegian, which
+# is corroborating evidence the seeker produced. This matters — SPEAKER_DISCOUNT
+# is 0.0 for `fluent` against 0.6 for `conversational`, so reading these as
+# conversational would let ads penalise a Norwegian speaker. Recorded so a
+# reviewer can disagree with the convention in one place rather than in six.
+# ════════════════════════════════════════════════════════════════════════════
+
+  - persona_id: p1_sykepleier_norsk
+    constraints:
+      - {facet: occupation, value: sykepleier, priority: hard,
+         evidence: "Jeg er sykepleier", ad_side: occupation}
+      - {facet: skill, value: erfaring fra sykehus og sykehjem, priority: soft,
+         evidence: "erfaring fra sykehus og sykehjem", ad_side: skills}
+      - {facet: language.norwegian, value: fluent, priority: hard,
+         evidence: "Jeg snakker flytende norsk",
+         ad_side: norwegian_requirement_level}
+      - {facet: contract.permanence, value: permanent, priority: soft,
+         evidence: "fast stilling", ad_side: null}
+      - {facet: contract.shift, value: day, priority: soft,
+         evidence: "gjerne dagvakt", ad_side: null}
+
+  - persona_id: p2_tomrer_norsk
+    constraints:
+      - {facet: occupation, value: tømrer, priority: hard,
+         evidence: "Jeg er tømrer", ad_side: occupation}
+      - {facet: credential.trade_certificate, value: fagbrev, priority: hard,
+         evidence: "fagbrev", ad_side: null}
+      - {facet: experience.years, value: 10, priority: soft,
+         evidence: "ti års erfaring", ad_side: min_years_experience}
+      - {facet: skill, value: nybygg og rehabilitering, priority: soft,
+         evidence: "nybygg og rehabilitering", ad_side: skills}
+      - {facet: language.norwegian, value: fluent, priority: hard,
+         evidence: "Jeg snakker norsk", ad_side: norwegian_requirement_level}
+      - {facet: credential.licence, value: førerkort klasse B, priority: hard,
+         evidence: "førerkort klasse B", ad_side: null}
+
+  - persona_id: p2_tomrer_no_norsk
+    constraints:
+      - {facet: occupation, value: carpenter, priority: hard,
+         evidence: "I am a carpenter", ad_side: occupation}
+      - {facet: credential.trade_certificate, value: trade certificate,
+         priority: hard, evidence: "a trade certificate", ad_side: null}
+      - {facet: experience.years, value: 10, priority: soft,
+         evidence: "ten years of experience", ad_side: min_years_experience}
+      - {facet: skill, value: new builds and renovation, priority: soft,
+         evidence: "new builds and renovation", ad_side: skills}
+      - {facet: language.norwegian, value: none, priority: hard,
+         evidence: "I do not speak Norwegian",
+         ad_side: norwegian_requirement_level}
+      - {facet: credential.licence, value: category B driving licence,
+         priority: hard, evidence: "a category B driving licence", ad_side: null}
+
+  - persona_id: p4_backend_norsk
+    constraints:
+      - {facet: occupation, value: backend-utvikler, priority: hard,
+         evidence: "Jeg er backend-utvikler", ad_side: occupation}
+      - {facet: skill, value: Python, priority: soft, evidence: "Python",
+         ad_side: skills}
+      - {facet: skill, value: PostgreSQL, priority: soft, evidence: "PostgreSQL",
+         ad_side: skills}
+      - {facet: skill, value: Kubernetes, priority: soft, evidence: "Kubernetes",
+         ad_side: skills}
+      - {facet: language.norwegian, value: fluent, priority: hard,
+         evidence: "Jeg snakker norsk", ad_side: norwegian_requirement_level}
+      - {facet: contract.permanence, value: permanent, priority: soft,
+         evidence: "fast stilling", ad_side: null}
+      - {facet: location.place, value: Oslo, priority: hard, evidence: "i Oslo",
+         ad_side: null}
+      # `eller hybrid` makes the Oslo requirement satisfiable remotely. Recorded
+      # as a preference, not a requirement — the seeker offered it as one of two
+      # acceptable options rather than demanding it.
+      - {facet: work.remote, value: preferred, priority: soft,
+         evidence: "hybrid", ad_side: null}
+
+  - persona_id: p4_backend_no_norsk
+    constraints:
+      - {facet: occupation, value: backend developer, priority: hard,
+         evidence: "I am a backend developer", ad_side: occupation}
+      - {facet: skill, value: Python, priority: soft, evidence: "Python",
+         ad_side: skills}
+      - {facet: skill, value: PostgreSQL, priority: soft, evidence: "PostgreSQL",
+         ad_side: skills}
+      - {facet: skill, value: Kubernetes, priority: soft, evidence: "Kubernetes",
+         ad_side: skills}
+      - {facet: language.norwegian, value: none, priority: hard,
+         evidence: "I do not speak Norwegian",
+         ad_side: norwegian_requirement_level}
+      - {facet: contract.permanence, value: permanent, priority: soft,
+         evidence: "a permanent role", ad_side: null}
+      - {facet: location.place, value: Oslo, priority: hard, evidence: "in Oslo",
+         ad_side: null}
+      - {facet: work.remote, value: preferred, priority: soft,
+         evidence: "hybrid", ad_side: null}
+
+  - persona_id: p5_data_scientist_norsk
+    constraints:
+      - {facet: occupation, value: data scientist, priority: hard,
+         evidence: "Jeg er data scientist", ad_side: occupation}
+      - {facet: skill, value: maskinlæring, priority: soft,
+         evidence: "maskinlæring", ad_side: skills}
+      - {facet: skill, value: Python, priority: soft, evidence: "Python",
+         ad_side: skills}
+      - {facet: skill, value: SQL, priority: soft, evidence: "SQL",
+         ad_side: skills}
+      - {facet: language.norwegian, value: fluent, priority: hard,
+         evidence: "Jeg snakker norsk", ad_side: norwegian_requirement_level}
+      - {facet: skill, value: AI eller analyse, priority: soft,
+         evidence: "stilling innen AI eller analyse", ad_side: skills}
+
+  - persona_id: p5_data_scientist_no_norsk
+    constraints:
+      - {facet: occupation, value: data scientist, priority: hard,
+         evidence: "I am a data scientist", ad_side: occupation}
+      - {facet: skill, value: machine learning, priority: soft,
+         evidence: "machine learning", ad_side: skills}
+      - {facet: skill, value: Python, priority: soft, evidence: "Python",
+         ad_side: skills}
+      - {facet: skill, value: SQL, priority: soft, evidence: "SQL",
+         ad_side: skills}
+      - {facet: language.norwegian, value: none, priority: hard,
+         evidence: "I do not speak Norwegian",
+         ad_side: norwegian_requirement_level}
+      - {facet: skill, value: AI or analytics, priority: soft,
+         evidence: "a role in AI or analytics", ad_side: skills}
+
+  # The designed negative control. Norwegian genuinely IS required to teach in a
+  # Norwegian primary school, so the right behaviour is few results and a reason.
+  - persona_id: p6_grunnskolelaerer
+    constraints:
+      - {facet: occupation, value: primary school teacher, priority: hard,
+         evidence: "I am a qualified primary school teacher",
+         ad_side: occupation}
+      - {facet: language.norwegian, value: none, priority: hard,
+         evidence: "I do not speak Norwegian",
+         ad_side: norwegian_requirement_level}
+      - {facet: location.anywhere, value: true, priority: soft,
+         evidence: "teach in Norway", ad_side: null}
+
+  - persona_id: p7_lagermedarbeider
+    constraints:
+      - {facet: occupation, value: warehouse work, priority: hard,
+         evidence: "warehouse work", ad_side: occupation}
+      - {facet: credential.licence, value: forklift certificate, priority: hard,
+         evidence: "a forklift certificate", ad_side: null}
+      # A SECOND JUDGMENT WORTH FLAGGING. "not ... yet but I am learning" is read
+      # as `none`, not `basic`: the seeker states they do not speak it, and
+      # learning is an intention rather than a present capability. The
+      # conservative reading, and it costs them — SPEAKER_DISCOUNT is 1.0 for
+      # `none` against 0.8 for `basic`, so `none` applies the FULL penalty. Read
+      # as `basic` this persona would see slightly more. Unresolved by the text.
+      - {facet: language.norwegian, value: none, priority: hard,
+         evidence: "I do not speak Norwegian yet but I am learning",
+         ad_side: norwegian_requirement_level}
+
+  # CONTROL. No language row, and that is the assertion.
+  - persona_id: c1_lager_no_language_mention
+    constraints:
+      - {facet: occupation, value: lager, priority: hard,
+         evidence: "jobb på lager", ad_side: occupation}
+      - {facet: location.place, value: Bergen, priority: hard,
+         evidence: "i Bergen", ad_side: null}
+      - {facet: credential.licence, value: truckførerbevis, priority: hard,
+         evidence: "truckførerbevis", ad_side: null}
+      - {facet: credential.licence, value: førerkort klasse B, priority: hard,
+         evidence: "førerkort klasse B", ad_side: null}
+      - {facet: contract.shift, value: shift, priority: soft,
+         evidence: "Jeg kan jobbe skift", ad_side: null}
+
+  # CONTROL, and the `norsk`-as-SUBJECT-TAUGHT trap. `undervisningskompetanse i
+  # norsk` is a teaching qualification in the Norwegian SUBJECT — a skill, not a
+  # language claim. A parse that reads `language.norwegian` here punishes a
+  # fluent Norwegian speaker for saying nothing about language, which is the
+  # exact inversion c4 was written to catch.
+  #
+  # `fra høsten` — an availability date — has no facet in this schema and no
+  # counterpart in the census, so it is not recorded. Noted rather than dropped
+  # silently.
+  - persona_id: c4_laerer_norsk_speaker
+    constraints:
+      - {facet: occupation, value: grunnskolelærer, priority: hard,
+         evidence: "Jeg er grunnskolelærer", ad_side: occupation}
+      - {facet: skill, value: undervisningskompetanse i norsk og matematikk,
+         priority: soft,
+         evidence: "undervisningskompetanse i norsk og matematikk",
+         ad_side: skills}
+      - {facet: contract.permanence, value: permanent, priority: soft,
+         evidence: "fast stilling", ad_side: null}
+      - {facet: location.place, value: Oslo-området, priority: hard,
+         evidence: "i Oslo-området", ad_side: null}
