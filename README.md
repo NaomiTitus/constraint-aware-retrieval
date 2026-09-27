@@ -231,7 +231,7 @@ flowchart LR
 ```
 
 **Where this architecture stops.** It works because the corpus fits in a browser: 10,166 ads
-is 2.9 MB gzipped and a full scan is 174 ms. At ~100k ads the index needs sharding by region
+is 2.9 MB gzipped and a full scan is 166 ms. At ~100k ads the index needs sharding by region
 or occupation and the linear scan becomes an inverted index; past ~1M it is a served
 retrieval tier with the constraint stage as a filter pushed into the query planner. **The ETL
 and the extraction economics are unchanged by that** — only the query path is
