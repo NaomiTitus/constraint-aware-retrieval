@@ -1589,3 +1589,53 @@ answer is "almost nothing". And §17's CVR@10 result should be read knowing the 
 headroom is field-dependent: a constraint stage has far more to fix in care work, where
 almost everything violates, than in IT, where more than a quarter of ads are already
 workable.
+
+## 26. The live page told visitors its skills were sparse, three weeks after they weren't
+
+Asked to fact-check the demo page's explainer, an audit found twelve errors. The worst is
+not a wrong number — it is that **the page described a version of itself that no longer
+existed**, and the claim was self-deprecating, so nothing about it looked like a bug.
+
+The page said:
+
+> *Skills come from the original census and are present on only 32.8% of ads; a re-prompt
+> measured 8× better recall but **has not been run over the corpus**.*
+
+The re-run had happened. `reports/skills_census_run.log` records 9,823 calls over all
+10,166 advertisements, and `export_web.py` prefers `reports/skills_census.json` over the
+`ad_facets` column whenever that file exists — it does. **Measured on the shipped index:
+10,008 of 10,166 ads (98.4%) carry skills, 66,401 in total.** 32.8% is still exactly right
+for `ad_facets.skills` (3,338/10,166), which is a table the page never reads.
+
+**Why it survived.** The README was updated. The page was not, and neither was
+`export_web.py`'s own docstring, which still said "has NOT been run" — so the one file
+whose job is to ship the skills asserted they weren't there. A stale claim that *understates*
+the product attracts no bug report: it reads as humility.
+
+### The other eleven, briefly
+
+| claim on the page | what the code does |
+|---|---|
+| *"a bag of words cannot hold a qualifier like low voltage"* | §22 added adjacent-pair terms; the pair is admitted when rarer than either word, and on the voltage query `unmetTerms()` now returns **empty** — the page said nothing on its own example |
+| *"a BOOST for the 956 the census marks"* | the boost reaches **1,061** ads (956 `english_accessible` + 105 with a stated English working language); 90 boosted rows in one test carry no badge explaining why |
+| *"the census marks open to English speakers"* | `english_accessible` is **derived**, never asked of the model (`census_prompt.derive_english_accessible`) |
+| *"2223 nurse vs 2221 specialist nurse share a group"* | codes are correct, but **both are in the candidate set** for `nurse`, so each scores exact 1.0. The 0.7 group tier is what reaches `2222` Jordmødre. The stated mechanism is not the one that fires |
+| *"R are viable only if contained in S"* | the page has **no** viability test — every stage is a graded multiplier, and the next sentence says "Never a filter". R ⊆ S is `constraints.py`, a different implementation |
+| *"typed attributes — occupation, language capability, free-text skills"* | omits **place**, and there is no skills attribute: `terms` is the residual bag after removing the occupation and place words. Also omits the third resolution path, employers' own ad titles (3,849 entries) |
+| *"nurse and sykepleier reach the same ads"* | **8 of 10** in the top ten; 5,259 of ~5,700 overall. And 786 ads tie at exactly 1.200 for `nurse`, so the visible top twenty is a slice of a ~750-ad plateau ordered by uuid |
+| *"a graded penalty on ads that demand what you lack"* | `SILENT_NO = 0.5` also penalises **silence** — 1,640 `unstated` ads carry sev 0.50 on one test query |
+| *"No relevance judgments have been applied to this ranking"* | §22 did apply them: CVR@10 0.046, nDCG@10 0.286 — uninterpretable because the **judged share is 32%**. The conclusion holds; the claim was imprecise |
+| *"a third of this corpus is merely silent"* | 36.5% are `unstated` (3,707); the 3,507 figure is the different set blocked by silence *alone* |
+| *"links to arbeidsplassen.no"* | every shipped URL is **arbeidsplassen.nav.no** |
+
+**Verified correct, so the record is balanced:** λ=0 is genuinely inert now (byte-identical
+top tens on three query shapes — and §24 records that it was false before today); the
+rare-word disclaimer exists and fires; 1.0 / 0.55 location weights; the 956 count itself;
+3,507; the 2026-09-24 snapshot; and no ad text, employer name or contact detail is
+redistributed.
+
+**The lesson worth keeping.** Every one of these twelve was written truthfully and went
+stale as the code moved underneath it. Prose describing behaviour is untested code. The
+figures that did not rot are the ones the pipeline emits into the index itself —
+`skills_source`, `snapshot` — which is the argument for describing less in prose and
+stamping more into the data.

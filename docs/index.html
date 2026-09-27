@@ -76,19 +76,35 @@
     margin-top:32px;padding-top:16px}
   .note code{background:var(--chip);padding:1px 4px;border-radius:3px}
   .loading{color:var(--muted);font-size:14px}
+  .lead{font-size:14px;color:var(--ink);margin:0 0 14px;line-height:1.55}
+  .lam label{font-weight:600;color:var(--ink)}
+  .lam .q{opacity:.55}
+  .note ul.legend{list-style:none;padding:0;margin:8px 0 0}
+  .note ul.legend li{background:none;border:0;border-radius:0;padding:0;
+     margin:0 0 8px;line-height:1.6}
+  .note details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+  .note summary{cursor:pointer;font-weight:600;color:var(--ink);font-size:13px}
+  .note details p{margin:9px 0}
 </style>
 
 <div class="wrap">
 <h1>Smart Search</h1>
-<p class="sub">Job search over 10,166 Norwegian advertisements that respects what you
-<em>cannot</em> do, not just what you want.</p>
+<p class="sub">Job search over 10,166 job ads in Norway, so the jobs needing fluent
+Norwegian don't crowd out the ones that don't.</p>
+
+<p class="lead"><b>Write a sentence, not keywords</b> — in English or Norwegian, whichever you
+prefer. Say what you do, where you want to work, and what you <em>can't</em> do:
+<em>"I am a nurse looking for work in Bergen. I do not speak Norwegian."</em> Jobs that clash
+with what you said move down the list. Nothing is ever hidden from you.</p>
 
 <textarea id="q" placeholder="Describe yourself and what you are looking for…"></textarea>
 
 <div class="row">
   <button id="go">Search</button>
-  <div class="lam">λ <input type="range" id="lam" min="0" max="1" step="0.1" value="0.7">
-    <span id="lamv">0.7</span> — how hard constraints bite</div>
+  <div class="lam"><label for="lam">Strictness</label>
+    <input type="range" id="lam" min="0" max="1" step="0.1" value="0.7">
+    <span id="lamv">0.7</span> — 0 ignores what you can't do, 1 pushes those jobs
+    to the bottom <span class="q">(λ)</span></div>
 </div>
 <p class="ex">Try:
   <a data-q="I am a nurse looking for work in Bergen. I do not speak Norwegian.">nurse, Bergen, no Norwegian</a> ·
@@ -103,20 +119,99 @@
 <ol id="out"></ol>
 
 <div class="note">
-  <p><b>How the ranking works.</b> Your text is parsed into typed attributes — an
-  occupation resolved against ESCO's bilingual labels, a language capability, and
-  free-text skills. A job's requirements <b>R</b> are viable only if contained in
-  your attributes <b>S</b>. Occupation is compared as a STYRK taxonomy code
-  (<code>2223</code> nurse vs <code>2221</code> specialist nurse share a group), so
-  <em>nurse</em> and <em>sykepleier</em> reach the same ads. Language works two ways: a graded penalty × λ on advertisements that demand what you lack, and a BOOST for the 956 the census marks open to English speakers. Never a filter — at λ=0 the constraint stage is off, and you can
-  watch the ranking change.</p>
-  <p><b>What it does with language.</b> If you say you do not speak Norwegian, advertisements demanding it are demoted by a graded severity (a stated requirement counts more than silence) and advertisements explicitly open to English are promoted. If you say nothing, the stage contributes exactly nothing — writing in English is <em>observed and reported</em>, never silently treated as a constraint, because a third of this corpus is merely silent on language and inferring a requirement from silence would remove 3,507 jobs from everyone.</p><p><b>Honest limitations.</b> Skills come from the original census and are present
-  on only 32.8% of ads; a re-prompt measured 8× better recall but has not been run
-  over the corpus. When a rare word or phrase you asked for appears in none of the results, the page says so and how many advertisements contain it at all — a bag of words cannot hold a qualifier like <em>low</em> voltage, so it tells you rather than pretending. Location is a graded predicate over the corpus's own municipality and county names (exact 1.0, same county 0.55), and every location an ad lists is checked. No relevance judgments have
-  been applied to this ranking yet, so nothing here is a measured quality claim.
-  Ad text, employer names and contact details are deliberately not redistributed —
-  each result links to the original advertisement on arbeidsplassen.no. Corpus
-  snapshot 2026-09-24; many ads will have expired.</p>
+  <p><b>Reading your results.</b> Every result links straight to the full advertisement on
+  arbeidsplassen.nav.no — open it there to read the ad and apply. The labels under each result
+  say why it is in the list:</p>
+  <ul class="legend">
+    <li><span class="b ok">exact occupation</span> <span class="b ok">related occupation</span>
+      <span class="b n">distant occupation</span> — how close the job is to the occupation you
+      named. Your occupation is matched in both languages, so <em>nurse</em> and
+      <em>sykepleier</em> reach substantially the same ads.</li>
+    <li><span class="b no">requires Norwegian</span> <span class="b sf">Norwegian likely
+      needed</span> <span class="b n">silent on language</span> — the language bar.
+      "Requires" means the employer said so. <b>"Silent" means the ad never mentioned
+      language at all</b>, so that one is our guess, not a fact. Faded rows are the jobs
+      asking for Norwegian you told us you don't have.</li>
+    <li><span class="b ok">open to English speakers</span> <span class="b ok">English
+      accessible</span> — 956 ads are marked workable in English. These are pushed
+      <em>up</em> when you say you don't speak Norwegian.</li>
+    <li><span class="b ok">in Bergen</span> <span class="b sf">same county</span>
+      <span class="b no">wrong area</span> — the place. A job in the town you named ranks
+      above one merely in the same county, and an ad listing several towns counts if
+      <em>any</em> of them is yours.</li>
+    <li><span class="b n">python</span> <span class="b n">python*</span>
+      <span class="b n">"low voltage"</span> — your own words that this ad matched. A
+      <code>*</code> means the word was in the skill list rather than the job title; quotes
+      mean the whole phrase matched.</li>
+  </ul>
+
+  <p><b>Before you apply, two things.</b> These ads are a snapshot taken
+  <b>2026-09-24</b>, not a live feed: <b>674 of them have already expired</b> and more will
+  as time passes, so check the date on the result and on the real ad. And the order of
+  results has never been tested against human judgement, so treat it as a starting point —
+  read the labels rather than trusting the top result.</p>
+
+  <p><b>When a word of yours matches nothing, the page says so.</b> Rather than quietly
+  returning near-misses, a warning above the list tells you the word appeared in no result,
+  and how many ads in the whole corpus contain it at all — so you can tell "no such jobs
+  exist here" from "this search went wrong".</p>
+
+  <details>
+    <summary>How the ranking works</summary>
+    <p>Your sentence is read for four things: your occupation, which languages you speak,
+    where you want to work, and whatever words are left over, which are treated as skills.
+    The occupation is looked up in <b>ESCO</b>, the EU's bilingual occupation vocabulary,
+    then in its individual tokens, then in employers' own advertisement titles — which is
+    what lets <em>nurse</em> and <em>sykepleier</em> land on the same jobs.</p>
+    <p>Matching then runs on <b>STYRK</b>, Norway's official occupation-classification
+    number — the code shown in the panel above the results. Closeness is graded by how much
+    of the code is shared: <em>nurse</em> resolves to a set that includes both
+    <code>2223</code> Sykepleiere and <code>2221</code> Spesialsykepleiere, so both count as
+    exact, while <code>2222</code> Jordmødre shares only the group <code>222</code> and
+    scores 0.7. Place works the same way — the exact municipality scores 1.0, elsewhere in
+    the same county 0.55, and every location an ad lists is checked, not just the first.</p>
+    <p>A requirement you don't meet <em>costs a job rank</em>; it never removes the job.
+    Language moves ads both ways: those demanding Norwegian you lack are pushed down — full
+    weight for a stated requirement, <b>half weight for silence</b> — and ads workable in
+    English are pushed up. How far anything moves is scaled by the <b>strictness</b> slider
+    (λ). <b>At λ=0 none of it applies</b> and you get the plain keyword ranking, so you can
+    move the slider and watch the order change.</p>
+    <p>Adjacent word pairs are indexed as terms in their own right, which is how
+    <em>low voltage</em> stays distinct from <em>high voltage</em>: the pair is rarer than
+    either word, so an ad has to actually contain it. That only reaches phrases that literally
+    occur in the index — <em>lavspenning</em> is a different string, and <em>high school</em>
+    appears zero times because these ads say <em>upper secondary</em>.</p>
+    <p><b>If you say nothing about language, this contributes exactly nothing.</b> Writing
+    your query in English is reported back to you above the results, but never silently
+    treated as a constraint — plenty of people who type in English read Norwegian fine.
+    36.5% of these ads are merely silent on language, and inferring a requirement from that
+    silence would remove 3,507 jobs from everyone.</p>
+  </details>
+
+  <details>
+    <summary>Limits, for the technically curious</summary>
+    <p><b>Skills.</b> Re-extracted over the whole corpus with the <code>skills-v1</code>
+    prompt on claude-haiku-4-5, which lifted recall from 0.104 to 0.861 and left only 1.6% of
+    ads with no skills. That 0.861 is agreement with a golden set labelled by a <em>model</em>
+    rather than a human, so read it as an upper bound.</p>
+    <p><b>English-accessible is derived, not asked.</b> No model was asked "is this open to an
+    English speaker" — it is computed, and it treats silence on a Norwegian-language ad as
+    inaccessible. That default is a design choice, not evidence, and it decides more ads than
+    every stated requirement combined. The boost actually reaches 1,061 ads: the 956 marked
+    accessible plus 105 more whose advertiser-stated working language is English.</p>
+    <p><b>No measured quality claim.</b> This ranking has never been judged on a pool built
+    for it. 378 relevance judgments exist, but they cover a separate Python pipeline and 68%
+    of this page's top ten falls outside them — so nothing here is a measured quality claim.
+    Word matching is term overlap weighted by rarity, standing in for the BM25 the shipped
+    index cannot carry.</p>
+    <p><b>Ties.</b> A bare occupation query like <em>nurse</em> leaves hundreds of ads on an
+    identical score, and that plateau is ordered arbitrarily. Adding a place, a skill or a
+    language makes the ranking meaningful.</p>
+    <p><b>Licence.</b> Ad text, employer names and contact details are deliberately not
+    redistributed — each result links to the original advertisement on arbeidsplassen.nav.no.
+    Full workings, and everything these numbers don't support, are in the repository's
+    LIMITATIONS.md.</p>
+  </details>
 </div>
 </div>
 
@@ -637,7 +732,7 @@ function render(S, res, lam){
       unstated:"says nothing about language"};
     // THE ADVERTISEMENT TEXT IS DELIBERATELY NOT HERE. DATA_LICENSE.md forbids
     // redistributing it, so the panel shows what this project DERIVED from the
-    // advertisement and the button opens the original on arbeidsplassen.no.
+    // advertisement and the button opens the original on arbeidsplassen.nav.no.
     const more=`<div class="more" hidden>
       <h4>Skills the extractor found</h4>
       ${skills?`<ul>${skills}</ul>`:`<p class="en">None extracted from this advertisement.</p>`}

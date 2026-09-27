@@ -20,11 +20,20 @@ run BM25 or the predicates on. So the index is precomputed here and the ranking 
 computed client-side, which is what PLAN G1 specifies ("precomputed facets, lambda
 slider, negation toggle diff").
 
-A HONEST LIMITATION SHIPPED WITH THE DATA. `skills` comes from the ORIGINAL census
-column, populated on 32.8% of advertisements. The re-prompt measured at recall 0.861
-(LIMITATIONS §15) has NOT been run over the corpus, so skill matching in the demo is
-weaker than the pilot shows is achievable. The index records `skills_source` so the
-page can say so rather than implying otherwise.
+WHICH SKILLS SHIP, AND THE CAVEAT THAT SURVIVES. This docstring used to say the
+re-prompt "has NOT been run over the corpus" and that skills sit on 32.8% of ads. Both
+were true when written and are now stale: `run_skills_census.py` ran `skills-v1` over all
+10,166 advertisements, and this script PREFERS `reports/skills_census.json` over the
+`ad_facets` column whenever that file exists. Shipped coverage is 10,008 of 10,166 ads
+(98.4%) carrying 66,401 skills — the 32.8% figure describes a column the page no longer
+reads.
+
+That stale sentence reached the live page and told visitors their skills were sparse while
+the index served them on nearly every ad (LIMITATIONS §26), which is why the version is
+recorded in `skills_source` rather than described in prose that can drift.
+
+The caveat that does survive: recall 0.861 is agreement with a golden set labelled by a
+MODEL, not a human (§15), so it is an upper bound on agreement rather than on correctness.
 """
 from __future__ import annotations
 
