@@ -281,6 +281,29 @@ function parse(q){
   // The place word is handled STRUCTURALLY below, so it must not also sit in the
   // lexical bag: double-counting it let a Bergen advertisement in the wrong
   // occupation outrank a nurse advertisement elsewhere.
+  // ADJACENT WORD PAIRS AS THEIR OWN TERMS. A bag of words cannot tell `low
+  // voltage` from `high voltage` — both contribute `voltage` and the qualifier is
+  // thrown away. Indexing the PAIR fixes it without a rule about adjectives,
+  // because rarity does the work: measured on this corpus `low voltage` appears in
+  // 2 advertisements (idf 8.13) against `voltage` in 11 (idf 6.74), and a
+  // high-voltage advertisement contains `voltage` but CANNOT contain the pair. So
+  // the true match gains a term the false match has no way to earn.
+  //
+  // Pairs never cross a comma or full stop: "engineer, low voltage" must not
+  // produce the phantom phrase "engineer low".
+  S.bigrams=[];
+  {
+    const seen=new Set();
+    for(const clause of String(q).split(/[,.;:!?\n]+/)){
+      const w=norm(clause).split(" ").filter(Boolean);
+      for(let i=0;i<w.length-1;i++){
+        if(w[i].length<3||w[i+1].length<3) continue;
+        if(STOP.has(w[i])||STOP.has(w[i+1])) continue;
+        const pair=w[i]+" "+w[i+1];
+        if(!seen.has(pair)){ seen.add(pair); S.bigrams.push(pair); }
+      }
+    }
+  }
   const drop = new Set([best, S.place && normPlace(S.place.phrase)].filter(Boolean));
   S.terms = toks(q).filter(w=>!drop.has(w));
   return S;
@@ -292,8 +315,31 @@ function prefixProx(a,b){
   let n=0; for(let i=0;i<Math.min(a.length,b.length);i++){ if(a[i]!==b[i]) break; n++; }
   return [0,.15,.4,.7,1][Math.min(n,4)];
 }
+// Bigram document frequency, computed once per query rather than shipped: a full
+// bigram index over 10,166 advertisements would multiply the download for a handful
+// of pairs per search.
+const BGDF={};
+function bigramIdf(pair){
+  if(!(pair in BGDF)){
+    let n=0;
+    for(const a of ADS){
+      const h=" "+norm(a.t+" "+a.o+" "+a.e+" "+(a.k||[]).join(" ")+" "
+                       +(a.g||[]).join(" "))+" ";
+      if(h.includes(" "+pair+" ")) n++;
+    }
+    BGDF[pair]=n;
+  }
+  return Math.log(1 + NDOC/(BGDF[pair]+1));
+}
+
 function score(S, lam){
   const out=[];
+  // Only pairs that are genuinely rarer than their parts earn a place; a pair as
+  // common as its words adds nothing but noise.
+  const bg=(S.bigrams||[]).filter(p=>{
+    const [a,b]=p.split(" ");
+    return bigramIdf(p) > Math.max(idf(a), idf(b)) + 0.5;
+  });
   for(const ad of ADS){
     // lexical: title + occupation labels + skills, term overlap (a stand-in for
     // BM25, which needs the full body text the licence does not let us ship)
@@ -321,7 +367,14 @@ function score(S, lam){
       const inT=hayT.includes(" "+t+" "), inS=hayS.includes(" "+t+" ");
       if(inT||inS){ hits += idf(t) * (inT ? 1.0 : 0.55); matched.push(inT?t:t+"*"); }
     }
-    const avail = S.terms.reduce((s,t)=>s+idf(t), 0) || 1;
+    // A pair found in the advertisement is worth its own (high) rarity, at title
+    // weight if it sits in the title.
+    for(const p of bg){
+      const inT=hayT.includes(" "+p+" "), inS=hayS.includes(" "+p+" ");
+      if(inT||inS){ hits += bigramIdf(p) * (inT ? 1.0 : 0.8); matched.push('"'+p+'"'); }
+    }
+    const avail = S.terms.reduce((s,t)=>s+idf(t), 0)
+                + bg.reduce((s,p)=>s+bigramIdf(p), 0) || 1;
     let base = hits/avail;
 
     // occupation as a PREDICATE over metadata, not a scored term

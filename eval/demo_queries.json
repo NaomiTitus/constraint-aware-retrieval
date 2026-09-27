@@ -1,37 +1,158 @@
 {
  "note": "Sanity queries for the static demo, 2-3 per NAV industry. Each carries an expected industry and, where stated, an expected language behaviour. NOT a relevance benchmark: no judgments, no pre-registration. A smoke test with a stated expectation, so a regression is visible.",
  "queries": [
-  {"q":"Jeg er sykepleier med erfaring fra sykehus. Jeg snakker norsk.","cat":"Helse og sosial","lang":"fluent"},
-  {"q":"I am a nurse with intensive care experience. I only speak English.","cat":"Helse og sosial","lang":"none"},
-  {"q":"Jeg er helsefagarbeider og søker jobb i Bergen. Jeg snakker norsk.","cat":"Helse og sosial","lang":"fluent","place":"Bergen"},
-
-  {"q":"Jeg er butikkmedarbeider med erfaring fra dagligvare. Jeg snakker norsk.","cat":"Salg og service","lang":"fluent"},
-  {"q":"I am looking for retail sales work. I do not speak Norwegian.","cat":"Salg og service","lang":"none"},
-
-  {"q":"Jeg er grunnskolelærer i matematikk og søker fast stilling.","cat":"Utdanning","lang":null},
-  {"q":"I am a kindergarten teacher. I do not speak Norwegian.","cat":"Utdanning","lang":"none"},
-
-  {"q":"Jeg er regnskapsfører med erfaring fra lønn og fakturering.","cat":"Kontor og økonomi","lang":null},
-  {"q":"I am an accountant looking for work in Oslo. I only speak English.","cat":"Kontor og økonomi","lang":"none","place":"Oslo"},
-
-  {"q":"Jeg er tømrer med fagbrev og erfaring fra nybygg.","cat":"Håndverkere","lang":null},
-  {"q":"I am an electrician with certification. I do not speak Norwegian.","cat":"Håndverkere","lang":"none"},
-  {"q":"Jeg er rørlegger og søker jobb i Trondheim.","cat":"Håndverkere","lang":null,"place":"Trondheim"},
-
-  {"q":"Jeg er kokk med erfaring fra à la carte og storkjøkken.","cat":"Reiseliv og mat","lang":null},
-  {"q":"I am a chef. I do not speak Norwegian but I speak English.","cat":"Reiseliv og mat","lang":"none"},
-
-  {"q":"Jeg er anleggsmaskinfører med erfaring fra grunnarbeid.","cat":"Bygg og anlegg","lang":null},
-  {"q":"I am a civil engineer with structural design experience. I only speak English.","cat":"Bygg og anlegg","lang":"none"},
-
-  {"q":"Jeg er lastebilsjåfør med førerkort klasse CE.","cat":"Transport og lager","lang":null},
-  {"q":"I am a warehouse worker with a forklift certificate. I do not speak Norwegian.","cat":"Transport og lager","lang":"none"},
-
-  {"q":"Jeg er backend-utvikler med erfaring i Java og Kubernetes.","cat":"IT","lang":null},
-  {"q":"I am a data engineer with Python and SQL. I do not speak Norwegian.","cat":"IT","lang":"none"},
-  {"q":"I am a software developer working with React and TypeScript. I only speak English.","cat":"IT","lang":"none"},
-
-  {"q":"Jeg er produksjonsmedarbeider med erfaring fra industri.","cat":"Industri og produksjon","lang":null},
-  {"q":"I am a process operator in manufacturing. I do not speak Norwegian.","cat":"Industri og produksjon","lang":"none"}
- ]
+  {
+   "q": "Jeg er sykepleier med erfaring fra sykehus. Jeg snakker norsk.",
+   "cat": "Helse og sosial",
+   "lang": "fluent"
+  },
+  {
+   "q": "I am a nurse with intensive care experience. I only speak English.",
+   "cat": "Helse og sosial",
+   "lang": "none"
+  },
+  {
+   "q": "Jeg er helsefagarbeider og søker jobb i Bergen. Jeg snakker norsk.",
+   "cat": "Helse og sosial",
+   "lang": "fluent",
+   "place": "Bergen"
+  },
+  {
+   "q": "Jeg er butikkmedarbeider med erfaring fra dagligvare. Jeg snakker norsk.",
+   "cat": "Salg og service",
+   "lang": "fluent"
+  },
+  {
+   "q": "I am looking for retail sales work. I do not speak Norwegian.",
+   "cat": "Salg og service",
+   "lang": "none"
+  },
+  {
+   "q": "Jeg er grunnskolelærer i matematikk og søker fast stilling.",
+   "cat": "Utdanning",
+   "lang": null
+  },
+  {
+   "q": "I am a kindergarten teacher. I do not speak Norwegian.",
+   "cat": "Utdanning",
+   "lang": "none"
+  },
+  {
+   "q": "Jeg er regnskapsfører med erfaring fra lønn og fakturering.",
+   "cat": "Kontor og økonomi",
+   "lang": null
+  },
+  {
+   "q": "I am an accountant looking for work in Oslo. I only speak English.",
+   "cat": "Kontor og økonomi",
+   "lang": "none",
+   "place": "Oslo"
+  },
+  {
+   "q": "Jeg er tømrer med fagbrev og erfaring fra nybygg.",
+   "cat": "Håndverkere",
+   "lang": null
+  },
+  {
+   "q": "I am an electrician with certification. I do not speak Norwegian.",
+   "cat": "Håndverkere",
+   "lang": "none"
+  },
+  {
+   "q": "Jeg er rørlegger og søker jobb i Trondheim.",
+   "cat": "Håndverkere",
+   "lang": null,
+   "place": "Trondheim"
+  },
+  {
+   "q": "Jeg er kokk med erfaring fra à la carte og storkjøkken.",
+   "cat": "Reiseliv og mat",
+   "lang": null
+  },
+  {
+   "q": "I am a chef. I do not speak Norwegian but I speak English.",
+   "cat": "Reiseliv og mat",
+   "lang": "none"
+  },
+  {
+   "q": "Jeg er anleggsmaskinfører med erfaring fra grunnarbeid.",
+   "cat": "Bygg og anlegg",
+   "lang": null
+  },
+  {
+   "q": "I am a civil engineer with structural design experience. I only speak English.",
+   "cat": "Bygg og anlegg",
+   "lang": "none"
+  },
+  {
+   "q": "Jeg er lastebilsjåfør med førerkort klasse CE.",
+   "cat": "Transport og lager",
+   "lang": null
+  },
+  {
+   "q": "I am a warehouse worker with a forklift certificate. I do not speak Norwegian.",
+   "cat": "Transport og lager",
+   "lang": "none"
+  },
+  {
+   "q": "Jeg er backend-utvikler med erfaring i Java og Kubernetes.",
+   "cat": "IT",
+   "lang": null
+  },
+  {
+   "q": "I am a data engineer with Python and SQL. I do not speak Norwegian.",
+   "cat": "IT",
+   "lang": "none"
+  },
+  {
+   "q": "I am a software developer working with React and TypeScript. I only speak English.",
+   "cat": "IT",
+   "lang": "none"
+  },
+  {
+   "q": "Jeg er produksjonsmedarbeider med erfaring fra industri.",
+   "cat": "Industri og produksjon",
+   "lang": null
+  },
+  {
+   "q": "I am a process operator in manufacturing. I do not speak Norwegian.",
+   "cat": "Industri og produksjon",
+   "lang": "none"
+  }
+ ],
+ "discrimination": {
+  "note": "Pairs that must NOT conflate. A bag of words cannot tell `low voltage` from `high voltage`; adjacent-pair (bigram) terms can, because a bigram is far rarer than its parts and the false match cannot earn it.",
+  "pairs": [
+   {
+    "q": "electrical engineer, low voltage, automation",
+    "want": "low voltage",
+    "avoid": "high voltage"
+   },
+   {
+    "q": "I am a data engineer.",
+    "want": "data engineer|datavarehus|dataingeni",
+    "avoid": "elektro|electrical"
+   },
+   {
+    "q": "I am an electrical engineer.",
+    "want": "elektro|electrical",
+    "avoid": "data engineer|datavarehus"
+   },
+   {
+    "q": "I am a mechanical engineer.",
+    "want": "maskin|mechanical",
+    "avoid": "datavarehus|elektro"
+   },
+   {
+    "q": "I am a software engineer.",
+    "want": "programvare|software|utvikler",
+    "avoid": "elektro|maskin"
+   },
+   {
+    "q": "I am a nurse.",
+    "want": "sykepleier|nurse",
+    "avoid": "ingeni|engineer|utvikler"
+   }
+  ]
+ }
 }

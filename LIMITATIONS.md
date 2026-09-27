@@ -1375,3 +1375,65 @@ search.
 **What it does not do** is rank low-voltage above high-voltage. That needs phrase-
 aware matching in the scorer, which is a ranking change and therefore needs a judged
 arm rather than my judgement.
+
+## 22. Adjacent-pair (bigram) terms: `low voltage` no longer matches `high voltage`
+
+Asked whether simple NLP — treating adjacent word pairs as units — would separate
+`low voltage` from `high voltage`. It does, and **rarity does the work without any
+rule about adjectives**:
+
+| term | ads | idf |
+|---|---:|---:|
+| `voltage` | 11 | 6.74 |
+| `high` | 117 | 4.47 |
+| `low` | 9 | 6.93 |
+| **`low voltage`** | **2** | **8.13** |
+| `high voltage` | 6 | 7.28 |
+
+A high-voltage advertisement contains `voltage` but **cannot** contain the pair
+`low voltage`, so the true match earns a term the false match has no way to get —
+and because the pair is rarer, IDF weights it above either word alone.
+
+Pairs never cross a comma or full stop: `"engineer, low voltage"` must not produce
+the phantom phrase `engineer low`, which the first version did. Only pairs
+measurably rarer than both their parts are kept.
+
+**Measured effect:**
+
+| query | first LOW-voltage ad | first HIGH-voltage ad |
+|---|---:|---:|
+| "…low voltage…" | **rank 1** | rank 15 |
+| "…high voltage…" | rank 1 | **rank 3** |
+
+`night shift` pushes the first `day shift` advertisement to rank 140.
+
+**Engineer disambiguation, checked because it was asked for:** data 5/5, electrical
+5/5, mechanical 5/5, software 5/5, civil 4/5 — own kind in the top five, and no
+bleed between data and electrical in either direction.
+
+**One apparent regression was a metric artefact.** The industry-match proxy scored
+`data engineer` lower after the change — but four of the top five are literally
+titled "Data Engineer"; NAV files them under *Industri og produksjon*. The proxy
+penalised correct results, which is a limit of the proxy and not of the ranking.
+
+### The deployed page cannot be scored on the existing pool
+
+The judged arms are the **Python** pipeline; the page is a separate **JavaScript**
+implementation, so its agreement with the judgments had never been checked. Running
+it against the 378 judgments:
+
+| | |
+|---|---:|
+| CVR@10 | 0.046 |
+| nDCG@10 | 0.286 |
+| **judged share** | **32%** |
+
+**Those numbers are not comparable to the Python arms.** 68% of the page's top-10 was
+never judged, so CVR is a lower bound (unjudged rows count as non-violating) and nDCG
+is depressed (they contribute no gain). Reporting 0.046 against the Python arms'
+0.077 would be exactly the error §17 records.
+
+This is the same pooling bias, and it now has a name: **the page and the evaluated
+pipeline are two implementations, and only one of them has ever been judged.** Either
+the page's ranking is pooled and judged in its own round, or the Python pipeline is
+made to serve the page. The second is the better fix and is not a small change.

@@ -45,3 +45,23 @@ console.log(`place parse failures: ${placeFail.length}`);
 placeFail.forEach(([q,got,want])=>console.log(`   got ${got} want ${want}: ${q.slice(0,50)}`));
 console.log(`occupation unresolved: ${parseFail.length}`);
 parseFail.forEach(q=>console.log(`   ${q.slice(0,56)}`));
+
+// DISCRIMINATION: pairs that must not conflate. A bag of words cannot tell
+// `low voltage` from `high voltage`; adjacent-pair terms can, because a bigram is
+// far rarer than its parts and the false match has no way to earn it.
+const DIS=JSON.parse(readFileSync("eval/demo_queries.json","utf8")).discrimination;
+console.log(`\n${"=".repeat(70)}\nDISCRIMINATION`);
+let disOk=0;
+for(const c of DIS.pairs){
+  const r=m.score(m.parse(c.q),0.7).slice(0,5);
+  // Skills and glosses too: "low voltage" lives in the extracted skills, not the
+  // title, and checking only the title reported a pass as a failure.
+  const txt=x=>(x.ad.t+" "+x.ad.o+" "+x.ad.e+" "+(x.ad.k||[]).join(" ")+" "
+                +(x.ad.g||[]).join(" ")).toLowerCase();
+  const want=r.filter(x=>new RegExp(c.want).test(txt(x))).length;
+  const bad=c.avoid? r.filter(x=>new RegExp(c.avoid).test(txt(x))).length : 0;
+  const ok = want>=1 && bad===0;   // want>=1 for rare phrases; zero unwanted is the hard rule
+  if(ok) disOk++;
+  console.log(`  [${ok?"ok ":"BAD"}] ${want}/5 wanted, ${bad} unwanted   ${c.q.slice(0,46)}`);
+}
+console.log(`  discrimination passed: ${disOk}/${DIS.pairs.length}`);
