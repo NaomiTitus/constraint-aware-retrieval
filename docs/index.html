@@ -91,10 +91,9 @@
   free-text skills. A job's requirements <b>R</b> are viable only if contained in
   your attributes <b>S</b>. Occupation is compared as a STYRK taxonomy code
   (<code>2223</code> nurse vs <code>2221</code> specialist nurse share a group), so
-  <em>nurse</em> and <em>sykepleier</em> reach the same ads. Language is a graded
-  penalty × λ, never a filter — at λ=0 the constraint stage is off, and you can
+  <em>nurse</em> and <em>sykepleier</em> reach the same ads. Language works two ways: a graded penalty × λ on advertisements that demand what you lack, and a BOOST for the 956 the census marks open to English speakers. Never a filter — at λ=0 the constraint stage is off, and you can
   watch the ranking change.</p>
-  <p><b>Honest limitations.</b> Skills come from the original census and are present
+  <p><b>What it does with language.</b> If you say you do not speak Norwegian, advertisements demanding it are demoted by a graded severity (a stated requirement counts more than silence) and advertisements explicitly open to English are promoted. If you say nothing, the stage contributes exactly nothing — writing in English is <em>observed and reported</em>, never silently treated as a constraint, because a third of this corpus is merely silent on language and inferring a requirement from silence would remove 3,507 jobs from everyone.</p><p><b>Honest limitations.</b> Skills come from the original census and are present
   on only 32.8% of ads; a re-prompt measured 8× better recall but has not been run
   over the corpus. Location is a graded predicate over the corpus's own municipality and county names (exact 1.0, same county 0.55), and every location an ad lists is checked. No relevance judgments have
   been applied to this ranking yet, so nothing here is a measured quality claim.
@@ -195,6 +194,15 @@ function parse(q){
       break;
     }
   }
+  // THE LANGUAGE THE QUERY IS WRITTEN IN IS EVIDENCE, AND IT IS NOT APPLIED
+  // SILENTLY. A seeker typing English may well read Norwegian — `c4` is a fluent
+  // Norwegian teacher who never mentions language — and §3b measured what inferring
+  // a constraint from silence costs: 3,507 advertisements, a third of the corpus.
+  // So the observation is SURFACED and the seeker chooses. Detected by Norwegian
+  // function words and letters, which no English sentence carries.
+  S.queryLang = /[æøå]|\b(jeg|meg|som|ikke|med|søker|erfaring|stilling|arbeid)\b/
+                  .test(low) ? "no" : "en";
+
   if(S.norwegian===null){
     const L=[
       [/\bonly speak(s)? english\b|\bonly english\b|\bengelsk bare\b|\bbare engelsk\b/,"none"],
@@ -285,15 +293,23 @@ function score(S, lam){
     // The English GLOSSES are searched alongside the Norwegian phrases: that is
     // what lets "computer vision" match an advertisement that says
     // "erfaring med maskinsyn", which no amount of Norwegian text matching can do.
-    const hay = " "+norm(ad.t+" "+ad.o+" "+ad.e+" "+(ad.k||[]).join(" ")+" "
-                     +(ad.g||[]).join(" ")+" "+ad.c)+" ";
+    // FIELDS ARE WEIGHTED, not pooled. A term in the job TITLE is far stronger
+    // evidence than the same term buried in a skill list — `ad_taxonomy` derives the
+    // standardised occupation from the title for 100% of the corpus, and BM25 on the
+    // server side already boosts it 3x. Treating every field alike let an ad that
+    // merely lists a skill outrank one whose title names the job.
+    const hayT = " "+norm(ad.t+" "+ad.o+" "+ad.e)+" ";
+    const hayS = " "+norm((ad.k||[]).join(" ")+" "+(ad.g||[]).join(" ")+" "+ad.c)+" ";
     // WORD BOUNDARIES, not substrings. `hay.includes("nurse")` matched `nursery`,
     // so a query for a nurse returned a kindergarten manager first — the term was
     // "found" inside an unrelated word. Padding both sides and matching on space
     // boundaries is the cheap fix; a Norwegian compound is still reachable because
     // the occupation predicate and the skill glosses carry that load, not this.
     let hits=0; const matched=[];
-    for(const t of S.terms){ if(hay.includes(" "+t+" ")){ hits++; matched.push(t); } }
+    for(const t of S.terms){
+      const inT=hayT.includes(" "+t+" "), inS=hayS.includes(" "+t+" ");
+      if(inT||inS){ hits += inT ? 1.0 : 0.55; matched.push(inT?t:t+"*"); }
+    }
     let base = hits/Math.max(S.terms.length,1);
 
     // occupation as a PREDICATE over metadata, not a scored term
@@ -352,7 +368,19 @@ function score(S, lam){
         sev = s*disc;
       }
     }
-    out.push({ad, final: base*(1-lam*sev), prox, sev, matched, lprox});
+    // A POSITIVE SIGNAL, not only a penalty. The census marks 956 advertisements
+    // english_accessible — 551 of them `either_norwegian_or_english`, which an
+    // English speaker can simply take. Penalising the blocking ads pushes them down;
+    // this pulls the workable ones UP, which is a different and complementary move.
+    // It fires only when the seeker actually said they lack Norwegian, so a seeker
+    // who said nothing is unaffected — the non-effect rule.
+    let boost=1.0;
+    if(S.norwegian==="none" || S.norwegian==="basic"){
+      if(ad.a) boost += 0.22;                         // derived english_accessible
+      if(ad.w==="english"||ad.w==="both") boost += 0.10;   // stated working language
+    }
+    out.push({ad, final: base*boost*(1-lam*sev), prox, sev, matched, lprox,
+              boosted: boost>1.0});
   }
   out.sort((a,b)=>b.final-a.final);
   return out;
@@ -366,7 +394,12 @@ function render(S, res, lam){
     `${S.styrk.length?" → STYRK "+S.styrk.slice(0,3).join(", "):""}`+
     `${S.occExact?"":S.occFromTitle?" <i>(from employers\u2019 own titles)</i>":" <i>(broad match — weighted down)</i>"}</span>`);
   if(S.norwegian!==null) bits.push(`<span class="chip hard"><b>Norwegian</b> ${S.norwegian} <i>“${S.evidence.language}”</i></span>`);
-  else bits.push(`<span class="chip"><b>Norwegian</b> not stated → stage contributes nothing</span>`);
+  else {
+    bits.push(`<span class="chip"><b>Norwegian</b> not stated → stage contributes nothing</span>`);
+    if(S.queryLang==="en") bits.push(
+      `<span class="chip"><b>you wrote in English</b> — say “I don\u2019t speak Norwegian” `+
+      `to apply that as a constraint</span>`);
+  }
   if(S.place) bits.push(`<span class="chip hard"><b>place</b> ${S.place.phrase}`+
     `${S.place.anywhere?" (anywhere)":S.place.county&&!S.place.muni?" — county":""}</span>`);
   if(S.terms.length) bits.push(`<span class="chip"><b>skills / terms</b> ${S.terms.join(", ")}</span>`);
@@ -389,6 +422,7 @@ function render(S, res, lam){
     if(r.lprox===EXACT && S.place && !S.place.anywhere) bg.push(`<span class="b ok">in ${a.m||"the area"}</span>`);
     else if(r.lprox===SAME_COUNTY) bg.push(`<span class="b sf">same county</span>`);
     else if(r.lprox===0 && S.place && !S.place.anywhere) bg.push(`<span class="b no">wrong area</span>`);
+    if(r.boosted && a.a) bg.push(`<span class="b ok">open to English speakers</span>`);
     if(a.l==="unstated" && r.sev>0) bg.push(`<span class="b n">silent on language</span>`);
     for(const m of r.matched.slice(0,4)) bg.push(`<span class="b n">${m}</span>`);
     return `<li class="${r.sev>=.9?"blocked":""}">

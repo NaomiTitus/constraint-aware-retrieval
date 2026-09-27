@@ -953,6 +953,30 @@ Three honest readings that travel with it:
   negative". +0.050 means the constraint is largely neutralised, not reversed, and
   p1 and p4 still show +0.20 individually. The claim this supports is *"the stage
   removes most of the harm"*, not *"the system prefers accessible work"*.
+- **CVR@10 IS A LANGUAGE-ACCESSIBILITY METRIC WEARING A GENERAL NAME.** Split by
+  what the seeker stated:
+
+  | | n | mean CVR@10 |
+  |---|---:|---:|
+  | seekers stating **no Norwegian** | 6 | **0.283** |
+  | everyone else | 7 | **0.043** |
+
+  **86% of the 77 violations are language**; the rest are 6 `other` and 5 `licence`.
+  Three personas sit at exactly 0.00. So the pooled headline is a macro-average over
+  seven personas that barely move it — which **understates** the effect on the people
+  it is about rather than inflating it, but means the number is not a general-purpose
+  retrieval metric. It should be reported split, with "0.283 for seekers without
+  Norwegian" as the honest headline.
+
+  Two consequences. **ΔCVR is the sounder measure**, because it compares a persona
+  against itself and the low-CVR personas cannot dilute it. And **the controls'
+  near-zero CVR is itself a result**: `c2` and `c4` at 0.00 confirm the non-effect —
+  a seeker who says nothing about language is not penalised for it.
+
+  The metric is generic by construction and thin in practice for a measured reason:
+  `credential.licence` and `credential.trade_certificate` have **no corpus
+  counterpart at all** (§15), so the judge can see a master-craftsman requirement the
+  seeker lacks while the constraint stage has no field to act on.
 - **Thirteen dev personas, four intact pairs.** No confidence intervals are computed
   and none should be quoted; E7 pre-registers bootstrap CIs on every adjacent-rung
   delta and they have not been run.
