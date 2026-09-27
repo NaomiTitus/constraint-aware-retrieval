@@ -1,0 +1,124 @@
+{
+ "n_ads": 10166,
+ "resolution": {
+  "c1_lager_no_language_mention": {
+   "phrase": "lager",
+   "codes": {}
+  },
+  "c2_sykepleier_authorisation_only": {
+   "phrase": "sykepleier",
+   "codes": {
+    "2223": 0.8803030303030303,
+    "2221": 0.05454545454545454
+   }
+  },
+  "c4_laerer_norsk_speaker": {
+   "phrase": "grunnskolel\u00e6rer",
+   "codes": {
+    "2341": 0.9915966386554622
+   }
+  },
+  "p1_sykepleier_no_norsk": {
+   "phrase": "nurse",
+   "codes": {
+    "5329": 0.0724191063174114,
+    "5321": 0.650231124807396,
+    "2223": 0.0847457627118644,
+    "2221": 0.14329738058551617
+   }
+  },
+  "p1_sykepleier_norsk": {
+   "phrase": "sykepleier",
+   "codes": {
+    "2223": 0.8803030303030303,
+    "2221": 0.05454545454545454
+   }
+  },
+  "p2_tomrer_no_norsk": {
+   "phrase": "carpenter",
+   "codes": {
+    "7115": 0.967741935483871
+   }
+  },
+  "p2_tomrer_norsk": {
+   "phrase": "t\u00f8mrer",
+   "codes": {
+    "7115": 0.967741935483871
+   }
+  },
+  "p4_backend_no_norsk": {
+   "phrase": "backend developer",
+   "codes": {
+    "2512": 0.7777777777777778,
+    "2152": 0.05555555555555555,
+    "2513": 0.05555555555555555,
+    "2431": 0.08333333333333333
+   }
+  },
+  "p4_backend_norsk": {
+   "phrase": "backend-utvikler",
+   "codes": {}
+  },
+  "p5_data_scientist_no_norsk": {
+   "phrase": "data scientist",
+   "codes": {
+    "2511": 0.6666666666666666,
+    "2310": 0.1111111111111111,
+    "2514": 0.2222222222222222
+   }
+  },
+  "p5_data_scientist_norsk": {
+   "phrase": "data scientist",
+   "codes": {
+    "2511": 0.6666666666666666,
+    "2310": 0.1111111111111111,
+    "2514": 0.2222222222222222
+   }
+  },
+  "p6_grunnskolelaerer": {
+   "phrase": "primary school teacher",
+   "codes": {
+    "2341": 0.9915254237288136
+   }
+  },
+  "p7_lagermedarbeider": {
+   "phrase": "warehouse work",
+   "codes": {}
+  }
+ },
+ "arms": {},
+ "pair_overlap": {
+  "raw query": 1.75,
+  "gold parse": 2.5,
+  "gold parse x occupation": 2.25
+ },
+ "occupation_precision_at5": {
+  "raw query": 0.48,
+  "gold parse": 0.6599999999999999,
+  "gold parse x occupation": 0.7
+ },
+ "p1_top5": {
+  "raw query": [
+   "spesiallege",
+   "l\u00e6rer i moderne spr\u00e5k i videreg\u00e5ende skole",
+   "vaktmester",
+   "Selgere (engros)",
+   "murer"
+  ],
+  "gold parse": [
+   "pleiemedhjelper",
+   "spesialsykepleier",
+   "spesialveterin\u00e6r",
+   "spesiallege",
+   "pleiemedhjelper"
+  ],
+  "gold parse x occupation": [
+   "pleiemedhjelper",
+   "pleiemedhjelper",
+   "pleiemedhjelper",
+   "pleiemedhjelper",
+   "pleiemedhjelper"
+  ]
+ },
+ "p1_blocking_in_top10_arm3": 5
+}

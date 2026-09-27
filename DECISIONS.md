@@ -719,3 +719,72 @@ Whether the resulting ranking is GOOD. `eval/JUDGING_PROTOCOL.md` is pre-registe
 with zero pairs judged; everything above is structural — occupation labels read from
 `ad_taxonomy`, which is derived independently of BM25, so the check is not circular,
 but it is not a relevance measurement either.
+
+### D18 — measured outcome, 2026-09-27
+
+Built and measured the same day. **The predicate works; it does not fix what I
+predicted it would fix, and the remaining error is the input layer.**
+
+**What improved.** Share of the top-5 whose STYRK code is within one unit group of
+the seeker's occupation, read off `ad_taxonomy` and therefore independent of both
+BM25 and this module:
+
+| | occupation precision@5 |
+|---|---:|
+| BM25 on raw query prose | 48% |
+| BM25 on gold-parse lexical terms | 66% |
+| + occupation predicate | **70%** |
+
+`p6_grunnskolelaerer` went 1/5 → 5/5, `p4_backend_no_norsk` 2/5 → 5/5,
+`p2_tomrer_no_norsk` 3/5 → 5/5. Most of the first jump comes from querying the
+parse rather than the prose, which is the same finding D18 recorded from the other
+side: the boilerplate was the problem, and removing it beats reweighting it.
+
+**What did NOT improve, against the stated prediction.** Paired overlap@10 — the
+number D18 predicted would rise, because both language variants resolve to the same
+code:
+
+| | mean paired overlap@10 |
+|---|---:|
+| raw query | 1.8/10 |
+| gold parse | **2.5/10** |
+| + occupation predicate | 2.2/10 |
+
+**It went down.** The prediction failed and the reason is instructive rather than
+fatal.
+
+**Cause 1: asymmetric resolution makes a pair diverge MORE.** `backend developer`
+resolves to 2512; `backend-utvikler` does not resolve at all. The fail-open rule
+then leaves the Norwegian variant untouched while filtering the English one, so
+`p4` fell from 8/10 to 4/10. Fail-open is still right — zeroing every ad on a
+gazetteer miss would report a lookup gap as "no jobs exist" — but **a predicate
+applied to one side of a controlled pair and not the other is a confound**, and any
+future paired measurement has to report resolution status alongside it.
+
+**Cause 2: the gazetteer misresolves the most important phrase.** `nurse` resolves
+to **5321 `pleiemedhjelper`** (care assistant) at 65%, with the correct 2223
+`sykepleier` at only 8%. ESCO's English label for `sykepleier` is `nurse
+responsible for general care` — four content tokens — so symmetric Jaccard against
+the one-token phrase `nurse` scores 0.25 and falls below threshold, while a short
+label like `auxiliary nurse` scores 0.5 and wins. **Jaccard penalises the correct
+label for being specific.** Containment-weighted scoring (`|shared| / |phrase|`)
+is the obvious fix and is not attempted here.
+
+**Cause 3: 3 of 13 dev occupations do not resolve at all** — `lager`,
+`backend-utvikler`, `warehouse work`.
+
+**Where this leaves it.** All three causes are seeker-side: mapping a person's words
+onto a corpus code. That is `PLAN.md` D6, the query parser, and its gazetteer fast
+path — the input layer. The ad side is fine (100% coverage, hierarchical, derived
+independently); the predicate mechanism is fine (28 unit tests, exact/adjacent/
+unrelated all behave); what is weak is the lookup from prose to code.
+
+So the measurement redirects the work rather than endorsing more of it: **the next
+gain is in the input layer, not in retrieval.** That is also what the ceiling said
+from a different angle (§ gold parse coverage: 54% population-weighted), and what
+D18's own premise said — extraction reliability is the binding constraint.
+
+**Not settled.** Whether any of this ranking is GOOD. Zero relevance pairs judged.
+`occupation precision@5` measures agreement with a taxonomy label, not relevance to
+a person, and 5/10 of the top-10 for the no-Norwegian nurse still DEMAND Norwegian —
+which occupation proximity should not fix, and D5 exists to.
