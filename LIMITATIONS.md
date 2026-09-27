@@ -642,12 +642,52 @@ a three-line cleaning advert whose only requirement is a driving licence. Paddin
 them would teach the prompt to invent, which is the failure this exercise exists to
 fix in the other direction.
 
+### The baseline, now that a scorer exists
+
+`eval/skills_scoring.py` scores the existing census against these labels. It reuses
+`scoring.py`'s four-way agreement counter rather than an exact-match rate, for the
+reason that module already measured: over its 32 golden spans, five points of the
+gap were a trailing full stop, so an exact rate would report 62.5% as extraction
+quality.
+
+| the census, on the 44 golden advertisements | |
+|---|---:|
+| golden skills | 144 |
+| census predicted | 38 |
+| paired | 15 |
+| **recall** | **0.104** |
+| precision | 0.395 |
+| F1 | 0.165 |
+| agreement of the 15 pairs | 5 strict · 10 containment · 0 disjoint |
+| level agreement | 0.867 |
+
+**Read the recall, not the precision.** Of the 23 census predictions with no golden
+counterpart, **17 of the 20 sampled are credential-shaped** — `førerkort klasse C1`,
+`Truckførerbevis (T4)`, `Varme Arbeider`, `gyldig YSK`. Those are licences, which
+these labels exclude by design because `credential.*` records them. So the 0.395 is
+mostly a **category disagreement**, not a quality failure, and the defensible
+baseline claim is that the census finds **10% of the skills present**.
+
+Two further readings that keep this honest. **Zero of the 15 pairs are `disjoint`**,
+so where the census did extract a skill it quoted real text — the defect is
+omission, not invention. And **precision here has a provisional denominator**: an
+unpaired prediction may be a skill the labeller missed rather than an extractor
+error, so `skills_scoring` reports `unpaired_predictions` on its own line and never
+calls it a false positive.
+
 ### What is owed before any number from this is quoted
 
 - A human pass over the 144 labels, or a defined subset, by someone who reads
   Norwegian. Until then the file is provisional and says so.
 - The census re-run itself has **not** happened. `skills` in the corpus is still the
   32.8% column; nothing downstream has changed.
+- **The new prompt has never touched the API.** Its tool schema is unvalidated
+  against the live endpoint, and the judge batch was rejected wholesale on a
+  `custom_id` pattern that looked fine locally, so a 44-advertisement pilot comes
+  before any full run.
+- **The $22.59 figure does not transfer.** The census log names the cause —
+  "PROMPT-CACHE HIT RATE 97% <- the number that sets the bill" — and a new prompt
+  starts cold, so the re-run needs its own estimate.
 - Note that **no current retrieval arm reads `ad_facets.skills`** — `constraints.py`
   reads only `norwegian_requirement_level` and `stated_working_language`. So this
   defect has cost nothing measured *yet*, and equally the fix buys nothing until
