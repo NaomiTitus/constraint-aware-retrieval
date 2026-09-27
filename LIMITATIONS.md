@@ -675,6 +675,52 @@ unpaired prediction may be a skill the labeller missed rather than an extractor
 error, so `skills_scoring` reports `unpaired_predictions` on its own line and never
 calls it a false positive.
 
+### The pilot, 2026-09-27: recall 0.104 -> 0.868, and the label set is now the weaker half
+
+44 advertisements, `claude-opus-5`, prompt `skills-v1`, synchronous API. 44 of 44
+extracted, 257s, **$1.13 — $0.0256/ad**, so a full corpus is ~$261 standard and
+~$130 batched. That is an order of magnitude over the census's $22.59, and the
+census log says why: *"PROMPT-CACHE HIT RATE 97% <- the number that sets the bill"*.
+A pilot of 44 never warms a cache.
+
+| | census | pilot |
+|---|---:|---:|
+| skills returned | 38 | **259** |
+| paired with golden | 15 | **125** |
+| **recall** | 0.104 | **0.868** |
+| precision | 0.395 | 0.483 |
+| F1 | 0.165 | **0.620** |
+| agreement of pairs | 5 strict · 10 cont. | 78 strict · 13 punct · 34 cont. · **0 disjoint** |
+| level agreement | 0.867 | **0.984** |
+| ads with zero skills | 26 of 44 | **0 of 44** |
+
+**Validation rejected 2 of 261 returned skills (0.8%)**, both the same nynorsk
+phrase truncated mid-word — not fabrication.
+
+**THE PRECISION FIGURE IS NOT A PRECISION FIGURE.** 134 predictions had no golden
+counterpart. Reading a sample of 20: **18 are genuine skills the labeller omitted**
+— `Kommersiell forståelse og kremmerånd`, `Tidligere erfaring fra restaurant-,
+hotell-, service- eller handelsbransjen`, `erfaring med å ta ansvar for andre`. Only
+2 looked like exclusion violations and on inspection both were mis-flagged by the
+category regex rather than by reading. So **0.483 measures the labeller's coverage,
+not the extractor's precision**, and the model extracted roughly twice as many real
+skills per advertisement as the labeller did.
+
+**Four of the 19 "missed" golden skills are labelling errors, not extractor
+misses.** `ADR Tank kompetansebevis`, `instruktørutdanning (Trinn 1)`, `FSE og HLR`
+and `vidareutdanning innan pedagogikk` are **credentials**, which this schema
+excludes by design — the labeller broke its own rule and the extractor correctly
+declined to follow. Genuine misses are the remaining 15, including `Sårstell`
+(wound care) and `Assistere ved fødsler` (assisting at births), which are real
+omissions worth a prompt note.
+
+**So the label set is now the weaker half of the pair.** That inverts the §15
+concern: the risk is no longer that a model-labelled gate flatters the extractor, it
+is that the gate under-counts and makes a good extractor look imprecise. Both
+readings point the same way — a human pass over these labels is the highest-value
+remaining work on this facet, and until then **only the recall and the agreement
+breakdown should be quoted**.
+
 ### What is owed before any number from this is quoted
 
 - A human pass over the 144 labels, or a defined subset, by someone who reads
