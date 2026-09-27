@@ -1437,3 +1437,78 @@ This is the same pooling bias, and it now has a name: **the page and the evaluat
 pipeline are two implementations, and only one of them has ever been judged.** Either
 the page's ranking is pooled and judged in its own round, or the Python pipeline is
 made to serve the page. The second is the better fix and is not a small change.
+
+## 23. Is the bigram fix general? Measured on 12 pairs: 4 better, 8 flat, 0 worse
+
+§22 fixed `low voltage` matching high-voltage advertisements. The obvious question is
+whether that was a fix or a patch, so it was measured rather than asserted: 11
+contrastive pairs were selected mechanically from the corpus — both phrases present,
+sharing a head noun, the pair rarer than the noun — plus the voltage pair itself. Each
+was run as a bare query with the bigram contribution ON and OFF, counting how many of
+the top 10 contain the wanted phrase versus the contrasting one.
+
+| query phrase | OFF (want/unwant) | ON (want/unwant) | effect |
+|---|---:|---:|---|
+| heavy vehicle | 3/0 | 10/0 | **+7** |
+| food safety | 6/0 | 10/0 | **+4** |
+| quality control | 6/0 | 10/0 | **+4** |
+| special education | 6/1 | 10/2 | **+3** |
+| night shift | 2/0 | 2/0 | — |
+| intensive care | 8/0 | 8/0 | — |
+| primary school | 10/0 | 10/0 | — |
+| public sector | 1/0 | 1/0 | — |
+| electric vehicle | 0/0 | 0/0 | — |
+| mental health | 10/0 | 10/0 | — |
+| fast stilling | 1/0 | 1/0 | — |
+| low voltage (bare) | 0/1 | 0/1 | — |
+
+**4 better, 8 flat, 0 worse.** So it generalises, but narrowly, and NOT in the way
+§22's framing suggests. In every one of the four wins the unwanted count was already
+zero: the bigram did not push a wrong-qualifier advertisement out, it pulled more
+right-phrase advertisements IN. The mechanism is not qualifier discrimination in
+general — it is that an advertisement containing the literal phrase outscores one
+where both words merely co-occur. Where the unigrams already separate the senses
+(`intensive` vs `home`, `primary` vs `secondary` — both qualifiers are content words
+with their own IDF) the bigram is redundant and measures as nothing.
+
+**The first correction to §22.** The voltage case worked because `low` (9 ads) is a
+weak unigram beside `voltage`, and only in the full query shape. Bare `low voltage`
+is 0/1 either way: this index's low-voltage advertisements are Norwegian
+(`lavspenning`) and the bare query has nothing else to hold onto. In the original
+`electrical engineer, low voltage, automation` shape the first high-voltage
+advertisement moves from **rank 3 to rank 15** — verified as a clean A/B this time.
+
+**Where it does not reach, stated so it is not discovered as a surprise:**
+non-adjacent qualifiers (`voltage, low`), negated ones (`no night shifts` — the
+bigram has no polarity), cross-language pairs (`lavspenning` / `low voltage` are
+different strings and the gloss does not always carry the qualifier), and any pair
+whose phrase does not literally occur in the index.
+
+### 23.1 `high school teacher` found a worse bug, and it is not the bigram's
+
+The pair suggested from outside my own list was `high school`. It occurs **0 times**
+in this corpus — the glosses render *videregående* as "upper secondary" — so the
+bigram cannot fire at all, which is itself the vocabulary-mismatch limit above. But
+running the honest form of the query exposed something else:
+
+```
+upper secondary school teacher                          -> 1-3 all UPPER-SEC, 4-6 secondary
+upper secondary school teacher, I do not speak norwegian -> 1 PRIMARY, 2-6 PhD/researcher posts
+```
+
+Identical with the bigram ON and OFF. The cause is the **1.22x English-accessibility
+boost** (§19): a flat multiplier cannot reorder advertisements that all receive it,
+but it does lift the whole accessible pool over the Norwegian one — and in this corpus
+the English-language advertisements are overwhelmingly academic. So a seeker who says
+they do not speak Norwegian is handed PhD fellowships instead of teaching posts, and
+the correct upper-secondary teaching advertisements that rank 1-3 without the clause
+are gone.
+
+**This is a measurement blind spot, not only a ranking bug.** CVR@10 is a
+language-accessibility metric (§17) — it counts exactly what the boost optimises — so
+it would score that second ranking as a SUCCESS. The one metric that would catch it,
+nDCG@10 against topical judgments, is the one whose confidence interval on the
+constraint rung already straddles a loss. 1.22 was never fitted against topical
+relevance; it was chosen to clear the language floor and it does that at the cost of
+occupation fit. Fixing it properly means judging the page's own ranking (§22's
+outstanding item), not turning a dial.
