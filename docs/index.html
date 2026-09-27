@@ -172,15 +172,38 @@ function parse(q){
   // LANGUAGE. A seeker states a capability LEVEL, never a negation — "I do not
   // speak Norwegian" is the level `none`. Absence of any statement stays null,
   // which makes the stage contribute exactly nothing.
-  const L = [
-    [/\b(do not|don'?t|dont|ikke|no)\s+(speak|snakker|snakke)?\s*(any\s+)?(norwegian|norsk)\b/,"none"],
-    [/\bonly speak(s)? english\b|\bonly english\b|\bengelsk bare\b/,"none"],
-    [/\b(flytende|fluent|native|morsm[åa]l)\s*(i|in)?\s*(norsk|norwegian)\b/,"fluent"],
-    [/\bsnakker\s+(flytende\s+)?norsk\b|\bspeak(s)? (fluent )?norwegian\b/,"fluent"],
-    [/\b(litt|basic|some)\s+(norsk|norwegian)\b/,"basic"],
-  ];
-  for(const [re,lvl] of L){ const m=low.match(re); if(m){ S.norwegian=lvl;
-    S.evidence.language=m[0].trim(); break; } }
+  // NEGATION IS DETECTED BY PROXIMITY, NOT ADJACENCY, and this is the bug that
+  // taught it. `normalise` strips punctuation, so "I don't speak Norwegian" becomes
+  // "i don t speak norwegian" — an adjacency pattern spelled `don'?t` never matches
+  // it, and the POSITIVE pattern "speak norwegian" then matched instead. The seeker
+  // was recorded as FLUENT, which is the precise inversion this project exists to
+  // prevent, and it silenced the constraint stage entirely.
+  //
+  // So: find every mention of the language, then look BACKWARDS over a window for a
+  // negation. Word order and punctuation cannot defeat it.
+  const NEG=/\b(do not|dont|don t|doesn t|no|not|ikke|uten|without|zero|non)\b/;
+  const LANGRE=/\b(norwegian|norsk|norske)\b/g;
+  const WINDOW=42;                      // "I do not currently speak any Norwegian"
+  let m;
+  while((m=LANGRE.exec(low))!==null){
+    const before=low.slice(Math.max(0,m.index-WINDOW), m.index);
+    if(NEG.test(before)){
+      S.norwegian="none";
+      S.evidence.language=(before.trim()+" "+m[0]).trim().slice(-52);
+      break;
+    }
+  }
+  if(S.norwegian===null){
+    const L=[
+      [/\bonly speak(s)? english\b|\bonly english\b|\bengelsk bare\b|\bbare engelsk\b/,"none"],
+      [/\b(flytende|fluent|native|morsm[åa]l)\s*(i|in|p[åa])?\s*(norsk|norwegian)\b/,"fluent"],
+      [/\bsnakker\s+(flytende\s+)?norsk\b|\bspeak(s)? (fluent )?norwegian\b/,"fluent"],
+      [/\b(litt|basic|some|noe)\s+(norsk|norwegian)\b/,"basic"],
+      [/\b(l[æa]rer|learning)\s+(meg\s+)?(norsk|norwegian)\b/,"basic"],
+    ];
+    for(const [re,lvl] of L){ const mm=low.match(re); if(mm){ S.norwegian=lvl;
+      S.evidence.language=mm[0].trim(); break; } }
+  }
 
   // OCCUPATION, resolved against ESCO's bilingual labels — the same identity path
   // that makes `carpenter` and `tømrer` reach one STYRK code. Longest label first,

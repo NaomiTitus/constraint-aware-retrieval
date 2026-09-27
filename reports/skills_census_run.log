@@ -12,3 +12,12 @@ manifest -> reports/skills_census_manifest.json
   [  360s] 1 batch(es) in progress
   [  450s] 1 batch(es) in progress
   [  540s] 1 batch(es) in progress
+
+extracted  10166 of 10166 ads, 66,392 skills
+zero       164 ads (1.6%) — census had 6,828 (67.2%)
+REJECTED   4433 of 70825 returned (6.3%) failed verbatim validation
+errored    0
+
+written reports/skills_census.json
+NOT written into ad_facets: that row's prompt_version says census-v15 and
+a mixed row would carry neither version honestly (§4).

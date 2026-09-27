@@ -738,3 +738,73 @@ breakdown should be quoted**.
   reads only `norwegian_requirement_level` and `stated_working_language`. So this
   defect has cost nothing measured *yet*, and equally the fix buys nothing until
   D7's `skill_coverage` exists to consume it.
+
+## 16. The demo parser read "I don't speak Norwegian" as FLUENT, and ESCO has no AI job titles
+
+Two defects found by typing real queries into the deployed page, 2026-09-27. The
+first is the project's own thesis failing in its own demo.
+
+### The negation inversion
+
+`docs/index.html` recorded the seeker's Norwegian as **`fluent`** for the query
+*"...I don't speak norwegian"*, citing the evidence `"speak norwegian"`.
+
+The cause is one character. The page's `normalise` strips punctuation, so
+`don't` becomes `don t` — with a space. The negation pattern was written
+`don'?t`, which matches `dont` and `don't` but **not** `don t`, so it failed; the
+*positive* pattern `speak(s)? (fluent )?norwegian` then matched the tail of the same
+sentence and won.
+
+The consequence is the exact inversion this project exists to prevent: a seeker who
+cannot work in Norwegian was recorded as fluent, `SPEAKER_DISCOUNT["fluent"]` is
+0.0, and **the constraint stage was silenced entirely** — λ=0.7 and λ=0 returned
+byte-identical rankings, which is what made it visible.
+
+**The fix is structural, not another pattern.** Negation is now detected by
+PROXIMITY: find every mention of the language, then look backwards over a 42-character
+window for a negation token (`do not`, `dont`, `don t`, `no`, `not`, `ikke`, `uten`,
+`without`). Word order and punctuation cannot defeat it. Ten phrasings are checked,
+including `jeg snakker ikke norsk`, `I have no Norwegian`, `Without Norwegian` and
+`I speak English, not Norwegian`; the positive cases still resolve as before.
+
+This is the same class as the `ikke et krav` failure in §14 — an adjacency rule
+standing in for a semantic one — and it arrived from the opposite direction.
+
+### ESCO has no vocabulary for AI job titles
+
+Measured against the shipped gazetteer:
+
+| seeker phrase | resolves to |
+|---|---|
+| `ai engineer` | **not a label** |
+| `machine learning` | **not a label** |
+| `computer vision` | **not a label** |
+| `ai` | **unresolved** |
+| `vision` | **unresolved** |
+| `machine` | 8152, 7222, 8114 — *machine operators* |
+| `data scientist` | 2310, 2511, 2514 ✓ |
+
+So *"AI engineer specialising in computer vision"* falls back to the bare token
+`engineer`, which resolves to six broad codes covering **145 ads, 1.4% of the
+corpus** — every kind of engineer and no way to prefer the right one. ESCO v1.x
+predates the current AI job-title vocabulary, and the corpus's own
+`job_title_standardised` inherits that gap because it is 82% ESCO-derived.
+
+**This is a taxonomy-coverage limit, not a bug**, and it bounds the occupation
+predicate for exactly the roles a tech demo is most likely to be asked about. The
+lexical channel partially compensates — `python`, `data` and `engineer` still pull
+the data-engineering ads up — but weakly, because `DATA_LICENSE.md` forbids shipping
+body text, so the browser has titles and taxonomy labels rather than BM25 over the
+advertisement.
+
+### What the λ slider shows on this query, which is the thesis working
+
+| λ | top-10 |
+|---|---|
+| **0** (constraint off) | Data Engineer ads rank first — **9 of 10 demand Norwegian** |
+| **0.7** | 0 of 10 demand Norwegian, **10 of 10 English-accessible**, and the precise Data Engineer matches drop out |
+
+That trade is not a defect: silence on language carries severity 0.5, so a
+strongly-matching advertisement that says nothing is outranked by a weaker match that
+states it accepts English. Whether a seeker prefers that is a product decision, which
+is why λ is a dial on the page rather than a constant in the code.
