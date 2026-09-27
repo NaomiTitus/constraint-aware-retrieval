@@ -27,6 +27,21 @@ evidence that led here, and they are recorded in full in
 Encoder used throughout: `paraphrase-multilingual-mpnet-base-v2` via ONNX Runtime — **not**
 nb-sbert-base, which this project has never run (§12).
 
+## The demo
+
+**`docs/index.html` — a static GitHub Pages page.** Type a sentence, get a ranking
+with the reasoning shown: what the parser understood, which occupation code it
+resolved to, and a badge per result saying whether the advertisement demands
+Norwegian you do not have. The λ slider turns the constraint stage from off (0) to
+full (1) so the effect is visible rather than asserted.
+
+Search runs entirely in the browser over a precomputed index, because Pages is
+static hosting. Per `DATA_LICENSE.md` the bundle carries **derived fields only** —
+title, ESCO occupation labels, STYRK code, municipality, census language level,
+skill glosses — and every result links back to the original advertisement on
+arbeidsplassen.no. No ad body text, employer names or contact details are
+redistributed.
+
 ## Status
 
 Phase A complete — ingest, storage, taxonomy graph. Facet census complete over all

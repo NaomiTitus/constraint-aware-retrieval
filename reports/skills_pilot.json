@@ -1,98 +1,140 @@
 {
- "model": "claude-opus-5",
+ "model": "claude-haiku-4-5",
  "prompt_version": "skills-v1",
- "ran_at": "2026-09-27T14:07:43+0200",
+ "ran_at": "2026-09-27T14:21:13+0200",
  "usage": {
-  "in": 143171,
-  "out": 16470
+  "in": 116202,
+  "out": 16076
  },
- "cost_usd": 1.127605,
- "elapsed_s": 256.65405893325806,
+ "cost_usd": 0.98291,
+ "elapsed_s": 170.26656985282898,
  "report": {
   "n_ads": 44,
   "unscored": [],
   "n_golden": 144,
-  "n_predicted": 259,
-  "n_paired": 125,
+  "n_predicted": 270,
+  "n_paired": 124,
   "correct_zeros": 0,
-  "precision": 0.4826254826254826,
-  "recall": 0.8680555555555556,
-  "f1": 0.6203473945409429,
+  "precision": 0.45925925925925926,
+  "recall": 0.8611111111111112,
+  "f1": 0.5990338164251208,
   "agreement": {
-   "strict": 78,
-   "trailing_punct_only": 13,
-   "containment": 34,
+   "strict": 99,
+   "trailing_punct_only": 0,
+   "containment": 25,
    "disjoint": 0
   },
-  "level_agreement": 0.984,
-  "gloss_agreement": 0.224,
-  "unpaired_predictions": 134,
+  "level_agreement": 0.967741935483871,
+  "gloss_agreement": 0.14516129032258066,
+  "unpaired_predictions": 146,
   "unpaired_predictions_sample": [
    {
     "uuid": "208ba462-3f3a-4491-9ca0-9a6dfcdb0083",
     "phrase": "relevant erfaring",
     "gloss_en": "relevant experience",
-    "level": "preferred"
+    "level": "required"
+   },
+   {
+    "uuid": "25552313-1874-4601-ba07-1f6c7b250481",
+    "phrase": "Lede skift",
+    "gloss_en": "shift leadership",
+    "level": "required"
+   },
+   {
+    "uuid": "25552313-1874-4601-ba07-1f6c7b250481",
+    "phrase": "Sikre høy kvalitet på service, mat, renhold og atmosfære",
+    "gloss_en": "quality assurance in service, food, cleanliness and ambience",
+    "level": "required"
+   },
+   {
+    "uuid": "25552313-1874-4601-ba07-1f6c7b250481",
+    "phrase": "gjennomføring av rutiner og Egons konsept",
+    "gloss_en": "standard operating procedures and concept implementation",
+    "level": "required"
    },
    {
     "uuid": "25552313-1874-4601-ba07-1f6c7b250481",
     "phrase": "erfaring med å ta ansvar for andre",
-    "gloss_en": "experience taking responsibility for others / leading people",
-    "level": "preferred"
+    "gloss_en": "responsibility for managing others",
+    "level": "required"
+   },
+   {
+    "uuid": "25552313-1874-4601-ba07-1f6c7b250481",
+    "phrase": "jobbe med mennesker, service og ledelse",
+    "gloss_en": "people management, service delivery and leadership",
+    "level": "required"
    },
    {
     "uuid": "25552313-1874-4601-ba07-1f6c7b250481",
     "phrase": "Kommersiell forståelse og kremmerånd",
-    "gloss_en": "commercial understanding and sales instinct",
+    "gloss_en": "commercial awareness and entrepreneurial mindset",
     "level": "required"
    },
    {
     "uuid": "25552313-1874-4601-ba07-1f6c7b250481",
     "phrase": "Tidligere erfaring fra restaurant-, hotell-, service- eller handelsbransjen",
-    "gloss_en": "experience from restaurant, hotel, service or retail industry",
+    "gloss_en": "restaurant, hotel, service or retail industry experience",
     "level": "preferred"
    },
    {
     "uuid": "26399736-1262-4154-bcd6-90293323f5a6",
     "phrase": "Erfaring og engasjement for brukergruppen",
-    "gloss_en": "experience with people with intellectual disabilities",
+    "gloss_en": "experience with elderly persons with intellectual disability",
     "level": "required"
    },
    {
     "uuid": "26399736-1262-4154-bcd6-90293323f5a6",
     "phrase": "Utarbeide og utviklie faglig administrative system (FAS)",
-    "gloss_en": "development of professional administrative systems (FAS)",
+    "gloss_en": "developing and maintaining professional administrative systems (FAS)",
+    "level": "required"
+   },
+   {
+    "uuid": "26399736-1262-4154-bcd6-90293323f5a6",
+    "phrase": "Planlegge og gjennomføre aktiviteter",
+    "gloss_en": "planning and facilitating activities",
+    "level": "required"
+   },
+   {
+    "uuid": "26b60e69-ba34-43e2-a609-aaa717f335c5",
+    "phrase": "Evne til å arbeide selvstendig og strukturert",
+    "gloss_en": "independent and structured work",
+    "level": "required"
+   },
+   {
+    "uuid": "26b60e69-ba34-43e2-a609-aaa717f335c5",
+    "phrase": "Pasientmottak og telefon",
+    "gloss_en": "patient reception and telephone",
+    "level": "required"
+   },
+   {
+    "uuid": "26b60e69-ba34-43e2-a609-aaa717f335c5",
+    "phrase": "Assistere lege",
+    "gloss_en": "physician assistance",
     "level": "required"
    },
    {
     "uuid": "26b60e69-ba34-43e2-a609-aaa717f335c5",
     "phrase": "Sårstell og andre sykepleie-/helserelaterte oppgaver",
-    "gloss_en": "wound care and other nursing/health-related tasks",
+    "gloss_en": "wound care and nursing/healthcare tasks",
+    "level": "required"
+   },
+   {
+    "uuid": "26b60e69-ba34-43e2-a609-aaa717f335c5",
+    "phrase": "Administrative oppgaver",
+    "gloss_en": "administrative tasks",
     "level": "required"
    },
    {
     "uuid": "26bd04a1-f59a-4f7c-bf3e-983af55f72fb",
-    "phrase": "erfaring fra renhold er en fordel, men ikke et krav",
-    "gloss_en": "cleaning experience",
+    "phrase": "Opplæring og kursing",
+    "gloss_en": "training and upskilling",
     "level": "preferred"
    },
    {
     "uuid": "26bd04a1-f59a-4f7c-bf3e-983af55f72fb",
-    "phrase": "Vindusvask og temporære oppdrag",
-    "gloss_en": "window cleaning",
-    "level": "required"
-   },
-   {
-    "uuid": "26bd04a1-f59a-4f7c-bf3e-983af55f72fb",
-    "phrase": "Utføre renhold i henhold til gjeldende rutiner, kvalitet- og HMS-krav",
-    "gloss_en": "cleaning according to quality and HSE requirements",
-    "level": "required"
-   },
-   {
-    "uuid": "27b09b20-5a9e-4e42-905c-273425598f58",
-    "phrase": "Du har kjennskap til arbeidslivet, utdanningsmuligheter og relevante støtteordninger",
-    "gloss_en": "knowledge of the labour market, education options and support schemes",
-    "level": "required"
+    "phrase": "erfaring fra renhold",
+    "gloss_en": "cleaning work experience",
+    "level": "preferred"
    },
    {
     "uuid": "27b09b20-5a9e-4e42-905c-273425598f58",
@@ -105,52 +147,16 @@
     "phrase": "karriereveiledning",
     "gloss_en": "career guidance",
     "level": "preferred"
-   },
-   {
-    "uuid": "27b09b20-5a9e-4e42-905c-273425598f58",
-    "phrase": "tilrettelegging",
-    "gloss_en": "workplace accommodation/adaptation",
-    "level": "preferred"
-   },
-   {
-    "uuid": "27b09b20-5a9e-4e42-905c-273425598f58",
-    "phrase": "oppfølging av personer med ulike utfordringer",
-    "gloss_en": "follow-up of people with various challenges",
-    "level": "preferred"
-   },
-   {
-    "uuid": "27b09b20-5a9e-4e42-905c-273425598f58",
-    "phrase": "kunnskap om kartlegging av arbeidsevne",
-    "gloss_en": "work capacity assessment",
-    "level": "preferred"
-   },
-   {
-    "uuid": "27b09b20-5a9e-4e42-905c-273425598f58",
-    "phrase": "komfortabel med digitale verktøy",
-    "gloss_en": "digital tools proficiency",
-    "level": "required"
-   },
-   {
-    "uuid": "27b09b20-5a9e-4e42-905c-273425598f58",
-    "phrase": "Å bygge nettverk og samarbeide med næringslivet",
-    "gloss_en": "networking and business collaboration",
-    "level": "preferred"
-   },
-   {
-    "uuid": "27b09b20-5a9e-4e42-905c-273425598f58",
-    "phrase": "dele kunnskap og lede grupper",
-    "gloss_en": "knowledge sharing and group facilitation",
-    "level": "preferred"
-   },
-   {
-    "uuid": "27b09b20-5a9e-4e42-905c-273425598f58",
-    "phrase": "utføre skriftlige faglige vurderinger",
-    "gloss_en": "written professional assessments",
-    "level": "required"
    }
   ],
-  "unpaired_golden": 19,
+  "unpaired_golden": 20,
   "unpaired_golden_sample": [
+   {
+    "uuid": "25552313-1874-4601-ba07-1f6c7b250481",
+    "phrase": "Lede skift og sørge for god gjennomføring gjennom hele dagen",
+    "gloss_en": "shift leadership",
+    "level": "required"
+   },
    {
     "uuid": "26b60e69-ba34-43e2-a609-aaa717f335c5",
     "phrase": "Sårstell",
@@ -170,39 +176,21 @@
     "level": "required"
    },
    {
-    "uuid": "27b09b20-5a9e-4e42-905c-273425598f58",
-    "phrase": "Kartlegge deltakernes ressurser, muligheter og mål",
-    "gloss_en": "assessing participants' resources and goals",
+    "uuid": "2ca4d99f-5112-4fe3-90b4-5ef05c45cdb6",
+    "phrase": "Kartlegge og dokumentere mottakeres tjenestebehov",
+    "gloss_en": "assessing and documenting service needs",
     "level": "required"
    },
    {
-    "uuid": "27b09b20-5a9e-4e42-905c-273425598f58",
-    "phrase": "Veilede mot arbeid, utdanning og kompetanseheving",
-    "gloss_en": "guidance towards work and education",
+    "uuid": "31e7c9fe-7f49-4c27-a61d-18340b40a030",
+    "phrase": "Utføre tiltak etter tiltaksplan",
+    "gloss_en": "carrying out measures per a care plan",
     "level": "required"
    },
    {
-    "uuid": "27b09b20-5a9e-4e42-905c-273425598f58",
-    "phrase": "Etablere og utvikle samarbeid med arbeidsgivere",
-    "gloss_en": "building employer partnerships",
-    "level": "required"
-   },
-   {
-    "uuid": "29dd4b57-74e3-4c23-9d47-d85147f41276",
-    "phrase": "ADR Tank kompetansebevis",
-    "gloss_en": "ADR tank certificate",
-    "level": "preferred"
-   },
-   {
-    "uuid": "2ee163ae-d6a8-4901-817e-bb1713f8ef1b",
-    "phrase": "Assistere ved fødsler",
-    "gloss_en": "assisting at births",
-    "level": "required"
-   },
-   {
-    "uuid": "34b34080-ea2e-4a4b-b16d-740572c1002d",
-    "phrase": "Gode ferdigheter i polsk",
-    "gloss_en": "Polish language skills",
+    "uuid": "3d1cbc89-3df9-4eb1-8881-2e36edebd1c0",
+    "phrase": "Gode kunnskaper i bruk av IKT- verktøy",
+    "gloss_en": "IT tool proficiency",
     "level": "required"
    },
    {
@@ -218,16 +206,16 @@
     "level": "required"
    },
    {
-    "uuid": "46264590-80d4-491c-9e90-bca977018235",
-    "phrase": "vidareutdanning innan pedagogikk eller rettleiing",
-    "gloss_en": "further education in pedagogy or supervision",
-    "level": "preferred"
+    "uuid": "4ccebbd0-3a19-49d0-8264-eca3d953c9e8",
+    "phrase": "utvikling av barnehagens pedagogiske praksis",
+    "gloss_en": "developing pedagogical practice",
+    "level": "required"
    },
    {
-    "uuid": "46264590-80d4-491c-9e90-bca977018235",
-    "phrase": "vidareutdanning innan habilitering/rehabilitering",
-    "gloss_en": "further education in habilitation or rehabilitation",
-    "level": "preferred"
+    "uuid": "4ccebbd0-3a19-49d0-8264-eca3d953c9e8",
+    "phrase": "samarbeid med foresatte",
+    "gloss_en": "collaboration with guardians",
+    "level": "required"
    },
    {
     "uuid": "6b4847da-64f9-48fa-b3b7-4a9c53babbdb",
@@ -242,27 +230,45 @@
     "level": "required"
    },
    {
-    "uuid": "858495f7-feb2-4ccf-9857-11ee33c82f4c",
-    "phrase": "personlig stell og hygiene",
-    "gloss_en": "personal care and hygiene",
+    "uuid": "c1f5e19f-73ee-4a4c-881e-950ece13aae6",
+    "phrase": "Inn- og utsjekk av gjester",
+    "gloss_en": "guest check-in and check-out",
     "level": "required"
    },
    {
-    "uuid": "8ae0f800-2db0-48e2-9862-97300e47b04b",
-    "phrase": "Kontakte eksisterende og tidligere givere",
-    "gloss_en": "donor outreach by telephone",
+    "uuid": "c1f5e19f-73ee-4a4c-881e-950ece13aae6",
+    "phrase": "Enkle resepsjonsoppgaver",
+    "gloss_en": "basic reception duties",
+    "level": "required"
+   },
+   {
+    "uuid": "c1f5e19f-73ee-4a4c-881e-950ece13aae6",
+    "phrase": "Tilsyn og sikkerhet i huset",
+    "gloss_en": "premises supervision and security",
     "level": "required"
    },
    {
     "uuid": "d26961bc-fde0-4003-ab2d-768701443bda",
-    "phrase": "Delta aktivt i betong- og forskalingsarbeid",
-    "gloss_en": "concrete and formwork",
+    "phrase": "Planlegge og følge opp den daglige driften på prosjekt",
+    "gloss_en": "planning and running daily site operations",
     "level": "required"
    },
    {
     "uuid": "d26961bc-fde0-4003-ab2d-768701443bda",
     "phrase": "Følge opp fremdrift, kvalitet og HMS",
     "gloss_en": "progress, quality and health-and-safety follow-up",
+    "level": "required"
+   },
+   {
+    "uuid": "d26961bc-fde0-4003-ab2d-768701443bda",
+    "phrase": "erfaring fra betongarbeid",
+    "gloss_en": "concrete work experience",
+    "level": "required"
+   },
+   {
+    "uuid": "fdd26aec-1a86-4381-bc05-cb607c839115",
+    "phrase": "Er utdannet frisør eller har relevant erfaring",
+    "gloss_en": "trained hairdresser or equivalent experience",
     "level": "required"
    }
   ],
@@ -274,43 +280,43 @@
    },
    "25552313-1874-4601-ba07-1f6c7b250481": {
     "golden": 4,
-    "predicted": 7,
-    "paired": 4
+    "predicted": 10,
+    "paired": 3
    },
    "26399736-1262-4154-bcd6-90293323f5a6": {
     "golden": 6,
-    "predicted": 8,
+    "predicted": 9,
     "paired": 6
    },
    "26b60e69-ba34-43e2-a609-aaa717f335c5": {
     "golden": 5,
-    "predicted": 5,
+    "predicted": 9,
     "paired": 4
    },
    "26bd04a1-f59a-4f7c-bf3e-983af55f72fb": {
     "golden": 2,
-    "predicted": 3,
+    "predicted": 2,
     "paired": 0
    },
    "27b09b20-5a9e-4e42-905c-273425598f58": {
     "golden": 4,
     "predicted": 11,
-    "paired": 1
+    "paired": 4
    },
    "2812642a-45e0-4368-8f99-e302f1f269b6": {
     "golden": 2,
-    "predicted": 4,
+    "predicted": 3,
     "paired": 2
    },
    "28b383a5-bcea-4fce-bfe7-ee495a099386": {
     "golden": 3,
-    "predicted": 4,
+    "predicted": 8,
     "paired": 3
    },
    "29dd4b57-74e3-4c23-9d47-d85147f41276": {
     "golden": 3,
-    "predicted": 9,
-    "paired": 2
+    "predicted": 4,
+    "paired": 3
    },
    "2a2a1e31-76ed-46ae-a71c-bb9edd61d7f1": {
     "golden": 4,
@@ -320,17 +326,17 @@
    "2ca4d99f-5112-4fe3-90b4-5ef05c45cdb6": {
     "golden": 3,
     "predicted": 5,
-    "paired": 3
+    "paired": 2
    },
    "2e7551ed-1ad1-4dff-b6aa-24812a1b22f2": {
     "golden": 4,
-    "predicted": 7,
+    "predicted": 8,
     "paired": 4
    },
    "2ee163ae-d6a8-4901-817e-bb1713f8ef1b": {
     "golden": 5,
-    "predicted": 7,
-    "paired": 4
+    "predicted": 9,
+    "paired": 5
    },
    "30407462-7b33-4f76-9b77-fcadc5c9e0bd": {
     "golden": 2,
@@ -339,82 +345,82 @@
    },
    "31c2f223-9191-4214-9b77-6471c398ea7d": {
     "golden": 0,
-    "predicted": 1,
+    "predicted": 2,
     "paired": 0
    },
    "31e7c9fe-7f49-4c27-a61d-18340b40a030": {
     "golden": 4,
-    "predicted": 9,
-    "paired": 4
+    "predicted": 8,
+    "paired": 3
    },
    "34b34080-ea2e-4a4b-b16d-740572c1002d": {
     "golden": 5,
-    "predicted": 7,
-    "paired": 4
+    "predicted": 12,
+    "paired": 5
    },
    "3d1cbc89-3df9-4eb1-8881-2e36edebd1c0": {
     "golden": 4,
-    "predicted": 7,
-    "paired": 4
+    "predicted": 6,
+    "paired": 3
    },
    "3dfb11f3-3a96-4b60-8408-c13eaae11975": {
     "golden": 7,
-    "predicted": 12,
+    "predicted": 10,
     "paired": 7
    },
    "3ea17797-38a6-4962-b288-96abd03a1fb2": {
     "golden": 4,
-    "predicted": 5,
+    "predicted": 3,
     "paired": 3
    },
    "4012c5f7-6a80-4734-8c60-89542fabfd72": {
     "golden": 1,
-    "predicted": 2,
+    "predicted": 4,
     "paired": 0
    },
    "42cb6a0c-5962-409e-abf9-9b679a81b04d": {
     "golden": 6,
-    "predicted": 10,
+    "predicted": 8,
     "paired": 6
    },
    "46264590-80d4-491c-9e90-bca977018235": {
     "golden": 4,
-    "predicted": 8,
-    "paired": 2
+    "predicted": 10,
+    "paired": 4
    },
    "46b3d20b-9287-4819-892d-585cea4346dc": {
-    "golden": 4,
-    "predicted": 6,
-    "paired": 4
-   },
-   "47366cc8-6e01-4dcc-9d63-193d5ae9ba95": {
-    "golden": 4,
-    "predicted": 6,
-    "paired": 4
-   },
-   "48fab2b2-f0f4-40cf-998c-24ce8b58bad9": {
-    "golden": 2,
-    "predicted": 3,
-    "paired": 2
-   },
-   "4ccebbd0-3a19-49d0-8264-eca3d953c9e8": {
     "golden": 4,
     "predicted": 7,
     "paired": 4
    },
+   "47366cc8-6e01-4dcc-9d63-193d5ae9ba95": {
+    "golden": 4,
+    "predicted": 7,
+    "paired": 4
+   },
+   "48fab2b2-f0f4-40cf-998c-24ce8b58bad9": {
+    "golden": 2,
+    "predicted": 2,
+    "paired": 2
+   },
+   "4ccebbd0-3a19-49d0-8264-eca3d953c9e8": {
+    "golden": 4,
+    "predicted": 6,
+    "paired": 2
+   },
    "4f2378c3-49d0-4c21-9b53-a594737ceb97": {
     "golden": 4,
-    "predicted": 9,
+    "predicted": 8,
     "paired": 4
    },
    "502a8ece-024a-466d-8f6f-21c219d94305": {
     "golden": 3,
-    "predicted": 4,
+    "predicted": 3,
     "paired": 3
    },
    "51a6ad59-bdc7-4832-b59b-193b715af9d4": {
     "golden": 3,
-    "predicted": 4,
+    "predicted": 5,
     "paired": 3
    },
    "5688bcc1-1391-416a-86b4-1249bcb83fd1": {
@@ -424,12 +430,12 @@
    },
    "5a924a5e-1956-4fe7-9a40-090eac8c009a": {
     "golden": 4,
-    "predicted": 6,
+    "predicted": 5,
     "paired": 4
    },
    "5bc70af0-7b65-4c7d-9d18-3b15c1761279": {
     "golden": 4,
-    "predicted": 7,
+    "predicted": 12,
     "paired": 4
    },
    "6b4847da-64f9-48fa-b3b7-4a9c53babbdb": {
@@ -439,7 +445,7 @@
    },
    "70a7bd71-f9b8-4b25-bdf8-5bae40e1ad10": {
     "golden": 1,
-    "predicted": 10,
+    "predicted": 7,
     "paired": 0
    },
    "71fa1e10-e7aa-4367-b81e-b711aa18014a": {
@@ -449,61 +455,131 @@
    },
    "816a33d7-62e2-4afe-91d7-a981e554bf1e": {
     "golden": 3,
-    "predicted": 4,
+    "predicted": 6,
     "paired": 3
    },
    "858495f7-feb2-4ccf-9857-11ee33c82f4c": {
     "golden": 1,
-    "predicted": 2,
-    "paired": 0
+    "predicted": 9,
+    "paired": 1
    },
    "8ae0f800-2db0-48e2-9862-97300e47b04b": {
     "golden": 2,
     "predicted": 5,
-    "paired": 1
+    "paired": 2
    },
    "a64a3996-be11-421b-a78d-6f41173108f0": {
     "golden": 4,
-    "predicted": 6,
+    "predicted": 5,
     "paired": 4
    },
    "c1f5e19f-73ee-4a4c-881e-950ece13aae6": {
     "golden": 3,
-    "predicted": 5,
-    "paired": 3
+    "predicted": 2,
+    "paired": 0
    },
    "d26961bc-fde0-4003-ab2d-768701443bda": {
     "golden": 5,
-    "predicted": 9,
-    "paired": 3
+    "predicted": 7,
+    "paired": 2
    },
    "de37e63a-6279-4aea-95e5-26bf6d29277d": {
     "golden": 1,
-    "predicted": 3,
+    "predicted": 2,
     "paired": 1
    },
    "fdd26aec-1a86-4381-bc05-cb607c839115": {
     "golden": 4,
-    "predicted": 7,
-    "paired": 4
+    "predicted": 6,
+    "paired": 3
    }
   },
   "census": {
    "n_skills": 38,
    "ads_with_zero": 26,
-   "lift": 6.815789473684211
+   "lift": 7.105263157894737
   }
  },
  "rejected": [
   {
-   "uuid": "46264590-80d4-491c-9e90-bca977018235",
-   "phrase": "Vidareutdanning innan pedagogikk eller rettleiing",
-   "reason": "phrase not found verbatim in the advertisement: 'Vidareutdanning innan pedagogikk eller rettleiing'"
+   "uuid": "29dd4b57-74e3-4c23-9d47-d85147f41276",
+   "phrase": "Ladning av salver, enkel service og vedlikehold av utstyr",
+   "reason": "phrase not found verbatim in the advertisement: 'Ladning av salver, enkel service og vedlikehold av utstyr'"
   },
   {
-   "uuid": "46264590-80d4-491c-9e90-bca977018235",
-   "phrase": "Vidareutdanning innan habilitering/rehabilitering",
-   "reason": "phrase not found verbatim in the advertisement: 'Vidareutdanning innan habilitering/rehabilitering'"
+   "uuid": "29dd4b57-74e3-4c23-9d47-d85147f41276",
+   "phrase": "Mekanisk interesse",
+   "reason": "phrase not found verbatim in the advertisement: 'Mekanisk interesse'"
+  },
+  {
+   "uuid": "3d1cbc89-3df9-4eb1-8881-2e36edebd1c0",
+   "phrase": "Gode kunnskaper i bruk av IKT-verktøy",
+   "reason": "phrase not found verbatim in the advertisement: 'Gode kunnskaper i bruk av IKT-verktøy'"
+  },
+  {
+   "uuid": "3ea17797-38a6-4962-b288-96abd03a1fb2",
+   "phrase": "Instruktørutdanning (Trinn 1 eller tilsvarende)",
+   "reason": "phrase not found verbatim in the advertisement: 'Instruktørutdanning (Trinn 1 eller tilsvarende)'"
+  },
+  {
+   "uuid": "3ea17797-38a6-4962-b288-96abd03a1fb2",
+   "phrase": "Relevant erfaring",
+   "reason": "phrase not found verbatim in the advertisement: 'Relevant erfaring'"
+  },
+  {
+   "uuid": "3ea17797-38a6-4962-b288-96abd03a1fb2",
+   "phrase": "Kan jobbe selvstendig",
+   "reason": "phrase not found verbatim in the advertisement: 'Kan jobbe selvstendig'"
+  },
+  {
+   "uuid": "4012c5f7-6a80-4734-8c60-89542fabfd72",
+   "phrase": "Jobb på spennende og interesannte prosjekter",
+   "reason": "phrase not found verbatim in the advertisement: 'Jobb på spennende og interesannte prosjekter'"
+  },
+  {
+   "uuid": "46b3d20b-9287-4819-892d-585cea4346dc",
+   "phrase": "erfaring med industrisøm",
+   "reason": "phrase not found verbatim in the advertisement: 'erfaring med industrisøm'"
+  },
+  {
+   "uuid": "4ccebbd0-3a19-49d0-8264-eca3d953c9e8",
+   "phrase": "å bygge trygge relasjoner",
+   "reason": "phrase not found verbatim in the advertisement: 'å bygge trygge relasjoner'"
+  },
+  {
+   "uuid": "4ccebbd0-3a19-49d0-8264-eca3d953c9e8",
+   "phrase": "støtte vennskap",
+   "reason": "phrase not found verbatim in the advertisement: 'støtte vennskap'"
+  },
+  {
+   "uuid": "4ccebbd0-3a19-49d0-8264-eca3d953c9e8",
+   "phrase": "styrke språk",
+   "reason": "phrase not found verbatim in the advertisement: 'styrke språk'"
+  },
+  {
+   "uuid": "4ccebbd0-3a19-49d0-8264-eca3d953c9e8",
+   "phrase": "skape inkluderende leke- og læringsmiljøer",
+   "reason": "phrase not found verbatim in the advertisement: 'skape inkluderende leke- og læringsmiljøer'"
+  },
+  {
+   "uuid": "4f2378c3-49d0-4c21-9b53-a594737ceb97",
+   "phrase": "Observant og trygg i håndteringen",
+   "reason": "phrase not found verbatim in the advertisement: 'Observant og trygg i håndteringen'"
+  },
+  {
+   "uuid": "70a7bd71-f9b8-4b25-bdf8-5bae40e1ad10",
+   "phrase": "Truck (T1/T4)",
+   "reason": "phrase not found verbatim in the advertisement: 'Truck (T1/T4)'"
+  },
+  {
+   "uuid": "70a7bd71-f9b8-4b25-bdf8-5bae40e1ad10",
+   "phrase": "Traverskran (G4)",
+   "reason": "phrase not found verbatim in the advertisement: 'Traverskran (G4)'"
+  },
+  {
+   "uuid": "d26961bc-fde0-4003-ab2d-768701443bda",
+   "phrase": "Du må beherske engelsk godt, både muntlig og skriftlig",
+   "reason": "phrase not found verbatim in the advertisement: 'Du må beherske engelsk godt, både muntlig og skriftlig'"
   }
  ],
  "failures": [],
@@ -512,65 +588,65 @@
    {
     "phrase": "relevant erfaring",
     "gloss_en": "relevant experience",
-    "level": "preferred"
+    "level": "required"
    }
   ],
   "25552313-1874-4601-ba07-1f6c7b250481": [
    {
-    "phrase": "erfaring med å ta ansvar for andre",
-    "gloss_en": "experience taking responsibility for others / leading people",
-    "level": "preferred"
-   },
-   {
-    "phrase": "Kommersiell forståelse og kremmerånd",
-    "gloss_en": "commercial understanding and sales instinct",
+    "phrase": "Lede skift",
+    "gloss_en": "shift leadership",
     "level": "required"
    },
    {
-    "phrase": "Tidligere erfaring fra restaurant-, hotell-, service- eller handelsbransjen",
-    "gloss_en": "experience from restaurant, hotel, service or retail industry",
-    "level": "preferred"
-   },
-   {
-    "phrase": "Bidra til rekruttering, opplæring, utvikling og oppfølging av medarbeidere",
-    "gloss_en": "recruitment, training and staff development",
+    "phrase": "rekruttering, opplæring, utvikling og oppfølging av medarbeidere",
+    "gloss_en": "employee recruitment, training, development and supervision",
     "level": "required"
    },
    {
-    "phrase": "Bidra til økonomistyring, kostnadskontroll og måloppnåelse",
+    "phrase": "økonomistyring, kostnadskontroll og måloppnåelse",
     "gloss_en": "financial management and cost control",
     "level": "required"
    },
    {
-    "phrase": "Delta aktivt i markedsføring og lokale aktiviteter",
-    "gloss_en": "marketing and local activities",
+    "phrase": "Sikre høy kvalitet på service, mat, renhold og atmosfære",
+    "gloss_en": "quality assurance in service, food, cleanliness and ambience",
     "level": "required"
    },
    {
-    "phrase": "Lede skift og sørge for god gjennomføring gjennom hele dagen",
-    "gloss_en": "shift leadership",
+    "phrase": "gjennomføring av rutiner og Egons konsept",
+    "gloss_en": "standard operating procedures and concept implementation",
     "level": "required"
+   },
+   {
+    "phrase": "markedsføring og lokale aktiviteter",
+    "gloss_en": "marketing and local activities promotion",
+    "level": "required"
+   },
+   {
+    "phrase": "erfaring med å ta ansvar for andre",
+    "gloss_en": "responsibility for managing others",
+    "level": "required"
+   },
+   {
+    "phrase": "jobbe med mennesker, service og ledelse",
+    "gloss_en": "people management, service delivery and leadership",
+    "level": "required"
+   },
+   {
+    "phrase": "Kommersiell forståelse og kremmerånd",
+    "gloss_en": "commercial awareness and entrepreneurial mindset",
+    "level": "required"
+   },
+   {
+    "phrase": "Tidligere erfaring fra restaurant-, hotell-, service- eller handelsbransjen",
+    "gloss_en": "restaurant, hotel, service or retail industry experience",
+    "level": "preferred"
    }
   ],
   "26399736-1262-4154-bcd6-90293323f5a6": [
    {
-    "phrase": "Erfaring og engasjement for brukergruppen",
-    "gloss_en": "experience with people with intellectual disabilities",
-    "level": "required"
-   },
-   {
-    "phrase": "Kjennskap til geriatri",
-    "gloss_en": "knowledge of geriatrics",
-    "level": "required"
-   },
-   {
-    "phrase": "Kjennskap til HOL kap 9",
-    "gloss_en": "knowledge of Health and Care Services Act chapter 9",
-    "level": "required"
-   },
-   {
-    "phrase": "Gode digitale ferdigheter",
-    "gloss_en": "good digital skills",
+    "phrase": "Kartlegge brukerbehov, iverksette og evaluere tiltak",
+    "gloss_en": "assessing user needs, implementing and evaluating interventions",
     "level": "required"
    },
    {
@@ -579,75 +655,105 @@
     "level": "required"
    },
    {
-    "phrase": "Kartlegge brukerbehov, iverksette og evaluere tiltak",
-    "gloss_en": "assessing user needs and evaluating interventions",
+    "phrase": "Erfaring og engasjement for brukergruppen",
+    "gloss_en": "experience with elderly persons with intellectual disability",
+    "level": "required"
+   },
+   {
+    "phrase": "Kjennskap til geriatri",
+    "gloss_en": "knowledge of geriatric care",
+    "level": "required"
+   },
+   {
+    "phrase": "Kjennskap til HOL kap 9",
+    "gloss_en": "knowledge of HOL chapter 9",
+    "level": "required"
+   },
+   {
+    "phrase": "Gode digitale ferdigheter",
+    "gloss_en": "digital skills",
     "level": "required"
    },
    {
     "phrase": "Bidra til faglig veiledning av kollegaer, studenter og elever",
-    "gloss_en": "professional supervision and mentoring",
+    "gloss_en": "professional mentoring and supervision of colleagues, students and trainees",
     "level": "required"
    },
    {
     "phrase": "Utarbeide og utviklie faglig administrative system (FAS)",
-    "gloss_en": "development of professional administrative systems (FAS)",
+    "gloss_en": "developing and maintaining professional administrative systems (FAS)",
+    "level": "required"
+   },
+   {
+    "phrase": "Planlegge og gjennomføre aktiviteter",
+    "gloss_en": "planning and facilitating activities",
     "level": "required"
    }
   ],
   "26b60e69-ba34-43e2-a609-aaa717f335c5": [
    {
     "phrase": "Erfaring fra arbeid på legekontor",
-    "gloss_en": "experience working at a medical practice",
+    "gloss_en": "general practice office work experience",
     "level": "required"
    },
    {
     "phrase": "Erfaring med Infodoc journalsystem",
-    "gloss_en": "experience with Infodoc medical records system",
+    "gloss_en": "Infodoc electronic patient record system",
+    "level": "required"
+   },
+   {
+    "phrase": "Evne til å arbeide selvstendig og strukturert",
+    "gloss_en": "independent and structured work",
+    "level": "required"
+   },
+   {
+    "phrase": "Pasientmottak og telefon",
+    "gloss_en": "patient reception and telephone",
     "level": "required"
    },
    {
     "phrase": "Laboratoriearbeid og prøvetaking",
-    "gloss_en": "laboratory work and sample taking",
+    "gloss_en": "laboratory work and specimen collection",
+    "level": "required"
+   },
+   {
+    "phrase": "Assistere lege",
+    "gloss_en": "physician assistance",
     "level": "required"
    },
    {
     "phrase": "Sårstell og andre sykepleie-/helserelaterte oppgaver",
-    "gloss_en": "wound care and other nursing/health-related tasks",
+    "gloss_en": "wound care and nursing/healthcare tasks",
     "level": "required"
    },
    {
     "phrase": "Dokumentasjon og journalføring",
     "gloss_en": "documentation and medical record keeping",
     "level": "required"
+   },
+   {
+    "phrase": "Administrative oppgaver",
+    "gloss_en": "administrative tasks",
+    "level": "required"
    }
   ],
   "26bd04a1-f59a-4f7c-bf3e-983af55f72fb": [
    {
-    "phrase": "erfaring fra renhold er en fordel, men ikke et krav",
-    "gloss_en": "cleaning experience",
+    "phrase": "Opplæring og kursing",
+    "gloss_en": "training and upskilling",
     "level": "preferred"
    },
    {
-    "phrase": "Vindusvask og temporære oppdrag",
-    "gloss_en": "window cleaning",
-    "level": "required"
-   },
-   {
-    "phrase": "Utføre renhold i henhold til gjeldende rutiner, kvalitet- og HMS-krav",
-    "gloss_en": "cleaning according to quality and HSE requirements",
-    "level": "required"
+    "phrase": "erfaring fra renhold",
+    "gloss_en": "cleaning work experience",
+    "level": "preferred"
    }
   ],
   "27b09b20-5a9e-4e42-905c-273425598f58": [
    {
-    "phrase": "Kompetanse innen veiledningsmetodikk er ønskelig",
-    "gloss_en": "guidance/counselling methodology",
+    "phrase": "Kompetanse innen veiledningsmetodikk",
+    "gloss_en": "guidance methodology competence",
     "level": "preferred"
-   },
-   {
-    "phrase": "Du har kjennskap til arbeidslivet, utdanningsmuligheter og relevante støtteordninger",
-    "gloss_en": "knowledge of the labour market, education options and support schemes",
-    "level": "required"
    },
    {
     "phrase": "erfaring med arbeidsinkludering",
@@ -661,37 +767,42 @@
    },
    {
     "phrase": "tilrettelegging",
-    "gloss_en": "workplace accommodation/adaptation",
+    "gloss_en": "accommodation and adjustment",
     "level": "preferred"
    },
    {
     "phrase": "oppfølging av personer med ulike utfordringer",
-    "gloss_en": "follow-up of people with various challenges",
+    "gloss_en": "follow-up of persons with various challenges",
     "level": "preferred"
    },
    {
-    "phrase": "kunnskap om kartlegging av arbeidsevne",
-    "gloss_en": "work capacity assessment",
+    "phrase": "kunnskap om kartlegging av arbeidsevne og veiledningsmetodikk",
+    "gloss_en": "work capacity assessment and guidance methodology knowledge",
     "level": "preferred"
    },
    {
-    "phrase": "komfortabel med digitale verktøy",
-    "gloss_en": "digital tools proficiency",
+    "phrase": "Kartlegge deltakernes ressurser, muligheter og mål",
+    "gloss_en": "participant resource mapping and goal-setting",
     "level": "required"
    },
    {
-    "phrase": "Å bygge nettverk og samarbeide med næringslivet",
-    "gloss_en": "networking and business collaboration",
-    "level": "preferred"
+    "phrase": "Veilede mot arbeid, utdanning og kompetanseheving",
+    "gloss_en": "guidance towards employment, education and skills development",
+    "level": "required"
    },
    {
-    "phrase": "dele kunnskap og lede grupper",
-    "gloss_en": "knowledge sharing and group facilitation",
-    "level": "preferred"
+    "phrase": "Etablere og utvikle samarbeid med arbeidsgivere og andre aktører",
+    "gloss_en": "employer partnership development and stakeholder collaboration",
+    "level": "required"
    },
    {
-    "phrase": "utføre skriftlige faglige vurderinger",
-    "gloss_en": "written professional assessments",
+    "phrase": "Dokumentere utvikling og utføre skriftlige faglige vurderinger",
+    "gloss_en": "progress documentation and written professional assessment",
+    "level": "required"
+   },
+   {
+    "phrase": "kjennskap til arbeidslivet, utdanningsmuligheter og relevante støtteordninger",
+    "gloss_en": "knowledge of employment, education options and support schemes",
     "level": "required"
    }
   ],
@@ -702,99 +813,84 @@
     "level": "required"
    },
    {
-    "phrase": "Tilrettelegging ved personlig hygiene og av og til også hjelp til personlig hygiene.",
-    "gloss_en": "personal hygiene assistance",
+    "phrase": "Tilrettelegging ved personlig hygiene og av og til også hjelp til personlig hygiene",
+    "gloss_en": "personal hygiene assistance and adaptation",
     "level": "required"
    },
    {
     "phrase": "Handle mat og lage mat",
-    "gloss_en": "grocery shopping and cooking",
+    "gloss_en": "food shopping and cooking",
     "level": "required"
-   },
-   {
-    "phrase": "kjører egen bil",
-    "gloss_en": "car driving",
-    "level": "preferred"
    }
   ],
   "28b383a5-bcea-4fce-bfe7-ee495a099386": [
    {
     "phrase": "Fengselsfaglig erfaring og kompetanse",
-    "gloss_en": "prison service professional experience and competence",
+    "gloss_en": "prison operations expertise and competence",
     "level": "required"
    },
    {
     "phrase": "God kunnskap og erfaring i bruk av IKT-systemer",
-    "gloss_en": "ICT systems knowledge and use",
+    "gloss_en": "ICT systems knowledge and experience",
     "level": "required"
    },
    {
     "phrase": "God muntlig og skriftlig fremstillingsevne",
-    "gloss_en": "oral and written presentation ability",
+    "gloss_en": "oral and written communication skills",
     "level": "required"
    },
    {
     "phrase": "Innsikt i gjeldende lover, reglement og avtaleverk for kriminalomsorgen",
-    "gloss_en": "knowledge of correctional service laws, regulations and agreements",
+    "gloss_en": "knowledge of criminal justice legislation, regulations and agreements",
+    "level": "required"
+   },
+   {
+    "phrase": "evne til å planlegge og beslutte innenfor de føringer og rammer som til enhver tid er gitt",
+    "gloss_en": "planning and decision-making within given frameworks",
+    "level": "required"
+   },
+   {
+    "phrase": "evne til å arbeide analytisk og strukturert",
+    "gloss_en": "analytical and structured working methods",
+    "level": "required"
+   },
+   {
+    "phrase": "evne til å arbeide målrettet og selvstendig",
+    "gloss_en": "goal-oriented and independent work",
+    "level": "required"
+   },
+   {
+    "phrase": "evne til å tenke helhetlig",
+    "gloss_en": "holistic thinking",
     "level": "required"
    }
   ],
   "29dd4b57-74e3-4c23-9d47-d85147f41276": [
    {
-    "phrase": "Erfaring fra anleggs- eller sprengstoffbransjen, eller annet lignende arbeid (for eksempel septik eller anleggsdrivstoff).",
-    "gloss_en": "experience from construction or explosives industry",
+    "phrase": "Erfaring fra anleggs- eller sprengstoffbransjen, eller annet lignende arbeid (for eksempel septik eller anleggsdrivstoff)",
+    "gloss_en": "construction or explosives industry experience",
     "level": "preferred"
    },
    {
-    "phrase": "Ha en forståelse for produksjonsprosesser.",
-    "gloss_en": "understanding of production processes",
+    "phrase": "ADR Tank kompetansebevis",
+    "gloss_en": "ADR Tank certification knowledge",
+    "level": "preferred"
+   },
+   {
+    "phrase": "Grunnleggende ferdigheter i bruk av data, PC og skanner",
+    "gloss_en": "basic computer, PC and scanner operation",
     "level": "required"
    },
    {
-    "phrase": "enkel service og vedlikehold av utstyr",
-    "gloss_en": "basic servicing and maintenance of equipment",
-    "level": "required"
-   },
-   {
-    "phrase": "ladning av salver",
-    "gloss_en": "charging of blast rounds",
-    "level": "required"
-   },
-   {
-    "phrase": "Grunnleggende ferdigheter i bruk av data, PC og skanner.",
-    "gloss_en": "basic computer, PC and scanner skills",
-    "level": "required"
-   },
-   {
-    "phrase": "Du har erfaring med fysisk arbeid og er i normal god form.",
-    "gloss_en": "experience with physical work and good physical fitness",
-    "level": "required"
-   },
-   {
-    "phrase": "Har mekanisk interesse.",
-    "gloss_en": "mechanical aptitude",
-    "level": "required"
-   },
-   {
-    "phrase": "Du er en sjåfør med en trygg kjøreatferd",
-    "gloss_en": "safe driving behaviour",
-    "level": "required"
-   },
-   {
-    "phrase": "følger gjeldende krav, lover og standarder innen fagområdet",
-    "gloss_en": "knowledge of HSE requirements, laws and standards in the field",
+    "phrase": "Ha en forståelse for produksjonsprosesser",
+    "gloss_en": "production process understanding",
     "level": "required"
    }
   ],
   "2a2a1e31-76ed-46ae-a71c-bb9edd61d7f1": [
    {
-    "phrase": "Bachelor, teknisk fagskole eller tilsvarende innen bygg, anlegg, geomatikk eller landmåling",
-    "gloss_en": "construction, civil engineering, geomatics or surveying subject knowledge",
-    "level": "required"
-   },
-   {
-    "phrase": "Erfaring med stikning/innmåling er en fordel (nyutdannede kan også være aktuelle)",
-    "gloss_en": "setting-out and surveying experience",
+    "phrase": "Erfaring med stikning/innmåling",
+    "gloss_en": "setting out and measurement experience",
     "level": "preferred"
    },
    {
@@ -804,12 +900,12 @@
    },
    {
     "phrase": "Erfaring med relevant programvare (Gemini, Civil 3D, AutoCAD eller tilsvarende)",
-    "gloss_en": "relevant software experience (Gemini, Civil 3D, AutoCAD)",
+    "gloss_en": "relevant software experience (Gemini, Civil 3D, AutoCAD or equivalent)",
     "level": "required"
    },
    {
     "phrase": "Forståelse for tekniske tegninger og anleggsprosesser",
-    "gloss_en": "understanding of technical drawings and construction processes",
+    "gloss_en": "technical drawings and construction process understanding",
     "level": "required"
    },
    {
@@ -818,78 +914,78 @@
     "level": "preferred"
    },
    {
-    "phrase": "Gode kommunikasjonsferdigheter, både skriftlig og muntlig",
-    "gloss_en": "written and oral communication skills",
+    "phrase": "Evne til å jobbe selvstendig, strukturert og med god fremdrift",
+    "gloss_en": "independent and structured work with good progress",
     "level": "preferred"
    },
    {
+    "phrase": "Gode kommunikasjonsferdigheter, både skriftlig og muntlig",
+    "gloss_en": "communication skills, written and oral",
+    "level": "preferred"
+   },
+   {
+    "phrase": "Utarbeidelse av dokumentasjon og som-bygget-grunnlag",
+    "gloss_en": "documentation and as-built basis preparation",
+    "level": "required"
+   },
+   {
     "phrase": "Utarbeide maskinstyring og produksjonsunderlag",
-    "gloss_en": "machine control and production data preparation",
+    "gloss_en": "machine guidance and production data preparation",
     "level": "required"
    },
    {
-    "phrase": "Kvalitetssikring og kontrollmåling",
-    "gloss_en": "quality assurance and control measurement",
-    "level": "required"
-   },
-   {
-    "phrase": "Etablering og bearbeiding av stiknings- og grunnlagsdata",
-    "gloss_en": "setting-out and base data processing",
+    "phrase": "Stikning og innmåling på bygg- og anleggsprosjekter",
+    "gloss_en": "setting out and measurement on building and construction projects",
     "level": "required"
    }
   ],
   "2ca4d99f-5112-4fe3-90b4-5ef05c45cdb6": [
    {
-    "phrase": "erfaring med, eller interesse for, arbeid med mennesker som kan ha utfordrende atferd",
-    "gloss_en": "experience working with people with challenging behaviour",
-    "level": "preferred"
-   },
-   {
-    "phrase": "Kartlegge og dokumentere mottakeres tjenestebehov, prioritere og iverksette tiltak",
-    "gloss_en": "assessment and documentation of service needs",
+    "phrase": "Autorisert helsepersonell til stillinger der det er påkrevd",
+    "gloss_en": "authorized healthcare personnel",
     "level": "required"
    },
    {
-    "phrase": "Delta i tverrfaglig samarbeid, blant annet i ansvarsgruppemøter, arbeid med individuell plan og koordinatoroppgaver",
-    "gloss_en": "interdisciplinary collaboration and individual care plan work",
-    "level": "required"
-   },
-   {
-    "phrase": "Ønskelig med erfaring fra arbeid med mennesker med funksjonsnedsettelser",
+    "phrase": "erfaring fra arbeid med mennesker med funksjonsnedsettelser",
     "gloss_en": "experience working with people with disabilities",
     "level": "preferred"
    },
    {
     "phrase": "Erfaring med bruk av digitale hjelpemidler",
-    "gloss_en": "use of digital tools",
+    "gloss_en": "digital assistive technology use",
+    "level": "required"
+   },
+   {
+    "phrase": "erfaring med, eller interesse for, arbeid med mennesker som kan ha utfordrende atferd",
+    "gloss_en": "experience or interest in working with people with challenging behaviour",
+    "level": "preferred"
+   },
+   {
+    "phrase": "tverrfaglig samarbeid, blant annet i ansvarsgruppemøter, arbeid med individuell plan og koordinatoroppgaver",
+    "gloss_en": "interdisciplinary collaboration including responsibility group meetings, individual planning and coordination",
     "level": "required"
    }
   ],
   "2e7551ed-1ad1-4dff-b6aa-24812a1b22f2": [
    {
-    "phrase": "Har solid erfaring med salg av mobiltelefoner og abonnement",
-    "gloss_en": "sales of mobile phones and subscriptions",
+    "phrase": "solid erfaring med salg av mobiltelefoner og abonnement",
+    "gloss_en": "mobile phone and subscription sales",
     "level": "required"
    },
    {
-    "phrase": "Liker å jobbe med budsjetter og resultater",
+    "phrase": "jobbe med budsjetter og resultater",
     "gloss_en": "budget and results management",
     "level": "required"
    },
    {
     "phrase": "Setter deg raskt inn i kundens behov og finner de beste løsningene",
-    "gloss_en": "customer needs analysis and solution finding",
+    "gloss_en": "customer needs assessment and solution finding",
     "level": "required"
    },
    {
-    "phrase": "Enten har ledererfaring fra før, eller har et sterkt ønske om å utvikle deg til en dyktig avdelingsleder",
+    "phrase": "ledererfaring",
     "gloss_en": "management experience",
     "level": "preferred"
-   },
-   {
-    "phrase": "Rekruttering, opplæring, oppfølging og utvikling av dine selgere",
-    "gloss_en": "recruitment, training and development of salespeople",
-    "level": "required"
    },
    {
     "phrase": "Planlegging og gjennomføring av ukentlige kampanjer",
@@ -897,12 +993,42 @@
     "level": "required"
    },
    {
-    "phrase": "Er genuint opptatt av kunder og elektronikk",
-    "gloss_en": "consumer electronics knowledge",
+    "phrase": "Rekruttering, opplæring, oppfølging og utvikling av dine selgere",
+    "gloss_en": "recruitment, training, supervision and development of sales staff",
+    "level": "required"
+   },
+   {
+    "phrase": "Sikre korrekt og god utlevering av varer og tjenester",
+    "gloss_en": "product and service delivery",
+    "level": "required"
+   },
+   {
+    "phrase": "kundebehandling og salg",
+    "gloss_en": "customer service and sales",
     "level": "required"
    }
   ],
   "2ee163ae-d6a8-4901-817e-bb1713f8ef1b": [
+   {
+    "phrase": "Godkjent videreutdanning som barsel- og barnepleie",
+    "gloss_en": "postpartum and child nursing education",
+    "level": "required"
+   },
+   {
+    "phrase": "Erfaring fra føde- og barselomsorg",
+    "gloss_en": "childbirth and postpartum care experience",
+    "level": "preferred"
+   },
+   {
+    "phrase": "Gode IKT-kunnskaper",
+    "gloss_en": "ICT knowledge",
+    "level": "required"
+   },
+   {
+    "phrase": "Assistere ved fødsler",
+    "gloss_en": "childbirth assistance",
+    "level": "required"
+   },
    {
     "phrase": "Ammeveiledning",
     "gloss_en": "breastfeeding guidance",
@@ -910,17 +1036,12 @@
    },
    {
     "phrase": "Observasjon og oppfølging av nyfødte barn",
-    "gloss_en": "observation and follow-up of newborns",
+    "gloss_en": "newborn observation and follow-up",
     "level": "required"
    },
    {
-    "phrase": "Erfaring fra føde- og barselomsorg er ønskelig",
-    "gloss_en": "experience in maternity and postnatal care",
-    "level": "preferred"
-   },
-   {
-    "phrase": "Gode IKT-kunnskaper",
-    "gloss_en": "good IT skills",
+    "phrase": "Bidra til trygge pasientforløp",
+    "gloss_en": "safe patient journey management",
     "level": "required"
    },
    {
@@ -930,33 +1051,33 @@
    },
    {
     "phrase": "Bidra til fagutvikling i avdelingen",
-    "gloss_en": "professional development work",
-    "level": "required"
-   },
-   {
-    "phrase": "Omsorg og veiledning til nybakte foreldre",
-    "gloss_en": "care and guidance for new parents",
+    "gloss_en": "professional development contribution",
     "level": "required"
    }
   ],
   "30407462-7b33-4f76-9b77-fcadc5c9e0bd": [
    {
-    "phrase": "Undervisning og opplæring i ulike fagområder for barn i grunnskolen.",
-    "gloss_en": "teaching in primary school subjects",
+    "phrase": "Undervisning og opplæring i ulike fagområder",
+    "gloss_en": "teaching and instruction in various subject areas",
     "level": "required"
    },
    {
-    "phrase": "Undervisning i voksenopplæring, primært norskopplæring.",
-    "gloss_en": "adult education teaching, primarily Norwegian language instruction",
+    "phrase": "Undervisning i voksenopplæring, primært norskopplæring",
+    "gloss_en": "adult education instruction, primarily Norwegian language teaching",
     "level": "required"
    },
    {
-    "phrase": "Målformen ved grunnskolene i gamle Ålesund er bokmål",
-    "gloss_en": "written bokmål standard",
+    "phrase": "beherske norsk både skriftlig og muntlig",
+    "gloss_en": "Norwegian language competence, written and oral",
     "level": "required"
    }
   ],
   "31c2f223-9191-4214-9b77-6471c398ea7d": [
+   {
+    "phrase": "kunne prate engelsk eller ett nordisk språk",
+    "gloss_en": "English or Scandinavian language ability",
+    "level": "required"
+   },
    {
     "phrase": "rengjøring av hytter og leiligheter",
     "gloss_en": "cleaning of cabins and apartments",
@@ -966,85 +1087,105 @@
   "31e7c9fe-7f49-4c27-a61d-18340b40a030": [
    {
     "phrase": "Gi medisiner etter bestått kurs i legemiddelhåndtering og medisingjennomgang",
-    "gloss_en": "medication administration and medication review",
+    "gloss_en": "medication administration",
     "level": "required"
    },
    {
     "phrase": "Ha faglig innsikt og interesse for brukergruppen",
-    "gloss_en": "professional insight into the user group (people with intellectual disabilities)",
+    "gloss_en": "knowledge of developmental disabilities",
     "level": "required"
    },
    {
     "phrase": "Være komfortabel med atferd som utfordrer",
-    "gloss_en": "handling challenging behaviour",
+    "gloss_en": "managing challenging behavior",
     "level": "required"
    },
    {
     "phrase": "Kjenner til lov om kommunale helse- og omsorgstjenester, særlig HOL kap.9",
-    "gloss_en": "knowledge of the Health and Care Services Act, especially chapter 9",
+    "gloss_en": "knowledge of municipal health and care services law",
     "level": "required"
    },
    {
-    "phrase": "Har relevant arbeidserfaring med brukergruppen",
-    "gloss_en": "relevant work experience with the user group",
+    "phrase": "Kan følge tiltak i tiltaksplan, selv om man ønsker å gjøre noe annet",
+    "gloss_en": "following intervention plans",
     "level": "required"
    },
    {
     "phrase": "God forståelse av digitale plattformer",
-    "gloss_en": "understanding of digital platforms",
+    "gloss_en": "digital platform proficiency",
     "level": "required"
    },
    {
     "phrase": "Kjenner til Gerica og GAT",
-    "gloss_en": "knowledge of Gerica and GAT systems",
-    "level": "preferred"
-   },
-   {
-    "phrase": "Utføre tiltak etter tiltaksplan",
-    "gloss_en": "implementing care plan measures",
+    "gloss_en": "Gerica and GAT systems knowledge",
     "level": "required"
    },
    {
-    "phrase": "Samarbeide med pårørende og andre instanser",
-    "gloss_en": "collaboration with relatives and other agencies",
+    "phrase": "Helsefagarbeider eller annen utdanning som kvalifiserer til ettårig miljøterapeut",
+    "gloss_en": "health and social care qualifications",
     "level": "required"
    }
   ],
   "34b34080-ea2e-4a4b-b16d-740572c1002d": [
    {
     "phrase": "Rettskildesøk og juridiske utredninger",
-    "gloss_en": "legal source research and legal analysis",
+    "gloss_en": "legal research and legal analysis",
     "level": "required"
    },
    {
-    "phrase": "Saksforberedelse",
-    "gloss_en": "case preparation",
+    "phrase": "Saksforberedelse : innhenting og systematisering av dokumentasjon, kronologi og oversikter",
+    "gloss_en": "case preparation and document management",
     "level": "required"
    },
    {
-    "phrase": "Utkast til brev, klager, tilsvar og prosesskriv",
-    "gloss_en": "drafting letters, appeals, replies and pleadings",
+    "phrase": "Kommunikasjon med klienter, motparter og offentlige instanser",
+    "gloss_en": "client and stakeholder communication",
     "level": "required"
    },
    {
-    "phrase": "friststyring",
-    "gloss_en": "deadline management",
+    "phrase": "Løpende saksoppfølging , friststyring og enkle adminoppgaver",
+    "gloss_en": "case management and deadline management",
     "level": "required"
    },
    {
-    "phrase": "Møter med klienter og forhandlinger",
-    "gloss_en": "client meetings and negotiation",
+    "phrase": "Utkast til brev, klager, tilsvar og prosesskriv (under veiledning)",
+    "gloss_en": "legal document drafting",
+    "level": "required"
+   },
+   {
+    "phrase": "Gode ferdigheter i polsk",
+    "gloss_en": "Polish language proficiency",
     "level": "required"
    },
    {
     "phrase": "God digital forståelse (MS Office, Outlook, vanlige saksstyringssystemer)",
-    "gloss_en": "digital literacy (MS Office, Outlook, case management systems)",
+    "gloss_en": "digital literacy and case management systems",
     "level": "required"
    },
    {
-    "phrase": "Erfaring fra advokatbransjen",
-    "gloss_en": "experience from the legal profession",
+    "phrase": "Gode ferdigheter i engelsk",
+    "gloss_en": "English language proficiency",
     "level": "preferred"
+   },
+   {
+    "phrase": "Gode ferdigheter i andre språk",
+    "gloss_en": "other language proficiency",
+    "level": "preferred"
+   },
+   {
+    "phrase": "Erfaring fra advokatbransjen",
+    "gloss_en": "legal practice experience",
+    "level": "preferred"
+   },
+   {
+    "phrase": "Møter med klienter og forhandlinger",
+    "gloss_en": "client meetings and negotiations",
+    "level": "required"
+   },
+   {
+    "phrase": "Uavhengig saksbehandling under oppsyn",
+    "gloss_en": "independent case handling under supervision",
+    "level": "required"
    }
   ],
   "3d1cbc89-3df9-4eb1-8881-2e36edebd1c0": [
@@ -1054,37 +1195,42 @@
     "level": "required"
    },
    {
-    "phrase": "Gode kunnskaper i bruk av IKT- verktøy",
-    "gloss_en": "ICT tools proficiency",
-    "level": "required"
-   },
-   {
     "phrase": "Du kommuniserer godt både skriftlig og muntlig",
     "gloss_en": "written and oral communication",
     "level": "required"
    },
    {
-    "phrase": "Miljøterapeutisk arbeid og tilrettelegging for trygghet og mestring",
-    "gloss_en": "milieu therapy work",
+    "phrase": "Helhetlig pleie, omsorg og oppfølging av pasienter",
+    "gloss_en": "holistic patient care and follow-up",
     "level": "required"
    },
    {
-    "phrase": "Helhetlig pleie, omsorg og oppfølging av pasienter",
-    "gloss_en": "holistic patient care and nursing",
+    "phrase": "Miljøterapeutisk arbeid og tilrettelegging for trygghet og mestring",
+    "gloss_en": "milieu therapy and enabling safety and mastery",
+    "level": "required"
+   },
+   {
+    "phrase": "Samarbeid med pårørende og tverrfaglige samarbeidspartnere",
+    "gloss_en": "collaboration with relatives and multidisciplinary partners",
     "level": "required"
    },
    {
     "phrase": "Dokumentasjon og bruk av relevante IKT-verktøy",
-    "gloss_en": "documentation and use of ICT tools",
-    "level": "required"
-   },
-   {
-    "phrase": "Bidra aktivt til fagutvikling, kvalitet og forbedringsarbeid i enheten",
-    "gloss_en": "professional development and quality improvement work",
+    "gloss_en": "documentation and use of relevant ICT tools",
     "level": "required"
    }
   ],
   "3dfb11f3-3a96-4b60-8408-c13eaae11975": [
+   {
+    "phrase": "erfaring med GIS-løsninger",
+    "gloss_en": "GIS solutions experience",
+    "level": "required"
+   },
+   {
+    "phrase": "utvikling og automatisering",
+    "gloss_en": "development and automation",
+    "level": "required"
+   },
    {
     "phrase": "Erfaring med ArcGIS Enterprise og GIS-løsninger",
     "gloss_en": "ArcGIS Enterprise and GIS solutions experience",
@@ -1092,12 +1238,12 @@
    },
    {
     "phrase": "Erfaring med Python-programmering og automatisering",
-    "gloss_en": "Python programming and automation",
+    "gloss_en": "Python programming and automation experience",
     "level": "required"
    },
    {
     "phrase": "Erfaring med API-er, integrasjoner og moderne utviklingsmetodikk",
-    "gloss_en": "APIs, integrations and modern development methodology",
+    "gloss_en": "APIs, integrations and modern development methodology experience",
     "level": "required"
    },
    {
@@ -1106,77 +1252,57 @@
     "level": "required"
    },
    {
-    "phrase": "Erfaring med OpenShift, Kubernetes eller tilsvarende plattformteknologi er en fordel",
-    "gloss_en": "OpenShift, Kubernetes or similar platform technology",
+    "phrase": "Erfaring med OpenShift, Kubernetes eller tilsvarende plattformteknologi",
+    "gloss_en": "OpenShift, Kubernetes or equivalent platform technology experience",
     "level": "preferred"
    },
    {
-    "phrase": "Erfaring med skyløsninger, spesielt Azure, er en fordel",
-    "gloss_en": "cloud solutions, especially Azure",
+    "phrase": "Erfaring med skyløsninger, spesielt Azure",
+    "gloss_en": "cloud solutions experience, particularly Azure",
     "level": "preferred"
    },
    {
-    "phrase": "Erfaring med smidig metodikk er en fordel",
-    "gloss_en": "agile methodology",
+    "phrase": "Erfaring med smidig metodikk",
+    "gloss_en": "agile methodology experience",
     "level": "preferred"
    },
    {
-    "phrase": "IT, geomatikk eller relevant fagretning",
-    "gloss_en": "IT and geomatics subject knowledge",
-    "level": "required"
-   },
-   {
-    "phrase": "Automatisere prosesser og leveranser med Python, DevOps-verktøy og moderne plattformteknologi",
-    "gloss_en": "process automation with DevOps tooling",
-    "level": "required"
-   },
-   {
-    "phrase": "containerbaserte løsninger, skyteknologi og automatiserte leveranseprosesser",
-    "gloss_en": "container-based solutions and automated delivery pipelines",
-    "level": "required"
-   },
-   {
-    "phrase": "Utvikle og videreutvikle ArcGIS Enterprise, kartapplikasjoner og tilhørende GIS-tjenester",
-    "gloss_en": "map application and GIS service development",
-    "level": "required"
-   },
-   {
-    "phrase": "Utvikle mekanismer for automatisert kvalitetskontroll og etterlevelse av GIS-standarder og retningslinjer",
-    "gloss_en": "automated quality control and GIS standards compliance",
+    "phrase": "Utdannelse eller solid erfaring innen IT, geomatikk eller relevant fagretning",
+    "gloss_en": "IT, geomatics or relevant field education or experience",
     "level": "required"
    }
   ],
   "3ea17797-38a6-4962-b288-96abd03a1fb2": [
    {
     "phrase": "Planlegge og gjennomføre ski- og snowboardundervisning (gruppe og privat)",
-    "gloss_en": "ski and snowboard instruction, group and private",
+    "gloss_en": "ski and snowboard instruction planning and delivery",
     "level": "required"
    },
    {
     "phrase": "Tilpasse undervisning til nivå, alder og forutsetninger",
-    "gloss_en": "adapting teaching to level, age and individual needs",
+    "gloss_en": "lesson adaptation to learner level, age and needs",
     "level": "required"
    },
    {
     "phrase": "Ivareta sikkerhet i bakken og følge gjeldende rutiner",
     "gloss_en": "slope safety management and procedure compliance",
     "level": "required"
-   },
-   {
-    "phrase": "relevant erfaring",
-    "gloss_en": "relevant ski instruction experience",
-    "level": "required"
-   },
-   {
-    "phrase": "Har et ekstra engasjement for barn og unge",
-    "gloss_en": "working with children and young people",
-    "level": "required"
    }
   ],
   "4012c5f7-6a80-4734-8c60-89542fabfd72": [
    {
-    "phrase": "Minimum 1 års dokumentert erfaring fra Norge",
-    "gloss_en": "at least 1 year of documented work experience in Norway",
+    "phrase": "Fagbrev elektriker",
+    "gloss_en": "electrician certification",
+    "level": "required"
+   },
+   {
+    "phrase": "FSE",
+    "gloss_en": "electrical safety certification",
+    "level": "required"
+   },
+   {
+    "phrase": "HLR",
+    "gloss_en": "cardiopulmonary resuscitation",
     "level": "required"
    },
    {
@@ -1188,17 +1314,17 @@
   "42cb6a0c-5962-409e-abf9-9b679a81b04d": [
    {
     "phrase": "experience working with regulatory compliance and certification of electronic or hardware products",
-    "gloss_en": "regulatory compliance and certification of electronic/hardware products",
+    "gloss_en": "regulatory compliance and certification of electronic or hardware products",
     "level": "required"
    },
    {
-    "phrase": "Understands international regulatory frameworks and standards for product compliance",
-    "gloss_en": "knowledge of international regulatory frameworks and product compliance standards",
+    "phrase": "international regulatory frameworks and standards for product compliance",
+    "gloss_en": "international regulatory frameworks and standards knowledge",
     "level": "required"
    },
    {
     "phrase": "technical competence within hardware/electronics development",
-    "gloss_en": "hardware and electronics development competence",
+    "gloss_en": "hardware/electronics development",
     "level": "required"
    },
    {
@@ -1208,200 +1334,215 @@
    },
    {
     "phrase": "FCC grants",
-    "gloss_en": "FCC grant certification",
+    "gloss_en": "FCC certification",
     "level": "required"
    },
    {
     "phrase": "Coordinate certification and compliance activities with external test labs and certification partners",
-    "gloss_en": "coordinating certification activities with test labs and certification bodies",
+    "gloss_en": "coordination with external test laboratories and certification bodies",
     "level": "required"
    },
    {
     "phrase": "Interpret and apply relevant standards and regulations for different markets and regions",
-    "gloss_en": "interpreting and applying standards and regulations",
+    "gloss_en": "standards and regulations interpretation and application",
     "level": "required"
    },
    {
     "phrase": "Maintain regulatory documentation and support technical file preparation",
-    "gloss_en": "regulatory documentation and technical file preparation",
-    "level": "required"
-   },
-   {
-    "phrase": "Help establish scalable compliance processes",
-    "gloss_en": "building scalable compliance processes",
-    "level": "required"
-   },
-   {
-    "phrase": "manage multiple certification processes simultaneously",
-    "gloss_en": "managing multiple certification processes concurrently",
+    "gloss_en": "regulatory documentation and technical file management",
     "level": "required"
    }
   ],
   "46264590-80d4-491c-9e90-bca977018235": [
    {
+    "phrase": "Høgskuleutdanning innan helse",
+    "gloss_en": "health science tertiary education",
+    "level": "required"
+   },
+   {
+    "phrase": "vidareutdanning innan pedagogikk eller rettleiing",
+    "gloss_en": "further education in pedagogy or mentoring",
+    "level": "preferred"
+   },
+   {
+    "phrase": "vidareutdanning innan habilitering/rehabilitering",
+    "gloss_en": "further education in rehabilitation or habilitation",
+    "level": "preferred"
+   },
+   {
+    "phrase": "Initiere og fremme fagleg utvikling i forhald til lovverk, nasjonale retningslinjer, kommunale retningslinjer og beste praksis",
+    "gloss_en": "professional development in relation to legislation, national guidelines, and best practice",
+    "level": "required"
+   },
+   {
     "phrase": "Utarbeide, iverksette og evaluere opplæringsplanar for tilsette",
-    "gloss_en": "developing and evaluating staff training plans",
+    "gloss_en": "design, implementation and evaluation of staff training plans",
+    "level": "required"
+   },
+   {
+    "phrase": "Fungere som fagleg leiarstøtte",
+    "gloss_en": "professional leadership support",
     "level": "required"
    },
    {
     "phrase": "Planlegge og bidra til kompetanseheving",
-    "gloss_en": "competence development planning",
-    "level": "required"
-   },
-   {
-    "phrase": "Sikre at fagsystem og dokumentasjon bidrar til forsvarlege tenester for brukarane",
-    "gloss_en": "professional record systems and documentation",
-    "level": "required"
-   },
-   {
-    "phrase": "Prosjektarbeid",
-    "gloss_en": "project work",
+    "gloss_en": "planning and delivery of competency development",
     "level": "required"
    },
    {
     "phrase": "Evne til å rettleie og undervise kollegaer og/eller andre samarbeidspartnarar",
-    "gloss_en": "supervising and teaching colleagues and partners",
+    "gloss_en": "mentoring and teaching colleagues and collaborative partners",
+    "level": "required"
+   },
+   {
+    "phrase": "Evne til å jobbe strukturert og selvstendig innenfor gitte rammer",
+    "gloss_en": "structured and independent working within defined parameters",
     "level": "required"
    },
    {
     "phrase": "Fokus på brukarmedverknad og beslutningsstøtte",
-    "gloss_en": "user involvement and decision-making support",
-    "level": "required"
-   },
-   {
-    "phrase": "Initiere og fremme fagleg utvikling i forhald til lovverk, nasjonale retningslinjer, kommunale retningslinjer og beste praksis",
-    "gloss_en": "knowledge of legislation, national and municipal guidelines and best practice",
-    "level": "required"
-   },
-   {
-    "phrase": "Motivert til å drive endringsarbeid og utvikle tenestene",
-    "gloss_en": "change management and service development",
+    "gloss_en": "user participation and decision support",
     "level": "required"
    }
   ],
   "46b3d20b-9287-4819-892d-585cea4346dc": [
    {
-    "phrase": "Har erfaring med søm, enten fra arbeid, utdanning eller hobby",
+    "phrase": "erfaring med søm",
     "gloss_en": "sewing experience",
     "level": "required"
    },
    {
-    "phrase": "Har gode praktiske ferdigheter",
-    "gloss_en": "practical manual skills",
+    "phrase": "praktiske ferdigheter",
+    "gloss_en": "practical skills",
     "level": "required"
    },
    {
-    "phrase": "komfortable med å bruke symaskin",
+    "phrase": "bruke symaskin",
     "gloss_en": "sewing machine operation",
     "level": "required"
    },
    {
-    "phrase": "Erfaring med industrisøm er en fordel",
-    "gloss_en": "industrial sewing experience",
-    "level": "preferred"
+    "phrase": "Tilskjæring og kutting av materialer",
+    "gloss_en": "cutting and trimming materials",
+    "level": "required"
    },
    {
-    "phrase": "Tilskjæring og kutting av materialer",
-    "gloss_en": "cutting of materials",
+    "phrase": "Montering og ferdigstilling av produkter",
+    "gloss_en": "product assembly and finishing",
     "level": "required"
    },
    {
     "phrase": "Kvalitetskontroll av ferdige produkter",
     "gloss_en": "quality control of finished products",
     "level": "required"
+   },
+   {
+    "phrase": "Pakking og klargjøring for utsendelse",
+    "gloss_en": "packing and preparation for dispatch",
+    "level": "required"
    }
   ],
   "47366cc8-6e01-4dcc-9d63-193d5ae9ba95": [
    {
-    "phrase": "Allmenn tannbehandling",
-    "gloss_en": "general dental treatment",
-    "level": "required"
-   },
-   {
     "phrase": "Undersøkelser, diagnostikk og behandlingsplanlegging",
-    "gloss_en": "examination, diagnostics and treatment planning",
+    "gloss_en": "examination, diagnosis and treatment planning",
     "level": "required"
    },
    {
     "phrase": "Akuttbehandling",
-    "gloss_en": "emergency dental treatment",
+    "gloss_en": "emergency treatment",
     "level": "required"
    },
    {
     "phrase": "Protetikk, endodonti og kirurgisk behandling ut fra kompetanse og interesse",
     "gloss_en": "prosthodontics, endodontics and surgical treatment",
-    "level": "preferred"
-   },
-   {
-    "phrase": "behandlingspresentasjon",
-    "gloss_en": "treatment presentation to patients",
     "level": "required"
    },
    {
-    "phrase": "God kommunikasjon med pasientene",
-    "gloss_en": "patient communication",
+    "phrase": "Oppfølging av egen pasientportefølje",
+    "gloss_en": "management of own patient portfolio",
+    "level": "required"
+   },
+   {
+    "phrase": "Samarbeid med klinikkens spesialister og øvrige behandlingsteam",
+    "gloss_en": "collaboration with specialists and treatment team",
+    "level": "required"
+   },
+   {
+    "phrase": "Allmenn tannbehandling",
+    "gloss_en": "general dentistry",
+    "level": "required"
+   },
+   {
+    "phrase": "arbeider strukturert, effektivt og selvstendig",
+    "gloss_en": "structured, efficient and independent work",
     "level": "required"
    }
   ],
   "48fab2b2-f0f4-40cf-998c-24ce8b58bad9": [
    {
-    "phrase": "Du må ha interesse for - og gjerne kunnskaper om amming",
-    "gloss_en": "breastfeeding knowledge",
+    "phrase": "Erfaring innen fagområdene: barsel, nyfødte og/eller amming",
+    "gloss_en": "postnatal care, newborn care and lactation experience",
     "level": "preferred"
    },
    {
-    "phrase": "Erfaring innen fagområdene: barsel, nyfødte og/eller amming.",
-    "gloss_en": "experience in maternity care, newborns and/or breastfeeding",
-    "level": "preferred"
-   },
-   {
-    "phrase": "Erfaring med DIPS Arena, Partus og MetaVision.",
-    "gloss_en": "experience with DIPS Arena, Partus and MetaVision systems",
+    "phrase": "Erfaring med DIPS Arena, Partus og MetaVision",
+    "gloss_en": "DIPS Arena, Partus and MetaVision experience",
     "level": "preferred"
    }
   ],
   "4ccebbd0-3a19-49d0-8264-eca3d953c9e8": [
    {
-    "phrase": "kompetanse i COS (Trygghetssirkelen)",
-    "gloss_en": "Circle of Security (COS) competence",
+    "phrase": "COS (Trygghetssirkelen)",
+    "gloss_en": "COS (Trygghetssirkelen) competency",
     "level": "required"
    },
    {
     "phrase": "TIBIR (Tidlig innsats for barn i risiko)",
-    "gloss_en": "TIBIR early intervention for children at risk",
+    "gloss_en": "TIBIR (early intervention for children at risk) competency",
     "level": "required"
    },
    {
-    "phrase": "Bidra til planlegging, gjennomføring, dokumentasjon og vurdering av det pedagogiske arbeidet",
+    "phrase": "planlegging, gjennomføring, dokumentasjon og vurdering av det pedagogiske arbeidet",
     "gloss_en": "planning, implementation, documentation and evaluation of pedagogical work",
     "level": "required"
    },
    {
-    "phrase": "Bidra til utvikling av barnehagens pedagogiske praksis",
-    "gloss_en": "development of pedagogical practice",
+    "phrase": "refleksjon, samarbeid og faglig utvikling",
+    "gloss_en": "reflection, collaboration and professional development",
     "level": "required"
    },
    {
-    "phrase": "Bidra til et godt samarbeid med foresatte",
-    "gloss_en": "cooperation with parents/guardians",
-    "level": "required"
-   },
-   {
-    "phrase": "Bruke veiledning og tilbakemeldinger til å utvikle egen praksis",
-    "gloss_en": "using supervision and feedback to develop own practice",
+    "phrase": "relasjonsarbeid",
+    "gloss_en": "relational work",
     "level": "required"
    },
    {
     "phrase": "Erfaring fra arbeid i barnehage",
-    "gloss_en": "experience working in a kindergarten",
+    "gloss_en": "experience working in kindergarten",
     "level": "preferred"
    }
   ],
   "4f2378c3-49d0-4c21-9b53-a594737ceb97": [
    {
-    "phrase": "erfaring fra pleie og omsorg",
-    "gloss_en": "nursing and care experience",
+    "phrase": "Utdanning som helsefagarbeider, eller erfaring fra lignende arbeid",
+    "gloss_en": "health care worker training or care experience",
     "level": "preferred"
+   },
+   {
+    "phrase": "Personlig hygiene",
+    "gloss_en": "personal hygiene assistance",
+    "level": "required"
+   },
+   {
+    "phrase": "Posisjonering i seng",
+    "gloss_en": "bed positioning",
+    "level": "required"
+   },
+   {
+    "phrase": "Bistand til måltider",
+    "gloss_en": "meal assistance",
+    "level": "required"
    },
    {
     "phrase": "Medisinering",
@@ -1409,116 +1550,96 @@
     "level": "required"
    },
    {
-    "phrase": "Posisjonering i seng",
-    "gloss_en": "positioning a patient in bed",
-    "level": "required"
-   },
-   {
-    "phrase": "Personlig hygiene",
-    "gloss_en": "personal hygiene care",
-    "level": "required"
-   },
-   {
-    "phrase": "Bistand til måltider",
-    "gloss_en": "assistance with meals",
-    "level": "required"
-   },
-   {
     "phrase": "Gjennombevegelse/trening",
-    "gloss_en": "range-of-motion exercises and training",
+    "gloss_en": "passive exercise and mobilization",
     "level": "required"
    },
    {
-    "phrase": "Noe renhold og praktisk bistand i hjemmet",
-    "gloss_en": "household cleaning and practical assistance",
+    "phrase": "Du må disponere egen bil",
+    "gloss_en": "car operation and driving",
     "level": "required"
    },
    {
-    "phrase": "Du har gjerne litt arbeidserfaring",
-    "gloss_en": "some prior work experience",
-    "level": "preferred"
-   },
-   {
-    "phrase": "mulighet til å kjøre stor bil med plass til rullestol",
-    "gloss_en": "driving a large wheelchair-accessible vehicle",
+    "phrase": "kjøre stor bil med plass til rullestol",
+    "gloss_en": "driving large vehicles with wheelchair space",
     "level": "preferred"
    }
   ],
   "502a8ece-024a-466d-8f6f-21c219d94305": [
    {
-    "phrase": "erfaring fra generell intensivenhet",
-    "gloss_en": "general intensive care unit experience",
-    "level": "required"
-   },
-   {
     "phrase": "Respiratorkompetanse",
-    "gloss_en": "mechanical ventilator competence",
+    "gloss_en": "ventilator competency",
     "level": "required"
    },
    {
     "phrase": "2års erfaring fra intensivavdeling",
-    "gloss_en": "two years of intensive care ward experience",
+    "gloss_en": "intensive care unit experience",
     "level": "required"
    },
    {
     "phrase": "Oppdatert AHLR-kurs",
-    "gloss_en": "up-to-date advanced cardiopulmonary resuscitation training",
+    "gloss_en": "current AHLR certification",
     "level": "required"
    }
   ],
   "51a6ad59-bdc7-4832-b59b-193b715af9d4": [
    {
-    "phrase": "Observasjon, kartlegging, iverksetting av tiltak og dokumentasjon i pasientjournal (Helseplattformen).",
-    "gloss_en": "observation, assessment, intervention and patient record documentation (Helseplattformen)",
+    "phrase": "Observasjon, kartlegging, iverksetting av tiltak og dokumentasjon i pasientjournal (Helseplattformen)",
+    "gloss_en": "patient documentation in electronic health records",
     "level": "required"
    },
    {
-    "phrase": "Legemiddelhandtering.",
-    "gloss_en": "medication administration",
+    "phrase": "Legemiddelhandtering",
+    "gloss_en": "medication handling",
     "level": "required"
    },
    {
-    "phrase": "Relevant erfaring er ein fordel.",
-    "gloss_en": "relevant work experience",
-    "level": "preferred"
+    "phrase": "Beherske IKT-verktøy",
+    "gloss_en": "ICT tools proficiency",
+    "level": "required"
    },
    {
-    "phrase": "Beherske IKT-verktøy.",
-    "gloss_en": "command of ICT tools",
+    "phrase": "personlig bankid eller idporten kan benyttes",
+    "gloss_en": "digital authentication systems",
+    "level": "required"
+   },
+   {
+    "phrase": "God munnleg og skriftleg framstillingsevne",
+    "gloss_en": "oral and written communication",
     "level": "required"
    }
   ],
   "5688bcc1-1391-416a-86b4-1249bcb83fd1": [
    {
     "phrase": "Kjøring av lett lastebil på planlagte ruter",
-    "gloss_en": "driving a light truck on planned routes",
+    "gloss_en": "light truck driving on planned routes",
+    "level": "required"
+   },
+   {
+    "phrase": "Tømming og håndtering av tekstiler",
+    "gloss_en": "textile collection and handling",
     "level": "required"
    },
    {
     "phrase": "Lasting og lossing av bilen",
-    "gloss_en": "loading and unloading the vehicle",
+    "gloss_en": "loading and unloading vehicles",
     "level": "required"
    },
    {
     "phrase": "Enkelt vedlikehold og daglig kontroll av kjøretøy",
-    "gloss_en": "basic vehicle maintenance and daily checks",
-    "level": "required"
-   },
-   {
-    "phrase": "Er i god fysisk form og liker praktisk arbeid",
-    "gloss_en": "physical fitness for practical work",
+    "gloss_en": "basic vehicle maintenance and daily vehicle checks",
     "level": "required"
    },
    {
     "phrase": "Truckførerbevis (T4)",
-    "gloss_en": "forklift operation (T4)",
+    "gloss_en": "forklift operation",
     "level": "preferred"
    }
   ],
   "5a924a5e-1956-4fe7-9a40-090eac8c009a": [
    {
     "phrase": "Miljøterapeutisk arbeid med fokus på relasjonsbygging, trygghet og struktur",
-    "gloss_en": "milieu therapy work with relationship building, safety and structure",
+    "gloss_en": "milieu therapy with focus on relationship building, safety and structure",
     "level": "required"
    },
    {
@@ -1528,45 +1649,55 @@
    },
    {
     "phrase": "Oppfølging av behandlingsplaner og legemiddelhåndtering etter gjeldende rutiner",
-    "gloss_en": "treatment plan follow-up and medication handling",
+    "gloss_en": "medication management and treatment plan implementation",
     "level": "required"
    },
    {
-    "phrase": "pårørendearbeid",
-    "gloss_en": "work with patients' relatives",
+    "phrase": "Samarbeid med pasienter, pårørende og interne og eksterne samarbeidspartnere",
+    "gloss_en": "collaboration with patients, relatives and internal and external partners",
     "level": "required"
    },
    {
-    "phrase": "Erfaring fra psykisk helsearbeid, rusbehandling eller arbeid med psykoseproblematikk er en fordel",
-    "gloss_en": "experience in mental health care, addiction treatment or psychosis work",
+    "phrase": "Erfaring fra psykisk helsearbeid, rusbehandling eller arbeid med psykoseproblematikk",
+    "gloss_en": "experience in mental health work, substance abuse treatment or psychosis work",
     "level": "preferred"
-   },
-   {
-    "phrase": "Bidra til fagutvikling, kvalitet i tjenestene og et godt arbeidsmiljø",
-    "gloss_en": "professional development and service quality improvement",
-    "level": "required"
    }
   ],
   "5bc70af0-7b65-4c7d-9d18-3b15c1761279": [
    {
     "phrase": "Utføre målretta arbeid",
-    "gloss_en": "goal-directed/targeted therapeutic work",
+    "gloss_en": "targeted work execution",
+    "level": "required"
+   },
+   {
+    "phrase": "Delta i daglege aktivitetar med brukarane",
+    "gloss_en": "facilitation of daily activities with users",
+    "level": "required"
+   },
+   {
+    "phrase": "Yte tenester i henhald til gjeldande vedtak",
+    "gloss_en": "service delivery according to mandated decisions",
+    "level": "required"
+   },
+   {
+    "phrase": "Samarbeide med pårørande og andre instansar",
+    "gloss_en": "collaboration with family and other agencies",
     "level": "required"
    },
    {
     "phrase": "Oppfølging av kapittel 9 (tvang og makt)",
-    "gloss_en": "application of Chapter 9 regulations on coercion and force",
+    "gloss_en": "implementation of restraint and authority protocols",
     "level": "required"
    },
    {
     "phrase": "Rettleie og gi opplæring til andre tilsette, studentar og lærlingar",
-    "gloss_en": "supervision and training of staff, students and apprentices",
+    "gloss_en": "instruction and training of staff, students and apprentices",
     "level": "required"
    },
    {
-    "phrase": "Det er ein fordel med erfaring fra tilsvarende arbeid, men det er ikkje eit krav",
-    "gloss_en": "experience from similar work",
-    "level": "preferred"
+    "phrase": "Gode evner i kommunikasjon og samarbeid",
+    "gloss_en": "communication and collaboration skills",
+    "level": "required"
    },
    {
     "phrase": "Du må ha vanleg datakunnskap",
@@ -1574,150 +1705,185 @@
     "level": "required"
    },
    {
-    "phrase": "Vernepleiar vil ha tilleggsoppgåver knytt til medisinhandtering",
-    "gloss_en": "medication administration",
+    "phrase": "Kunnskap og interesse for og erfaring frå arbeid med mennesker med psykisk utviklingshemning",
+    "gloss_en": "knowledge and experience working with intellectually disabled persons",
     "level": "required"
    },
    {
-    "phrase": "Kunnskap og interesse for og erfaring frå arbeid med mennesker med psykisk utviklingshemning",
-    "gloss_en": "knowledge of and experience working with people with intellectual disabilities",
+    "phrase": "Evne til skriftelege og munnleg framstilling",
+    "gloss_en": "written and oral communication ability",
     "level": "required"
+   },
+   {
+    "phrase": "Det er ein fordel med erfaring fra tilsvarende arbeid",
+    "gloss_en": "experience in similar work",
+    "level": "preferred"
+   },
+   {
+    "phrase": "Vernepleiar vil ha tilleggsoppgåver knytt til medisinhandtering",
+    "gloss_en": "medication handling",
+    "level": "preferred"
    }
   ],
   "6b4847da-64f9-48fa-b3b7-4a9c53babbdb": [
    {
-    "phrase": "Erfaring fra lager er en fordel",
+    "phrase": "Erfaring fra lager",
     "gloss_en": "warehouse experience",
     "level": "preferred"
    }
   ],
   "70a7bd71-f9b8-4b25-bdf8-5bae40e1ad10": [
    {
-    "phrase": "Smelting og støping: Du former metall etter faste spesifikasjoner",
-    "gloss_en": "melting and casting metal to specification",
+    "phrase": "Smelting og støping",
+    "gloss_en": "metal casting and smelting",
     "level": "required"
    },
    {
-    "phrase": "Du sliper og bearbeider produktene",
+    "phrase": "sliper og bearbeider produktene",
     "gloss_en": "grinding and finishing products",
     "level": "required"
    },
    {
-    "phrase": "Kvalitet og sikkerhet: Du sjekker at det du lager holder mål",
-    "gloss_en": "quality control of produced items",
+    "phrase": "Kvalitet og sikkerhet",
+    "gloss_en": "quality control and safety inspection",
     "level": "required"
    },
    {
     "phrase": "HMS",
-    "gloss_en": "health, safety and environment practice",
+    "gloss_en": "health, safety and environment management",
     "level": "required"
    },
    {
-    "phrase": "erfaring eller fagbrev innen kjemi eller prosess",
-    "gloss_en": "chemistry or process industry experience",
-    "level": "preferred"
-   },
-   {
-    "phrase": "truck (T1/T4)",
-    "gloss_en": "forklift operation",
-    "level": "preferred"
-   },
-   {
-    "phrase": "traverskran (G4)",
-    "gloss_en": "overhead crane operation",
-    "level": "preferred"
-   },
-   {
     "phrase": "Varme Arbeider",
-    "gloss_en": "hot work",
+    "gloss_en": "hot work qualification",
     "level": "preferred"
    },
    {
     "phrase": "Stropp/Anhuker",
-    "gloss_en": "slinging and rigging of loads",
+    "gloss_en": "rigging and load securing",
     "level": "preferred"
    },
    {
-    "phrase": "fysisk arbeid",
-    "gloss_en": "physical labour",
-    "level": "required"
+    "phrase": "erfaring eller fagbrev innen kjemi eller prosess",
+    "gloss_en": "chemistry or process engineering knowledge",
+    "level": "preferred"
    }
   ],
   "71fa1e10-e7aa-4367-b81e-b711aa18014a": [
    {
-    "phrase": "Interessert i å yte god service til alle kunder og kollegaer med godt humør",
-    "gloss_en": "customer service",
+    "phrase": "Interessert i å yte god service til alle kunder og kollegaer",
+    "gloss_en": "customer and colleague service delivery",
+    "level": "required"
+   },
+   {
+    "phrase": "Gode evner til å samarbeide",
+    "gloss_en": "collaboration skills",
     "level": "required"
    },
    {
     "phrase": "Interesse for mat og drikke, gjerne asiatisk kjøkken",
-    "gloss_en": "food and beverage interest, preferably Asian cuisine",
+    "gloss_en": "food and beverage knowledge, preferably Asian cuisine",
     "level": "preferred"
    },
    {
-    "phrase": "Gode kommunikasjonsevner",
-    "gloss_en": "good communication skills",
+    "phrase": "Gode kommunikasjonsevner, skandinavisk og engelsk",
+    "gloss_en": "communication skills in Scandinavian and English",
     "level": "required"
    },
    {
-    "phrase": "Det er en fordel om du har noe kunnskap eller interesse for asiatisk mat",
-    "gloss_en": "knowledge of Asian food",
-    "level": "preferred"
-   },
-   {
-    "phrase": "Erfaring er en fordel, men ikke et krav",
-    "gloss_en": "waiting/serving experience",
+    "phrase": "Erfaring",
+    "gloss_en": "service experience",
     "level": "preferred"
    }
   ],
   "816a33d7-62e2-4afe-91d7-a981e554bf1e": [
    {
-    "phrase": "Har erfaring med renhold, gjerne fra industri, produksjon eller næringsmiddel",
-    "gloss_en": "cleaning experience, preferably from industry, production or food processing",
-    "level": "preferred"
-   },
-   {
-    "phrase": "Sørge for at hygienekrav og interne rutiner blir fulgt",
-    "gloss_en": "compliance with hygiene requirements and internal routines",
-    "level": "required"
-   },
-   {
-    "phrase": "Rengjøring av maskiner, arbeidsområder og fellesarealer",
-    "gloss_en": "cleaning of machines, work areas and common areas",
+    "phrase": "erfaring med renhold, gjerne fra industri, produksjon eller næringsmiddel",
+    "gloss_en": "cleaning and sanitation experience",
     "level": "required"
    },
    {
     "phrase": "Daglig renhold i produksjons- og industrimiljø",
-    "gloss_en": "daily cleaning in production and industrial environments",
+    "gloss_en": "industrial and production facility cleaning",
+    "level": "required"
+   },
+   {
+    "phrase": "Rengjøring av maskiner, arbeidsområder og fellesarealer",
+    "gloss_en": "machine and common area cleaning",
+    "level": "required"
+   },
+   {
+    "phrase": "Sørge for at hygienekrav og interne rutiner blir fulgt",
+    "gloss_en": "hygiene standards and procedures compliance",
+    "level": "required"
+   },
+   {
+    "phrase": "Bidra til at produksjonsområdene holder en høy standard for renhold og hygiene",
+    "gloss_en": "maintaining production area cleanliness and hygiene standards",
+    "level": "required"
+   },
+   {
+    "phrase": "Samarbeide med kollegaer både innen renhold og produksjon",
+    "gloss_en": "cross-team collaboration",
     "level": "required"
    }
   ],
   "858495f7-feb2-4ccf-9857-11ee33c82f4c": [
    {
-    "phrase": "komfortabel med å hjelpe til med personlig stell og andre praktiske gjøremål",
-    "gloss_en": "personal care and practical household assistance",
+    "phrase": "hjelpe til med personlig stell og andre praktiske gjøremål",
+    "gloss_en": "personal care assistance and practical tasks",
     "level": "required"
    },
    {
-    "phrase": "har god fysisk kapasitet",
-    "gloss_en": "good physical capacity",
+    "phrase": "personlig stell og hygiene",
+    "gloss_en": "personal hygiene and care",
+    "level": "required"
+   },
+   {
+    "phrase": "måltider",
+    "gloss_en": "meal preparation and service",
+    "level": "required"
+   },
+   {
+    "phrase": "på- og avkledning",
+    "gloss_en": "dressing and undressing assistance",
+    "level": "required"
+   },
+   {
+    "phrase": "daglige rutiner og gjøremål",
+    "gloss_en": "daily routines and tasks",
+    "level": "required"
+   },
+   {
+    "phrase": "aktiviteter og trening",
+    "gloss_en": "activity and exercise support",
+    "level": "required"
+   },
+   {
+    "phrase": "turer og utflukter",
+    "gloss_en": "organizing and accompanying outings and trips",
+    "level": "required"
+   },
+   {
+    "phrase": "praktiske oppgaver i hjemmet",
+    "gloss_en": "household practical tasks",
+    "level": "required"
+   },
+   {
+    "phrase": "reiser og helgeturer ved behov",
+    "gloss_en": "travel and weekend trip assistance",
     "level": "required"
    }
   ],
   "8ae0f800-2db0-48e2-9862-97300e47b04b": [
    {
-    "phrase": "Salgskonsulent humanitære prosjekter",
-    "gloss_en": "sales consulting",
-    "level": "required"
-   },
-   {
-    "phrase": "kontakte givere over telefon",
-    "gloss_en": "telephone fundraising / telesales",
+    "phrase": "Kontakte eksisterende og tidligere givere",
+    "gloss_en": "contacting existing and previous donors",
     "level": "required"
    },
    {
     "phrase": "Øke faste månedlige støttebeløp",
-    "gloss_en": "upselling monthly donation amounts",
+    "gloss_en": "increasing regular monthly donations",
     "level": "required"
    },
    {
@@ -1727,167 +1893,132 @@
    },
    {
     "phrase": "Reaktivere og vinne tilbake tidligere givere",
-    "gloss_en": "donor reactivation and win-back",
+    "gloss_en": "reactivating and recovering previous donors",
+    "level": "required"
+   },
+   {
+    "phrase": "Snakker flytende norsk eller tydelig skandinavisk med god språkforståelse",
+    "gloss_en": "telephone sales and donor outreach",
     "level": "required"
    }
   ],
   "a64a3996-be11-421b-a78d-6f41173108f0": [
    {
-    "phrase": "Utføre dame-, herre- og barneklipp med fokus på kvalitet og gode kundeopplevelser.",
-    "gloss_en": "women's, men's and children's haircutting",
+    "phrase": "Utføre dame-, herre- og barneklipp med fokus på kvalitet og gode kundeopplevelser",
+    "gloss_en": "women's, men's and children's hair cutting",
     "level": "required"
    },
    {
-    "phrase": "Fargebehandlinger, striper og andre kjemiske behandlinger.",
+    "phrase": "Fargebehandlinger, striper og andre kjemiske behandlinger",
     "gloss_en": "hair colouring, highlights and chemical treatments",
     "level": "required"
    },
    {
-    "phrase": "Veilede kunder og anbefale produkter som passer deres behov.",
-    "gloss_en": "customer advising and product recommendation",
+    "phrase": "Veilede kunder og anbefale produkter som passer deres behov",
+    "gloss_en": "customer advice and product recommendation",
     "level": "required"
    },
    {
-    "phrase": "Bygge opp og utvikle din egen kundeportefølje.",
-    "gloss_en": "building a client portfolio",
+    "phrase": "Bygge opp og utvikle din egen kundeportefølje",
+    "gloss_en": "building and developing a client base",
     "level": "required"
    },
    {
-    "phrase": "Planlegge din egen arbeidsdag og sette opp arbeidstider som passer deg og salongen.",
-    "gloss_en": "self-scheduling and work planning",
-    "level": "required"
-   },
-   {
-    "phrase": "interesse for frisørfaget",
-    "gloss_en": "hairdressing trade knowledge",
+    "phrase": "Holde deg faglig oppdatert og ta initiativ til egen utvikling",
+    "gloss_en": "professional development and continuous learning",
     "level": "required"
    }
   ],
   "c1f5e19f-73ee-4a4c-881e-950ece13aae6": [
    {
     "phrase": "Erfaring fra hotell, resepsjon eller lignende arbeid",
-    "gloss_en": "hotel or reception work experience",
+    "gloss_en": "hotel, reception or similar work experience",
     "level": "preferred"
    },
    {
-    "phrase": "Enkle resepsjonsoppgaver",
-    "gloss_en": "basic reception tasks",
-    "level": "required"
-   },
-   {
-    "phrase": "Inn- og utsjekk av gjester",
-    "gloss_en": "guest check-in and check-out",
-    "level": "required"
-   },
-   {
-    "phrase": "Tilsyn og sikkerhet i huset",
-    "gloss_en": "premises surveillance and security",
-    "level": "required"
-   },
-   {
-    "phrase": "Håndtere situasjoner som måtte oppstå i løpet av natten",
-    "gloss_en": "handling incidents as they arise",
+    "phrase": "kommunisere godt på engelsk",
+    "gloss_en": "English language communication",
     "level": "required"
    }
   ],
   "d26961bc-fde0-4003-ab2d-768701443bda": [
    {
-    "phrase": "Har solid og relevant erfaring fra betongarbeid",
+    "phrase": "solid erfaring fra betongfaget",
     "gloss_en": "concrete work experience",
     "level": "required"
    },
    {
-    "phrase": "Har erfaring med forskaling, armering og støping",
-    "gloss_en": "formwork, reinforcement and casting experience",
-    "level": "required"
-   },
-   {
-    "phrase": "Har god forståelse for fremdrift, kvalitet og HMS",
-    "gloss_en": "understanding of progress, quality and HSE",
-    "level": "required"
-   },
-   {
-    "phrase": "Erfaring som formann eller bas",
-    "gloss_en": "foreman or team leader experience",
+    "phrase": "erfaring som formann eller bas",
+    "gloss_en": "foreman or supervisor experience",
     "level": "preferred"
    },
    {
-    "phrase": "solid erfaring fra betongfaget",
-    "gloss_en": "solid experience in the concrete trade",
+    "phrase": "erfaring med forskaling, armering og støping",
+    "gloss_en": "formwork, reinforcement and casting work",
     "level": "required"
    },
    {
-    "phrase": "grunnarbeid",
-    "gloss_en": "groundwork",
+    "phrase": "forståelse for fremdrift, kvalitet og HMS",
+    "gloss_en": "understanding of project progress, quality and health and safety",
     "level": "required"
    },
    {
-    "phrase": "Planlegge og følge opp den daglige driften på prosjekt",
-    "gloss_en": "planning and follow-up of daily site operations",
+    "phrase": "Delta aktivt i betong- og forskalingsarbeid",
+    "gloss_en": "concrete and formwork labour",
     "level": "required"
    },
    {
     "phrase": "Koordinere arbeidet mellom egne medarbeidere og øvrige aktører på prosjektet",
-    "gloss_en": "coordination of workers and other project actors",
+    "gloss_en": "coordination of work between team members and external parties",
     "level": "required"
    },
    {
-    "phrase": "Har motivasjon for å lede og følge opp andre",
-    "gloss_en": "leading and supervising others",
-    "level": "required"
+    "phrase": "Norsk er en fordel",
+    "gloss_en": "Norwegian language",
+    "level": "preferred"
    }
   ],
   "de37e63a-6279-4aea-95e5-26bf6d29277d": [
    {
-    "phrase": "noe kunnskap eller interesse for asiatisk mat",
-    "gloss_en": "knowledge of or interest in Asian food",
-    "level": "preferred"
-   },
-   {
     "phrase": "Interesse for mat og drikke, gjerne asiatisk kjøkken",
-    "gloss_en": "interest in food and drink, especially Asian cuisine",
+    "gloss_en": "food and beverage knowledge, particularly Asian cuisine",
     "level": "preferred"
    },
    {
-    "phrase": "Erfaring er en fordel, men ikke et krav",
-    "gloss_en": "waiting/serving experience",
-    "level": "preferred"
+    "phrase": "Gode kommunikasjonsevner i engelsk",
+    "gloss_en": "English communication skills",
+    "level": "required"
    }
   ],
   "fdd26aec-1a86-4381-bc05-cb607c839115": [
    {
-    "phrase": "Er utdannet frisør eller har relevant erfaring.",
-    "gloss_en": "hairdressing experience",
-    "level": "required"
-   },
-   {
-    "phrase": "Klipp av dame, herre og barn.",
-    "gloss_en": "cutting hair for women, men and children",
+    "phrase": "Klipp av dame, herre og barn",
+    "gloss_en": "hair cutting for women, men and children",
     "level": "required"
    },
    {
     "phrase": "Fargebehandlinger, striper og andre kjemiske behandlinger",
-    "gloss_en": "colouring, highlights and other chemical treatments",
+    "gloss_en": "hair coloring, highlights and chemical treatments",
     "level": "preferred"
    },
    {
-    "phrase": "Veiledning av kunder og anbefaling av produkter.",
-    "gloss_en": "customer advising and product recommendation",
+    "phrase": "Veiledning av kunder og anbefaling av produkter",
+    "gloss_en": "customer consultation and product recommendation",
     "level": "required"
    },
    {
-    "phrase": "Bygge opp og utvikle din egen kundeportefølje.",
-    "gloss_en": "building a personal client base",
+    "phrase": "Bygge opp og utvikle din egen kundeportefølje",
+    "gloss_en": "building and developing a client base",
     "level": "required"
    },
    {
-    "phrase": "Planlegge din egen arbeidsdag og arbeidstid.",
-    "gloss_en": "planning own workday and working hours",
+    "phrase": "Planlegge din egen arbeidsdag og arbeidstid",
+    "gloss_en": "work scheduling and time management",
     "level": "required"
    },
    {
-    "phrase": "Holde deg faglig oppdatert",
-    "gloss_en": "keeping professionally up to date",
+    "phrase": "Holde deg faglig oppdatert og utvikle deg innen de behandlingene du ønsker å jobbe med",
+    "gloss_en": "professional development in treatments",
     "level": "required"
    }
   ]

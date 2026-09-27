@@ -99,10 +99,14 @@ F2 Crossover curve: 10k → 100k → 1M → 10M, recall@10 vs exact, p50/p95, bu
 F3 Filtered search: post-filter vs pre-filter vs in-engine at our 7% selectivity
 
 ## G. Deliverables
-G1 Static demo: precomputed facets + int8 vectors, λ slider, negation toggle diff
+G1 Static demo: precomputed facets, λ slider. DONE (PoC): docs/index.html +
+   scripts/export_web.py. Client-side ranking because Pages has no server; derived
+   fields only per DATA_LICENSE. int8 vectors NOT shipped — the dense channel was
+   measured as inverted for this task (LIMITATIONS §14), so the PoC ranks on the
+   occupation predicate x language constraint x lexical overlap instead.
 G2 Eval dashboard: ablation table, CVR bars, negation dumbbell, λ tradeoff curve
 G3 README with thesis, honest data caveat, headline result, limitations
-G4 GitHub Pages deploy
+G4 GitHub Pages deploy — enable Pages on the `docs/` folder in repo Settings
 
 ## Cut after review
 Snorkel label model (LFs correlated; 0% coverage on the classes that matter)

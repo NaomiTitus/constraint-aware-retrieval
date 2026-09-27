@@ -79,8 +79,11 @@ def main() -> None:
     print(f"prompt     {chars:,} chars ~= {chars // 4:,} input tokens")
     print(f"model      {args.model}   prompt {S.SKILLS_PROMPT_VERSION}")
     # Opus 5 standard rates, NOT batch: $5/MTok in, $25/MTok out.
-    est_in = chars / 4 / 1e6 * 5.0
-    est_out = len(uuids) * 1500 / 1e6 * 25.0
+    _R = {"claude-opus-5": (5.0, 25.0), "claude-sonnet-5": (2.0, 10.0),
+          "claude-haiku-4-5": (1.0, 5.0)}
+    _pi, _po = _R.get(args.model, (5.0, 25.0))
+    est_in = chars / 4 / 1e6 * _pi
+    est_out = len(uuids) * 1500 / 1e6 * _po
     print(f"est. cost  ~${est_in:.2f} in + ~${est_out:.2f} out = ~${est_in + est_out:.2f} "
           f"(standard rates; no batch discount)")
     print(f"golden     {sum(len(golden[u]) for u in uuids)} skills")
@@ -156,7 +159,12 @@ def main() -> None:
                   f"(golden {len(golden[u])}, census {len(census[u])})", flush=True)
 
     elapsed = time.time() - t0
-    cost = usage["in"] / 1e6 * 5.0 + usage["out"] / 1e6 * 25.0
+    # Per-model rates. This was hardcoded to Opus and reported a Haiku run at 5x
+    # its real cost, which is exactly the kind of number that ends up in a README.
+    RATES = {"claude-opus-5": (5.0, 25.0), "claude-sonnet-5": (2.0, 10.0),
+             "claude-haiku-4-5": (1.0, 5.0)}
+    p_in, p_out = RATES.get(args.model, (5.0, 25.0))
+    cost = usage["in"] / 1e6 * p_in + usage["out"] / 1e6 * p_out
     print(f"\n{len(predictions)} of {len(uuids)} ads extracted in {elapsed:.0f}s")
     print(f"tokens in={usage['in']:,} out={usage['out']:,}  ACTUAL COST ${cost:.2f} "
           f"= ${cost / max(len(predictions), 1):.4f}/ad")
