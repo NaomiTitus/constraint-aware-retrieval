@@ -7,9 +7,16 @@ evaluated as **predicates**, so a job you cannot take ranks as one you cannot ta
 result shows its own reasoning: what the parser understood, the occupation code it resolved
 to, which skills matched, and why it was penalised.
 
-**[▶ Live demo](https://naomititus.github.io/finnno_smart_search/)** · **[What these numbers
-do not support](LIMITATIONS.md)** — 23 sections of measured limits, disconfirmed
-hypotheses, and bugs found after the tests were green.
+**[▶ Live demo](https://naomititus.github.io/finnno_smart_search/)** · **[What these numbers do
+not support](LIMITATIONS.md)** · [Architecture](ARCHITECTURE.md) · [Decision log](DECISIONS.md)
+
+> **Scope.** One market: the NAV/arbeidsplassen licensed feed, 10,166 currently-active ads in
+> a 120-day window (FINN ads are excluded from that feed by licence). **Six of sixteen
+> extracted facets are wired into ranking** — language level, working language,
+> accessibility, location, occupation and skills; the other ten are extracted, validated and
+> stored but scored by nothing (§4, §11). No CV upload, no personalisation, no
+> learning-to-rank, no incremental re-crawl. **The shipped page's own ranking has not been
+> judged** — every confidence interval below comes from the Python pipeline (§22).
 
 ---
 
@@ -17,12 +24,12 @@ hypotheses, and bugs found after the tests were green.
 
 | | | |
 |---|---:|---|
+| **Language extraction** | **96.4%** (27/28) | sealed held-out set, never seen during prompt development · **0** accessible ads hidden |
+| **Constraint violations @10** | **halved**, 0.154 → 0.077 | 378 relevance judgments; 95% CI excludes zero |
 | **Query latency** | **174 ms** p50 · 224 ms p95 | full scan + rank of all 10,166 ads, in the browser, no server |
-| **Time to interactive** | ~400 ms after download | 2.8 MB gzipped index · 86 ms parse · 309 ms index build |
+| **Time to interactive** | ~400 ms after download | 2.9 MB gzipped index · 86 ms parse · 309 ms index build |
 | **Infrastructure at query time** | **none** | static GitHub Pages; no API call, no vector DB, no backend |
-| **Ongoing cost to tag an ad** | **$0.0047** → **~$64/month** | $4.73 per 1,000 ads at ~443 new ads/day; the only cost that recurs |
-| **One-off R&D** | **$8.30** | prompt development, golden set, 378 judgments — spent once, not per ad |
-| **One-off backfill** | **$46.15** | tagging the existing 10,166-ad corpus; scales with corpus size, not time |
+| **Cost** | **$0.0047**/ad → **~$64/month** | $0.0047 × 443 new ads/day × 30 days. Plus $8.30 R&D once and $46.15 to backfill — split out below |
 | **Extraction models** | `claude-haiku-4-5` | both censuses — 9,379 + 9,823 calls, 0 failures |
 | **Judge + label model** | `claude-opus-5` | judging, and the golden skill labels haiku is scored against |
 | **Throughput** | 9,823 ads in **10m13s** | Batch API, single submission |
@@ -69,8 +76,7 @@ saving still on the table. Body-hash deduplication already removes 3.4% of calls
 
 This is the number that surprises people: **proving the thing works cost less than
 $9.** It is fixed — judging 378 pairs costs the same whether the corpus is 10,000 ads
-or 10 million. What is *not* in it is my time, which dominated: the golden skill labels
-were authored by Opus precisely because I had no time to hand-label 144 of them (§15).
+or 10 million. It excludes my own time, which dominated.
 
 **③ One-off backfill — $46.15** to tag the existing 10,166 ads ($22.59 facets + $23.56
 skills). This scales with corpus size, not with time, and it is the figure to quote for
@@ -127,6 +133,13 @@ queries are long. Both disproved hypotheses are in
 
 ## Architecture
 
+**Budgets are asymmetric**, and everything follows from that: minutes and fractions of a cent
+per ad at **index** time, against <300 ms and effectively free at **query** time. So every
+expensive semantic operation is pushed to index time and the query path is arithmetic over
+dense arrays — the LLM's best use here is not inference, it is **label generation**. Full
+storage and latency argument in [ARCHITECTURE.md](ARCHITECTURE.md); numbered design
+decisions in [DECISIONS.md](DECISIONS.md).
+
 ### Build time — how the index is made
 
 There is no gradient descent here. What stands in for "training" is a **typed extraction
@@ -164,7 +177,7 @@ flowchart TB
   M --> Q["export_web.py<br/>DERIVED FIELDS ONLY"]
   G --> Q
   I --> Q
-  Q --> R["docs/data/index.json<br/>2.8 MB gzipped"]
+  Q --> R["docs/data/index.json<br/>2.9 MB gzipped"]
 
   style EXT fill:#fff4e6
   style VAL fill:#e8f5e9
@@ -203,6 +216,14 @@ flowchart LR
   style S4 fill:#ffe0e0
   style S5 fill:#e0f0ff
 ```
+
+**Where this architecture stops.** It works because the corpus fits in a browser: 10,166 ads
+is 2.9 MB gzipped and a full scan is 174 ms. At ~100k ads the index needs sharding by region
+or occupation and the linear scan becomes an inverted index; past ~1M it is a served
+retrieval tier with the constraint stage as a filter pushed into the query planner. **The ETL
+and the extraction economics are unchanged by that** — only the query path is
+corpus-size-dependent, which is why the cost figures above scale and the latency figure does
+not.
 
 Search runs **entirely in the browser** over the precomputed index. Per
 [DATA_LICENSE.md](DATA_LICENSE.md) the bundle carries **derived fields only** — title, ESCO
@@ -291,6 +312,13 @@ the seeker said nothing, the ranking is bit-identical to the unconstrained one**
 non-effect is the property the whole design protects, because a stage that applies to one
 side of a paired comparison and not the other is a confound.
 
+**Every constant here is structural, not fitted** — 0.55, 0.78, 0.62, 0.18, 1.22, the 0.5
+silence default, the STYRK ladder. Each is chosen from the shape of the taxonomy and left
+alone, because fitting them requires relevance judgments and
+[JUDGING_PROTOCOL.md](eval/JUDGING_PROTOCOL.md) was pre-registered with none applied. With
+enough judgments this stage becomes a learned reranker; at n=13 personas, fitting seven
+weights would be curve-fitting. That is a deliberate choice with a cost, not an omission.
+
 $\beta$ pulls workable ads **up** rather than only pushing blocking ads down — 956 ads are
 English-accessible, 551 of them `either_norwegian_or_english`. It was once stacked with a
 second boost, double-counting derived evidence at 1.32×; that bug put a sales role titled
@@ -308,7 +336,12 @@ violations on an **independent** axis. The protocol was **committed before any a
 ran**, with one prompt revision allowed before human calibration and zero after
 ([JUDGING_PROTOCOL.md](eval/JUDGING_PROTOCOL.md)).
 
-| rung | ΔCVR@10 | 95% CI | ΔnDCG@10 | 95% CI |
+**CVR@10** is the constraint-violation rate in the top ten — the share of returned ads that
+demand something the seeker said they lack. **Lower is better.** nDCG@10 is standard graded
+relevance; higher is better. So the row that matters below is negative on both: fewer
+violations, at a real cost in relevance.
+
+| rung | ΔCVR@10 ↓ | 95% CI | ΔnDCG@10 ↑ | 95% CI |
 |---|---:|---|---:|---|
 | raw → parsed query | +0.038 | [−0.008, +0.085] | **+0.124** | **[+0.017, +0.260]** |
 | + occupation predicate | +0.000 | [−0.023, +0.023] | −0.014 | [−0.052, +0.015] |
@@ -322,7 +355,7 @@ significance.
 
 **Absolute, and the negative result the architecture rests on:**
 
-| arm | CVR@10 | nDCG@10 | MRR@10 |
+| arm | CVR@10 ↓ | nDCG@10 ↑ | MRR@10 ↑ |
 |---|---:|---:|---:|
 | BM25 over the parsed query | 0.154 | **0.798** | 0.923 |
 | + constraint stage (λ=0.7) | **0.077** | 0.735 | 0.923 |
@@ -331,8 +364,9 @@ significance.
 **The dense channel is the worst arm on every measure** — roughly half the nDCG of every
 lexical arm at more than double the violation rate. That is the point, not a disappointment.
 
-**Read honestly, this is one win and five nothings.** The constraint stage halves
-violations — and it is a genuine **trade**, because the nDCG cost is *also* significant.
+**One component clearly earns its place and five measured as nothing — which is why only
+three are in the shipped ranking.** The constraint stage halves violations, and it is a
+genuine **trade**, because the nDCG cost is *also* significant.
 Quoting the first without the second would be dishonest. Five plausible components measured
 as **no effect at all**: the occupation predicate, both skill resolvers, IDF weighting on
 the query it was built for, and the label bonus. The one rung that clearly earns its place
@@ -351,9 +385,7 @@ on relevance is **parsing the query at all**.
 | — rejection rate | **6.3%** failed verbatim validation, **discarded not stored** | 4,433 of 70,825 returned |
 
 Skills recall is agreement with labels **Opus produced**, not human labels — an upper bound
-on agreement, not on correctness. Due to time constraints I could not validate the 144
-golden skill labels myself; Opus was enlisted to prove the concept. This is recorded as a
-standing caveat in §15, not buried.
+on agreement, not on correctness (§15).
 
 ### The shipped page — 23-query suite across ten industries
 
@@ -395,7 +427,7 @@ Run it yourself: `node scripts/check_demo_queries.mjs`.
 | **Evaluation** | TREC **depth-10 pooling** · CVR@10 · nDCG@10 (gains $2^g-1$) · MRR@10 · ΔCVR_paired | pooling bias is the failure mode, and it bit once (§17) |
 | **Statistics** | percentile bootstrap, 10,000 replicates, **persona-level** resampling | ad-level resampling would fake significance |
 | **Front end** | vanilla JS, zero dependencies, static Pages | no backend to run; the λ slider makes the effect visible rather than asserted |
-| **Method** | TDD gate: ground → scenario table → **human approval** → failing tests → implement | [STANDARDS.md](STANDARDS.md) §3; §3.1 lists seven bugs that had green tests |
+| **Method** | TDD gate: ground → scenario table → **human approval** → failing tests → implement | **1,022 tests**, offline and keyless. [STANDARDS.md](STANDARDS.md) §3; §3.1 lists seven bugs that had green tests anyway |
 
 **All of it, and what it does not support, is in [LIMITATIONS.md](LIMITATIONS.md)** — 23
 sections including the two hypotheses the probes disproved, the ablation that could not
@@ -421,12 +453,29 @@ rather than quietly dropped.
 
 Two further corpus facts worth stating because they shaped the design: **FINN ads are
 excluded from the licensed feed** (`source:"FINN"` uuids return HTTP 404; zero appear among
-10,166 — hence the project name is a misnomer), and **the positive class has almost no
+10,166 — so this indexes the NAV/arbeidsplassen slice), and **the positive class has almost no
 lexical signal** — a 22-pattern bilingual lexicon fires `not_required` on **5 ads in
 10,166**. English-accessible ads do not announce themselves; they are simply written in
 English. Detection is langid, not classification.
 
 ---
+
+## What I would do next
+
+In priority order, with the reason for the order:
+
+1. **Judge the shipped page's ranking on the existing pool.** It is the largest gap: the page
+   is a second implementation and none of the intervals above apply to it (§22). Cheap —
+   the judge, protocol and pool already exist.
+2. **Sweep the 0.5 silence default** at 0.3 and 0.7 and report the CVR/nDCG curve. It is the
+   single most consequential hand-set constant in the system — it decides more ads than every
+   stated requirement combined — and it has never been varied.
+3. **Fix the β × topicality interaction** (§23.1). The 1.22 accessibility boost can override
+   occupation fit, and CVR@10 is blind to it by construction. Needs nDCG on a topical pool.
+4. **Raise n above 13 personas.** Five components measured as "no effect"; at this sample a
+   true ΔnDCG of +0.03 is invisible, so some of those nulls are underpowered rather than flat.
+5. **Turn on prompt caching for the skills census** for the measured 20% — the smallest and
+   most certain win on this list.
 
 ## Layout
 
@@ -460,7 +509,10 @@ To serve it locally you need a static file server, **not** a double-click: the p
 
 ```bash
 python3 -m http.server 8000 --directory docs   # then open localhost:8000
+python3 -m pytest                              # 1,022 tests, 65s, offline, no API key
 ```
+
+The index is committed, so both of those work on a fresh clone with no key and no spend.
 
 ## Rebuilding from source
 
@@ -479,4 +531,11 @@ pytest                                        # the TDD gate
 
 Every script that spends money is a **dry run by default** and prints its estimate first.
 `data/` is gitignored — no ad text, employer names or contact details are redistributed.
-See [DATA_LICENSE.md](DATA_LICENSE.md).
+
+**Licences.** Code is [MIT](LICENSE). The advertisement data is *not* redistributed and is
+governed separately by [DATA_LICENSE.md](DATA_LICENSE.md) — **no automated access to finn.no
+was performed at any point.**
+
+**Not present, so as not to imply otherwise:** there is no CI workflow (the 1,022 tests run
+locally only) and no container or deployment manifest. GitHub Pages deploys on push to
+`main`.
