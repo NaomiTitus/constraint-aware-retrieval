@@ -39,13 +39,14 @@ gold_parses:
         value: nurse
         priority: hard
         evidence: "I am a nurse"
-        ad_side: occupation
       - facet: language.norwegian
         value: none
         priority: hard
         evidence: "I do not speak Norwegian"
-        ad_side: norwegian_requirement_level
 ```
+
+Four fields, and no `ad_side`: what a facet compares against is a property of the
+facet, resolved from the table below.
 
 ### Fields
 
@@ -55,7 +56,6 @@ gold_parses:
 | `value` | The seeker's stated value. For `language.*` these are capability levels (`none`…`native`), matching `constraints.NorwegianLevel`. |
 | `priority` | `hard` — a job violating this is not viable. `soft` — a preference that ranks. |
 | `evidence` | **A verbatim substring of the persona's `query`.** See below. |
-| `ad_side` | The `ad_facets` field this compares against, or `null` when the corpus has no counterpart. |
 
 ## The two rules that make this an oracle and not a wish list
 
@@ -94,37 +94,69 @@ break the non-effect the four control personas exist to protect. Enforced:
 
 Closed. Extending it is an edit here plus a test update, deliberately.
 
-| facet | example value | `ad_side` |
-|---|---|---|
-| `occupation` | `nurse` | `occupation` |
-| `skill` | `Python` | `skills` |
-| `language.norwegian` | `none` \| `basic` \| `conversational` \| `fluent` \| `native` | `norwegian_requirement_level` |
-| `language.english` | same scale | `stated_working_language` |
-| `language.other` | `Polish` | `null` |
-| `credential.authorisation` | `norsk autorisasjon (sykepleier)` | `authorisation_required` |
-| `credential.licence` | `førerkort klasse B` | `null` |
-| `credential.trade_certificate` | `fagbrev tømrer` | `null` |
-| `location.place` | `Oslo` | `null` |
-| `location.anywhere` | `true` | `null` |
-| `work.remote` | `required` \| `preferred` | `null` |
-| `contract.permanence` | `permanent` | `null` |
-| `contract.extent` | `full_time` | `null` |
-| `contract.shift` | `day` \| `evening_weekend` \| `shift` | `null` |
-| `experience.years` | `10` | `min_years_experience` |
-| `seniority` | `senior` | `seniority` |
+| facet | example value | compared against | populated |
+|---|---|---|---:|
+| `occupation` | `nurse` | `ad_taxonomy.job_title_standardised` | 100% |
+| `skill` | `Python` | `ad_facets.skills` | 32.8% |
+| `language.norwegian` | `none` \| `basic` \| `conversational` \| `fluent` \| `native` | `ad_facets.norwegian_requirement_level` | 63.5% |
+| `language.english` | same scale | `ad_facets.stated_working_language` | 4.7% |
+| `language.other` | `Polish` | — | — |
+| `credential.authorisation` | `norsk autorisasjon` | `ad_facets.authorisation_required` | 16.7% |
+| `credential.licence` | `førerkort klasse B` | — | — |
+| `credential.trade_certificate` | `fagbrev` | — | — |
+| `location.place` | `Oslo` | `ad_locations.municipal` | 99.1% |
+| `location.anywhere` | `true` | `ad_locations.country` | 100% |
+| `work.remote` | `required` \| `preferred` | — | — |
+| `contract.permanence` | `permanent` | `ads.engagementtype` (`Fast`) | 99.9% |
+| `contract.extent` | `full_time` | `ads.extent` | 100% |
+| `contract.shift` | `day` \| `evening_weekend` \| `shift` | — | — |
+| `experience.years` | `10` | `ad_facets.min_years_experience` | 6.1% |
+| `seniority` | `senior` | `ad_facets.seniority` | 20.5% |
 
-## The coverage ceiling this exposes, which is the point
+`ad_side` is **derived from the facet, never authored per constraint.** It is a
+property of the facet, so hand-maintained copies could only drift — the original
+need to validate 71 of them was the smell. A row may still state one, and then it
+must agree.
 
-Most rows above have `ad_side: null`. The census extracts fifteen facets and only
-four are scored (`LIMITATIONS.md` §4); of the seeker-side facets the personas
-actually state, a minority have any corpus counterpart at all.
+Population figures are measured by `scripts/measure_oracle_ceiling.py`, which also
+asserts that every mapping names a `table.column` that actually exists. That check
+is not decoration: the first version of this mapping pointed `occupation` at
+`ad_facets.occupation`, **a field that does not exist**, and counted 13 constraints
+as scoreable against nothing — while marking `location.place` and
+`contract.permanence` unscoreable although the corpus covers them at 99%+.
 
-That is not a defect in this schema — it is the measurement. `null` rows are
-**stated constraints the system cannot act on**, and counting them gives the
-oracle's own ceiling before a single query is run. A perfect parser and perfect
-retrieval still cannot honour a day-shift preference the corpus never recorded.
-`gold_parse.coverage()` reports that fraction, and it belongs beside any headline
-number the ideal-case eval produces.
+## Two ceilings, and conflating them is how the first version was wrong
+
+**Schema coverage — does a field exist at all?** Structural and cheap; this is
+what `gold_parse.coverage()` reports. On the 13 dev personas: **81.7%** of stated
+constraints, **81.1%** of the hard ones.
+
+**Population-weighted coverage — on a randomly drawn ad, does a VALUE exist?**
+This is the operative ceiling. `ad_facets.skills` exists on every row and carries
+something on 32.8%; `min_years_experience` on 6.1%. A facet at 6% is nominally
+scoreable and practically not. On the dev personas: **53.5%** of stated
+constraints, **66.6%** of the hard ones.
+
+Where the dev ceiling is actually lost:
+
+| facet | n | hard | populated | |
+|---|---:|---:|---:|---|
+| `skill` | 19 | 0 | 32.8% | sparse — the largest facet, and the weakest |
+| `credential.licence` | 5 | **5** | — | no counterpart; `førerkort klasse B` gates real jobs |
+| `contract.shift` | 4 | 0 | — | no counterpart |
+| `credential.trade_certificate` | 2 | **2** | — | no counterpart; `fagbrev` gates trade work |
+| `work.remote` | 2 | 0 | — | no counterpart |
+| `credential.authorisation` | 2 | **2** | 16.7% | sparse, and it is a hard disqualifier |
+| `experience.years` | 2 | 0 | 6.1% | sparse |
+
+Nine of the 37 hard dev constraints have **no corpus counterpart at all**, and two
+more sit on fields populated under 20%. These are must-haves, not preferences: a
+seeker without `fagbrev` cannot hold the job, and the corpus does not record
+whether the job wants it.
+
+This is not a defect in the schema — it *is* the measurement, and it is §4's "ten
+of fifteen facets scored by nothing" seen from the seeker's side. No encoder and no
+parser raises it, because it is a property of what advertisers chose to write.
 
 ## Reading the result honestly
 

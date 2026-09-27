@@ -34,26 +34,36 @@ PARSES_PATH = ROOT / "eval" / "gold_parses.yaml"
 
 PRIORITIES = frozenset({"hard", "soft"})
 
-# Closed vocabulary. Extending it is an edit here plus a test update, on purpose:
-# a typo'd facet name silently carried would be a constraint that never matches
-# anything and never reports that it didn't.
+# Closed vocabulary: a typo'd facet name silently carried would be a constraint
+# that never matches anything and never reports that it didn't.
+#
+# `facet` -> the corpus field it is compared against, as `table.column`, or None
+# when the corpus records nothing comparable.
+#
+# WRITTEN AGAINST THE REAL SCHEMA AFTER GETTING IT WRONG BOTH WAYS. The first
+# version of this mapping named bare `ad_facets` keys and was wrong twice over:
+# `occupation` pointed at an ad_facets field THAT DOES NOT EXIST, inflating
+# coverage by 13 constraints, while `location.place` and `contract.permanence`
+# were marked unscoreable although `ad_locations` and `ads.engagementtype` cover
+# 100% and 99.9% of the corpus. `table.column` is used precisely so a mapping
+# that names nothing real fails an integration check instead of quietly counting.
 FACETS: Mapping[str, str | None] = {
-    "occupation": "occupation",
-    "skill": "skills",
-    "language.norwegian": "norwegian_requirement_level",
-    "language.english": "stated_working_language",
+    "occupation": "ad_taxonomy.job_title_standardised",
+    "skill": "ad_facets.skills",
+    "language.norwegian": "ad_facets.norwegian_requirement_level",
+    "language.english": "ad_facets.stated_working_language",
     "language.other": None,
-    "credential.authorisation": "authorisation_required",
-    "credential.licence": None,
-    "credential.trade_certificate": None,
-    "location.place": None,
-    "location.anywhere": None,
-    "work.remote": None,
-    "contract.permanence": None,
-    "contract.extent": None,
-    "contract.shift": None,
-    "experience.years": "min_years_experience",
-    "seniority": "seniority",
+    "credential.authorisation": "ad_facets.authorisation_required",
+    "credential.licence": None,            # førerkort, truckførerbevis — no field
+    "credential.trade_certificate": None,  # fagbrev — gates trade work, no field
+    "location.place": "ad_locations.municipal",
+    "location.anywhere": "ad_locations.country",
+    "work.remote": None,                   # stated in prose only
+    "contract.permanence": "ads.engagementtype",
+    "contract.extent": "ads.extent",
+    "contract.shift": None,                # no shift field in the feed
+    "experience.years": "ad_facets.min_years_experience",
+    "seniority": "ad_facets.seniority",
 }
 
 # The capability scale, identical to `constraints.NorwegianLevel`. A seeker states
@@ -147,11 +157,14 @@ def load(path: Path | None = None,
                     f"{where}: evidence not found verbatim in the persona query.\n"
                     f"  evidence: {_norm(ev)!r}\n"
                     f"  query:    {query!r}")
-            declared = c.get("ad_side", FACETS[facet])
-            if declared != FACETS[facet]:
+            # `ad_side` is DERIVED, never authored. It is a property of the
+            # facet, so 71 hand-maintained copies could only drift — and the
+            # original need to validate them was the smell. A row may still state
+            # it, and then it must agree.
+            if "ad_side" in c and c["ad_side"] != FACETS[facet]:
                 raise GoldParseError(
                     f"{where}: ad_side for {facet!r} is {FACETS[facet]!r}, "
-                    f"not {declared!r} — the mapping is fixed by the schema")
+                    f"not {c['ad_side']!r} — derived from the schema, not authored")
             if facet in ("language.norwegian", "language.english"):
                 if c.get("value") not in LANGUAGE_LEVELS:
                     raise GoldParseError(

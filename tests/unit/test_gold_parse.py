@@ -105,8 +105,7 @@ def test_invented_evidence_is_rejected(tmp_path, personas):
     load, however plausible it looks."""
     bad = [{"persona_id": "p1_sykepleier_no_norsk", "constraints": [
         {"facet": "skill", "value": "intensive care",
-         "priority": "soft", "evidence": "I have intensive care experience",
-         "ad_side": "skills"}]}]
+         "priority": "soft", "evidence": "I have intensive care experience"}]}]
     with pytest.raises(gp.GoldParseError, match="not found verbatim"):
         gp.load(_write(tmp_path, bad), personas)
 
@@ -116,8 +115,7 @@ def test_paraphrased_evidence_is_rejected(tmp_path, personas):
     the same reason: a paraphrase is where an assumption enters unnoticed."""
     bad = [{"persona_id": "p1_sykepleier_no_norsk", "constraints": [
         {"facet": "language.norwegian", "value": "none", "priority": "hard",
-         "evidence": "I don't speak Norwegian",
-         "ad_side": "norwegian_requirement_level"}]}]
+         "evidence": "I don't speak Norwegian"}]}]
     with pytest.raises(gp.GoldParseError, match="not found verbatim"):
         gp.load(_write(tmp_path, bad), personas)
 
@@ -128,8 +126,7 @@ def test_a_control_persona_given_a_language_constraint_is_rejected(tmp_path, per
     precisely the trap."""
     rows = [{"persona_id": "c2_sykepleier_authorisation_only", "constraints": [
         {"facet": "language.norwegian", "value": "fluent", "priority": "hard",
-         "evidence": "norsk autorisasjon",
-         "ad_side": "norwegian_requirement_level"}]}]
+         "evidence": "norsk autorisasjon"}]}]
     parses = gp.load(_write(tmp_path, rows), personas)
     with pytest.raises(gp.GoldParseError, match="not a control"):
         gp.check_against_personas(parses, personas)
@@ -138,18 +135,19 @@ def test_a_control_persona_given_a_language_constraint_is_rejected(tmp_path, per
 def test_unknown_facet_is_rejected(tmp_path, personas):
     bad = [{"persona_id": "p1_sykepleier_no_norsk", "constraints": [
         {"facet": "langauge.norwegian", "value": "none", "priority": "hard",
-         "evidence": "I do not speak Norwegian", "ad_side": None}]}]
+         "evidence": "I do not speak Norwegian"}]}]
     with pytest.raises(gp.GoldParseError, match="unknown facet"):
         gp.load(_write(tmp_path, bad), personas)
 
 
 def test_a_rebound_ad_side_is_rejected(tmp_path, personas):
-    """The facet-to-ad_side mapping is fixed by the schema. Letting a parse
-    declare its own would let an unscoreable constraint claim coverage it does
-    not have, inflating `coverage()`."""
+    """`ad_side` is derived from the facet, not authored. A row that states its
+    own would let an unscoreable constraint claim coverage it does not have and
+    inflate `coverage()` — and a STALE one, left behind when the schema mapping
+    was corrected, would silently keep the old wrong answer. Both are rejected."""
     bad = [{"persona_id": "p1_sykepleier_no_norsk", "constraints": [
         {"facet": "contract.shift", "value": "day", "priority": "soft",
-         "evidence": "preferably day shifts", "ad_side": "seniority"}]}]
+         "evidence": "preferably day shifts", "ad_side": "ad_facets.seniority"}]}]
     with pytest.raises(gp.GoldParseError, match="ad_side"):
         gp.load(_write(tmp_path, bad), personas)
 
@@ -157,7 +155,7 @@ def test_a_rebound_ad_side_is_rejected(tmp_path, personas):
 def test_bad_priority_is_rejected(tmp_path, personas):
     bad = [{"persona_id": "p1_sykepleier_no_norsk", "constraints": [
         {"facet": "occupation", "value": "nurse", "priority": "nice_to_have",
-         "evidence": "I am a nurse", "ad_side": "occupation"}]}]
+         "evidence": "I am a nurse"}]}]
     with pytest.raises(gp.GoldParseError, match="priority"):
         gp.load(_write(tmp_path, bad), personas)
 

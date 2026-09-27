@@ -1,0 +1,107 @@
+{
+ "n_corpus": 10166,
+ "population": {
+  "ads.extent": 1.0,
+  "ads.engagementtype": 0.9993114302577218,
+  "ad_facets.authorisation_required": 0.16712571316151878,
+  "ad_facets.min_years_experience": 0.060889238638599255,
+  "ad_facets.stated_working_language": 0.04701947668699587,
+  "ad_facets.norwegian_requirement_level": 0.6353531379106827,
+  "ad_locations.country": 0.9999016328939603,
+  "ad_locations.municipal": 0.9914420617745426,
+  "ad_taxonomy.job_title_standardised": 0.9995081644698013,
+  "ad_facets.seniority": 0.2045052134566201,
+  "ad_facets.skills": 0.32834939996065315
+ },
+ "splits": {
+  "dev": {
+   "n_personas": 13,
+   "n_constraints": 71,
+   "schema_coverage": 0.8169014084507042,
+   "population_weighted_coverage": 0.5351378386391534,
+   "n_hard": 37,
+   "schema_coverage_hard": 0.8108108108108109,
+   "population_weighted_coverage_hard": 0.6659080879029728
+  },
+  "sealed": {
+   "n_personas": 1,
+   "n_constraints": 4,
+   "schema_coverage": 1.0,
+   "population_weighted_coverage": 0.7406305331497147,
+   "n_hard": 2,
+   "schema_coverage_hard": 1.0,
+   "population_weighted_coverage_hard": 0.817430651190242
+  },
+  "all": {
+   "n_personas": 14,
+   "n_constraints": 75,
+   "schema_coverage": 0.8266666666666667,
+   "population_weighted_coverage": 0.54609744901305,
+   "n_hard": 39,
+   "schema_coverage_hard": 0.8205128205128205,
+   "population_weighted_coverage_hard": 0.6736784757638584
+  }
+ },
+ "dev_per_facet": {
+  "occupation": {
+   "n": 13,
+   "hard": 13,
+   "pop": 0.9995081644698013
+  },
+  "skill": {
+   "n": 19,
+   "hard": 0,
+   "pop": 0.32834939996065315
+  },
+  "language.norwegian": {
+   "n": 10,
+   "hard": 10,
+   "pop": 0.6353531379106827
+  },
+  "contract.permanence": {
+   "n": 6,
+   "hard": 0,
+   "pop": 0.9993114302577218
+  },
+  "contract.shift": {
+   "n": 4,
+   "hard": 0,
+   "pop": null
+  },
+  "credential.trade_certificate": {
+   "n": 2,
+   "hard": 2,
+   "pop": null
+  },
+  "experience.years": {
+   "n": 2,
+   "hard": 0,
+   "pop": 0.060889238638599255
+  },
+  "credential.licence": {
+   "n": 5,
+   "hard": 5,
+   "pop": null
+  },
+  "location.place": {
+   "n": 5,
+   "hard": 5,
+   "pop": 0.9914420617745426
+  },
+  "work.remote": {
+   "n": 2,
+   "hard": 0,
+   "pop": null
+  },
+  "location.anywhere": {
+   "n": 1,
+   "hard": 0,
+   "pop": 0.9999016328939603
+  },
+  "credential.authorisation": {
+   "n": 2,
+   "hard": 2,
+   "pop": 0.16712571316151878
+  }
+ }
+}

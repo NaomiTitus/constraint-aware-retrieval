@@ -1,0 +1,57 @@
+=== MAPPING CHECK: does every ad_side name something real? ===
+
+  contract.extent                ads.extent                                 populated 100.0%
+  contract.permanence            ads.engagementtype                         populated  99.9%
+  contract.shift                 —  no corpus counterpart
+  credential.authorisation       ad_facets.authorisation_required           populated  16.7%
+  credential.licence             —  no corpus counterpart
+  credential.trade_certificate   —  no corpus counterpart
+  experience.years               ad_facets.min_years_experience             populated   6.1%
+  language.english               ad_facets.stated_working_language          populated   4.7%
+  language.norwegian             ad_facets.norwegian_requirement_level      populated  63.5%
+  language.other                 —  no corpus counterpart
+  location.anywhere              ad_locations.country                       populated 100.0%
+  location.place                 ad_locations.municipal                     populated  99.1%
+  occupation                     ad_taxonomy.job_title_standardised         populated 100.0%
+  seniority                      ad_facets.seniority                        populated  20.5%
+  skill                          ad_facets.skills                           populated  32.8%
+  work.remote                    —  no corpus counterpart
+
+  every mapping resolves against the live schema.
+
+=== DEV: 13 personas, 71 stated constraints ===
+  schema coverage        (a field exists)       81.7%   hard  81.1%
+  population-weighted   (a VALUE exists)       53.5%   hard  66.6%
+
+=== SEALED: 1 personas, 4 stated constraints ===
+  schema coverage        (a field exists)      100.0%   hard 100.0%
+  population-weighted   (a VALUE exists)       74.1%   hard  81.7%
+
+=== ALL: 14 personas, 75 stated constraints ===
+  schema coverage        (a field exists)       82.7%   hard  82.1%
+  population-weighted   (a VALUE exists)       54.6%   hard  67.4%
+
+=== WHERE THE CEILING IS LOST, dev constraints ===
+
+  facet                            n  hard  populated  verdict
+  skill                           19     0      32.8%  sparse
+  occupation                      13    13     100.0%  usable
+  language.norwegian              10    10      63.5%  usable
+  contract.permanence              6     0      99.9%  usable
+  credential.licence               5     5         --  NO COUNTERPART
+  location.place                   5     5      99.1%  usable
+  contract.shift                   4     0         --  NO COUNTERPART
+  credential.trade_certificate     2     2         --  NO COUNTERPART
+  experience.years                 2     0       6.1%  sparse
+  work.remote                      2     0         --  NO COUNTERPART
+  credential.authorisation         2     2      16.7%  sparse
+  location.anywhere                1     0     100.0%  usable
+
+written reports/oracle_ceiling.json
+
+=== HOW TO QUOTE THIS ===
+  A field exists for 82% of what the dev seekers state. But on a randomly
+  drawn ad only 54% of their constraints have a value to compare against, and for
+  HARD constraints — must-haves rather than preferences — it is 67%.
+  The second number is the ceiling. Report it beside any ideal-case result, because
+  no encoder and no parser can raise it: it is a property of what advertisers wrote.

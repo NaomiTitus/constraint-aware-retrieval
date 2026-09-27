@@ -28,32 +28,27 @@ gold_parses:
         value: nurse
         priority: hard
         evidence: "I am a nurse"
-        ad_side: occupation
       - facet: skill
         value: hospital and nursing-home experience
         priority: soft
         evidence: "hospital and nursing-home experience"
-        ad_side: skills
       # The whole point of the project, and note what it is NOT: it is not a
       # negation. It is the capability level the seeker HAS.
       - facet: language.norwegian
         value: none
         priority: hard
         evidence: "I do not speak Norwegian"
-        ad_side: norwegian_requirement_level
       - facet: contract.permanence
         value: permanent
         priority: soft
         evidence: "a permanent position"
-        ad_side: null
-      # STATED AND UNSCOREABLE. The census extracts no shift facet, so a perfect
-      # parser and a perfect encoder still cannot honour this. `ad_side: null`
-      # makes that visible in `coverage()` instead of silently unmet.
+      # STATED AND UNSCOREABLE. Nothing in the corpus records shift, so a
+      # perfect parser and a perfect encoder still cannot honour this. The facet
+      # maps to None, which `coverage()` counts instead of silently dropping.
       - facet: contract.shift
         value: day
         priority: soft
         evidence: "preferably day shifts"
-        ad_side: null
 
   # ── a control: the `norsk autorisasjon` trap, and NO language constraint ───
   #
@@ -68,32 +63,26 @@ gold_parses:
         value: sykepleier
         priority: hard
         evidence: "Jeg er sykepleier"
-        ad_side: occupation
       - facet: credential.authorisation
         value: norsk autorisasjon
         priority: hard
         evidence: "norsk autorisasjon"
-        ad_side: authorisation_required
       - facet: credential.authorisation
         value: HPR-nummer
         priority: hard
         evidence: "HPR-nummer"
-        ad_side: authorisation_required
       - facet: location.place
         value: Trondheim
         priority: hard
         evidence: "i Trondheim"
-        ad_side: null
       - facet: contract.permanence
         value: permanent
         priority: soft
         evidence: "fast stilling"
-        ad_side: null
       - facet: contract.shift
         value: day
         priority: soft
         evidence: "gjerne dagvakt"
-        ad_side: null
       # NO language.* row. Deliberate and load-bearing: this seeker said nothing
       # about language, so the language stage must contribute exactly nothing.
 
@@ -104,22 +93,18 @@ gold_parses:
         value: social worker
         priority: hard
         evidence: "I am a qualified social worker"
-        ad_side: occupation
       - facet: skill
         value: child welfare and family support
         priority: soft
         evidence: "experience in child welfare and family support"
-        ad_side: skills
       - facet: language.norwegian
         value: none
         priority: hard
         evidence: "I do not speak Norwegian"
-        ad_side: norwegian_requirement_level
       - facet: contract.permanence
         value: permanent
         priority: soft
         evidence: "a permanent position"
-        ad_side: null
 
 # ════════════════════════════════════════════════════════════════════════════
 # THE REMAINING DEV PERSONAS. Sealed parses are a separate pass.
@@ -138,140 +123,122 @@ gold_parses:
   - persona_id: p1_sykepleier_norsk
     constraints:
       - {facet: occupation, value: sykepleier, priority: hard,
-         evidence: "Jeg er sykepleier", ad_side: occupation}
+         evidence: "Jeg er sykepleier"}
       - {facet: skill, value: erfaring fra sykehus og sykehjem, priority: soft,
-         evidence: "erfaring fra sykehus og sykehjem", ad_side: skills}
+         evidence: "erfaring fra sykehus og sykehjem"}
       - {facet: language.norwegian, value: fluent, priority: hard,
-         evidence: "Jeg snakker flytende norsk",
-         ad_side: norwegian_requirement_level}
+         evidence: "Jeg snakker flytende norsk"}
       - {facet: contract.permanence, value: permanent, priority: soft,
-         evidence: "fast stilling", ad_side: null}
+         evidence: "fast stilling"}
       - {facet: contract.shift, value: day, priority: soft,
-         evidence: "gjerne dagvakt", ad_side: null}
+         evidence: "gjerne dagvakt"}
 
   - persona_id: p2_tomrer_norsk
     constraints:
       - {facet: occupation, value: tømrer, priority: hard,
-         evidence: "Jeg er tømrer", ad_side: occupation}
+         evidence: "Jeg er tømrer"}
       - {facet: credential.trade_certificate, value: fagbrev, priority: hard,
-         evidence: "fagbrev", ad_side: null}
+         evidence: "fagbrev"}
       - {facet: experience.years, value: 10, priority: soft,
-         evidence: "ti års erfaring", ad_side: min_years_experience}
+         evidence: "ti års erfaring"}
       - {facet: skill, value: nybygg og rehabilitering, priority: soft,
-         evidence: "nybygg og rehabilitering", ad_side: skills}
+         evidence: "nybygg og rehabilitering"}
       - {facet: language.norwegian, value: fluent, priority: hard,
-         evidence: "Jeg snakker norsk", ad_side: norwegian_requirement_level}
+         evidence: "Jeg snakker norsk"}
       - {facet: credential.licence, value: førerkort klasse B, priority: hard,
-         evidence: "førerkort klasse B", ad_side: null}
+         evidence: "førerkort klasse B"}
 
   - persona_id: p2_tomrer_no_norsk
     constraints:
       - {facet: occupation, value: carpenter, priority: hard,
-         evidence: "I am a carpenter", ad_side: occupation}
+         evidence: "I am a carpenter"}
       - {facet: credential.trade_certificate, value: trade certificate,
-         priority: hard, evidence: "a trade certificate", ad_side: null}
+         priority: hard, evidence: "a trade certificate"}
       - {facet: experience.years, value: 10, priority: soft,
-         evidence: "ten years of experience", ad_side: min_years_experience}
+         evidence: "ten years of experience"}
       - {facet: skill, value: new builds and renovation, priority: soft,
-         evidence: "new builds and renovation", ad_side: skills}
+         evidence: "new builds and renovation"}
       - {facet: language.norwegian, value: none, priority: hard,
-         evidence: "I do not speak Norwegian",
-         ad_side: norwegian_requirement_level}
+         evidence: "I do not speak Norwegian"}
       - {facet: credential.licence, value: category B driving licence,
-         priority: hard, evidence: "a category B driving licence", ad_side: null}
+         priority: hard, evidence: "a category B driving licence"}
 
   - persona_id: p4_backend_norsk
     constraints:
       - {facet: occupation, value: backend-utvikler, priority: hard,
-         evidence: "Jeg er backend-utvikler", ad_side: occupation}
-      - {facet: skill, value: Python, priority: soft, evidence: "Python",
-         ad_side: skills}
-      - {facet: skill, value: PostgreSQL, priority: soft, evidence: "PostgreSQL",
-         ad_side: skills}
-      - {facet: skill, value: Kubernetes, priority: soft, evidence: "Kubernetes",
-         ad_side: skills}
+         evidence: "Jeg er backend-utvikler"}
+      - {facet: skill, value: Python, priority: soft, evidence: "Python"}
+      - {facet: skill, value: PostgreSQL, priority: soft, evidence: "PostgreSQL"}
+      - {facet: skill, value: Kubernetes, priority: soft, evidence: "Kubernetes"}
       - {facet: language.norwegian, value: fluent, priority: hard,
-         evidence: "Jeg snakker norsk", ad_side: norwegian_requirement_level}
+         evidence: "Jeg snakker norsk"}
       - {facet: contract.permanence, value: permanent, priority: soft,
-         evidence: "fast stilling", ad_side: null}
-      - {facet: location.place, value: Oslo, priority: hard, evidence: "i Oslo",
-         ad_side: null}
+         evidence: "fast stilling"}
+      - {facet: location.place, value: Oslo, priority: hard, evidence: "i Oslo"}
       # `eller hybrid` makes the Oslo requirement satisfiable remotely. Recorded
       # as a preference, not a requirement — the seeker offered it as one of two
       # acceptable options rather than demanding it.
       - {facet: work.remote, value: preferred, priority: soft,
-         evidence: "hybrid", ad_side: null}
+         evidence: "hybrid"}
 
   - persona_id: p4_backend_no_norsk
     constraints:
       - {facet: occupation, value: backend developer, priority: hard,
-         evidence: "I am a backend developer", ad_side: occupation}
-      - {facet: skill, value: Python, priority: soft, evidence: "Python",
-         ad_side: skills}
-      - {facet: skill, value: PostgreSQL, priority: soft, evidence: "PostgreSQL",
-         ad_side: skills}
-      - {facet: skill, value: Kubernetes, priority: soft, evidence: "Kubernetes",
-         ad_side: skills}
+         evidence: "I am a backend developer"}
+      - {facet: skill, value: Python, priority: soft, evidence: "Python"}
+      - {facet: skill, value: PostgreSQL, priority: soft, evidence: "PostgreSQL"}
+      - {facet: skill, value: Kubernetes, priority: soft, evidence: "Kubernetes"}
       - {facet: language.norwegian, value: none, priority: hard,
-         evidence: "I do not speak Norwegian",
-         ad_side: norwegian_requirement_level}
+         evidence: "I do not speak Norwegian"}
       - {facet: contract.permanence, value: permanent, priority: soft,
-         evidence: "a permanent role", ad_side: null}
-      - {facet: location.place, value: Oslo, priority: hard, evidence: "in Oslo",
-         ad_side: null}
+         evidence: "a permanent role"}
+      - {facet: location.place, value: Oslo, priority: hard, evidence: "in Oslo"}
       - {facet: work.remote, value: preferred, priority: soft,
-         evidence: "hybrid", ad_side: null}
+         evidence: "hybrid"}
 
   - persona_id: p5_data_scientist_norsk
     constraints:
       - {facet: occupation, value: data scientist, priority: hard,
-         evidence: "Jeg er data scientist", ad_side: occupation}
+         evidence: "Jeg er data scientist"}
       - {facet: skill, value: maskinlæring, priority: soft,
-         evidence: "maskinlæring", ad_side: skills}
-      - {facet: skill, value: Python, priority: soft, evidence: "Python",
-         ad_side: skills}
-      - {facet: skill, value: SQL, priority: soft, evidence: "SQL",
-         ad_side: skills}
+         evidence: "maskinlæring"}
+      - {facet: skill, value: Python, priority: soft, evidence: "Python"}
+      - {facet: skill, value: SQL, priority: soft, evidence: "SQL"}
       - {facet: language.norwegian, value: fluent, priority: hard,
-         evidence: "Jeg snakker norsk", ad_side: norwegian_requirement_level}
+         evidence: "Jeg snakker norsk"}
       - {facet: skill, value: AI eller analyse, priority: soft,
-         evidence: "stilling innen AI eller analyse", ad_side: skills}
+         evidence: "stilling innen AI eller analyse"}
 
   - persona_id: p5_data_scientist_no_norsk
     constraints:
       - {facet: occupation, value: data scientist, priority: hard,
-         evidence: "I am a data scientist", ad_side: occupation}
+         evidence: "I am a data scientist"}
       - {facet: skill, value: machine learning, priority: soft,
-         evidence: "machine learning", ad_side: skills}
-      - {facet: skill, value: Python, priority: soft, evidence: "Python",
-         ad_side: skills}
-      - {facet: skill, value: SQL, priority: soft, evidence: "SQL",
-         ad_side: skills}
+         evidence: "machine learning"}
+      - {facet: skill, value: Python, priority: soft, evidence: "Python"}
+      - {facet: skill, value: SQL, priority: soft, evidence: "SQL"}
       - {facet: language.norwegian, value: none, priority: hard,
-         evidence: "I do not speak Norwegian",
-         ad_side: norwegian_requirement_level}
+         evidence: "I do not speak Norwegian"}
       - {facet: skill, value: AI or analytics, priority: soft,
-         evidence: "a role in AI or analytics", ad_side: skills}
+         evidence: "a role in AI or analytics"}
 
   # The designed negative control. Norwegian genuinely IS required to teach in a
   # Norwegian primary school, so the right behaviour is few results and a reason.
   - persona_id: p6_grunnskolelaerer
     constraints:
       - {facet: occupation, value: primary school teacher, priority: hard,
-         evidence: "I am a qualified primary school teacher",
-         ad_side: occupation}
+         evidence: "I am a qualified primary school teacher"}
       - {facet: language.norwegian, value: none, priority: hard,
-         evidence: "I do not speak Norwegian",
-         ad_side: norwegian_requirement_level}
+         evidence: "I do not speak Norwegian"}
       - {facet: location.anywhere, value: true, priority: soft,
-         evidence: "teach in Norway", ad_side: null}
+         evidence: "teach in Norway"}
 
   - persona_id: p7_lagermedarbeider
     constraints:
       - {facet: occupation, value: warehouse work, priority: hard,
-         evidence: "warehouse work", ad_side: occupation}
+         evidence: "warehouse work"}
       - {facet: credential.licence, value: forklift certificate, priority: hard,
-         evidence: "a forklift certificate", ad_side: null}
+         evidence: "a forklift certificate"}
       # A SECOND JUDGMENT WORTH FLAGGING. "not ... yet but I am learning" is read
       # as `none`, not `basic`: the seeker states they do not speak it, and
       # learning is an intention rather than a present capability. The
@@ -279,22 +246,21 @@ gold_parses:
       # `none` against 0.8 for `basic`, so `none` applies the FULL penalty. Read
       # as `basic` this persona would see slightly more. Unresolved by the text.
       - {facet: language.norwegian, value: none, priority: hard,
-         evidence: "I do not speak Norwegian yet but I am learning",
-         ad_side: norwegian_requirement_level}
+         evidence: "I do not speak Norwegian yet but I am learning"}
 
   # CONTROL. No language row, and that is the assertion.
   - persona_id: c1_lager_no_language_mention
     constraints:
       - {facet: occupation, value: lager, priority: hard,
-         evidence: "jobb på lager", ad_side: occupation}
+         evidence: "jobb på lager"}
       - {facet: location.place, value: Bergen, priority: hard,
-         evidence: "i Bergen", ad_side: null}
+         evidence: "i Bergen"}
       - {facet: credential.licence, value: truckførerbevis, priority: hard,
-         evidence: "truckførerbevis", ad_side: null}
+         evidence: "truckførerbevis"}
       - {facet: credential.licence, value: førerkort klasse B, priority: hard,
-         evidence: "førerkort klasse B", ad_side: null}
+         evidence: "førerkort klasse B"}
       - {facet: contract.shift, value: shift, priority: soft,
-         evidence: "Jeg kan jobbe skift", ad_side: null}
+         evidence: "Jeg kan jobbe skift"}
 
   # CONTROL, and the `norsk`-as-SUBJECT-TAUGHT trap. `undervisningskompetanse i
   # norsk` is a teaching qualification in the Norwegian SUBJECT — a skill, not a
@@ -308,12 +274,11 @@ gold_parses:
   - persona_id: c4_laerer_norsk_speaker
     constraints:
       - {facet: occupation, value: grunnskolelærer, priority: hard,
-         evidence: "Jeg er grunnskolelærer", ad_side: occupation}
+         evidence: "Jeg er grunnskolelærer"}
       - {facet: skill, value: undervisningskompetanse i norsk og matematikk,
          priority: soft,
-         evidence: "undervisningskompetanse i norsk og matematikk",
-         ad_side: skills}
+         evidence: "undervisningskompetanse i norsk og matematikk"}
       - {facet: contract.permanence, value: permanent, priority: soft,
-         evidence: "fast stilling", ad_side: null}
+         evidence: "fast stilling"}
       - {facet: location.place, value: Oslo-området, priority: hard,
-         evidence: "i Oslo-området", ad_side: null}
+         evidence: "i Oslo-området"}
