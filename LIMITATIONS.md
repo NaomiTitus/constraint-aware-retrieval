@@ -1333,3 +1333,45 @@ occupation resolution was wrong upstream.
 That is the same conclusion as §19 from a different query: **the occupation predicate
 propagates resolution errors at full confidence, and nothing downstream knows when
 its candidate set is too broad to trust.**
+
+## 21. "Low voltage" returns high voltage: a qualifier problem, answered with a disclaimer
+
+Asked why *"electrical engineer, low voltage, automation"* surfaces high-voltage
+roles, and whether that is because none exist.
+
+**Partly.** Counted over the shipped index:
+
+| | ads |
+|---|---:|
+| mention low voltage (`lavspenning` / `low voltage`) | **8** |
+| mention high voltage | 16 |
+| contain the exact phrase `low voltage` in shipped fields | **2** |
+| mention `automation` | 183 |
+
+So low-voltage roles exist but are outnumbered two to one, and only two carry the
+English phrase.
+
+**The mechanism is a qualifier being discarded.** `low voltage` tokenises to
+`[low, voltage]`; `voltage` then matches a HIGH-voltage advertisement perfectly while
+`low` carries almost nothing. It is the same shape as `"I do not speak Norwegian"`
+(§16) — the word that inverts the meaning is the one a bag of words throws away.
+
+**The response is a disclaimer, not another ranking heuristic**, and that choice is
+deliberate: four plausible ranking fixes measured as nothing today (§18 twice, §19,
+§20). The page now checks each rare word AND each adjacent word-pair from the query
+against the results, and reports any that appear in none of the top ten, with how
+many advertisements contain them at all. Bigrams do not cross a comma or full stop,
+so `"engineer, low voltage"` does not produce the phantom phrase `engineer low`.
+
+**On this query it correctly stays silent**: the top result is
+`Ulstein Power & Control søkjer Senior Engineer`, which genuinely does contain
+"low voltage". The high-voltage advertisement sits at rank 3 because the corpus holds
+twice as many of them and they share the matching token.
+
+The disclaimer fires when a term is genuinely unserved — `shepherd`, 0 advertisements
+— which is the case it exists for: telling a seeker apart an empty corpus from a bad
+search.
+
+**What it does not do** is rank low-voltage above high-voltage. That needs phrase-
+aware matching in the scorer, which is a ranking change and therefore needs a judged
+arm rather than my judgement.

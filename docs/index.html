@@ -95,7 +95,7 @@
   watch the ranking change.</p>
   <p><b>What it does with language.</b> If you say you do not speak Norwegian, advertisements demanding it are demoted by a graded severity (a stated requirement counts more than silence) and advertisements explicitly open to English are promoted. If you say nothing, the stage contributes exactly nothing — writing in English is <em>observed and reported</em>, never silently treated as a constraint, because a third of this corpus is merely silent on language and inferring a requirement from silence would remove 3,507 jobs from everyone.</p><p><b>Honest limitations.</b> Skills come from the original census and are present
   on only 32.8% of ads; a re-prompt measured 8× better recall but has not been run
-  over the corpus. Location is a graded predicate over the corpus's own municipality and county names (exact 1.0, same county 0.55), and every location an ad lists is checked. No relevance judgments have
+  over the corpus. When a rare word or phrase you asked for appears in none of the results, the page says so and how many advertisements contain it at all — a bag of words cannot hold a qualifier like <em>low</em> voltage, so it tells you rather than pretending. Location is a graded predicate over the corpus's own municipality and county names (exact 1.0, same county 0.55), and every location an ad lists is checked. No relevance judgments have
   been applied to this ranking yet, so nothing here is a measured quality claim.
   Ad text, employer names and contact details are deliberately not redistributed —
   each result links to the original advertisement on arbeidsplassen.no. Corpus
@@ -173,7 +173,7 @@ const toks = s => norm(s).split(" ").filter(w=>w.length>2 && !STOP.has(w));
 // ── the query parser: free text -> typed S ───────────────────────────────────
 function parse(q){
   const low = " "+norm(q)+" ";
-  const S = {occupation:null, styrk:[], occExact:false, occFromTitle:false,
+  const S = {raw:q, occupation:null, styrk:[], occExact:false, occFromTitle:false,
              norwegian:null, place:null,
              terms:[], evidence:{}};
 
@@ -435,6 +435,68 @@ function score(S, lam){
 }
 
 // ── render ───────────────────────────────────────────────────────────────────
+// WHICH OF THE SEEKER'S WORDS THE RESULTS ACTUALLY SATISFY.
+//
+// A bag of words cannot hold a qualifier. "low voltage" becomes [low, voltage], and
+// `voltage` matches a HIGH-voltage advertisement perfectly while `low` carries almost
+// nothing — the same shape as "I do not speak Norwegian", where the word that
+// inverts the meaning is the one discarded. Measured on this corpus: 8 advertisements
+// mention low voltage and 16 mention high voltage, so the honest answer is usually
+// "there are barely any, here is the nearest thing".
+//
+// Rather than another ranking heuristic — four of which measured as nothing today —
+// the page SAYS SO. It reports the rare words it could not honour and how many
+// advertisements contain them at all, so a seeker can tell an empty corpus from a
+// bad search.
+function unmetTerms(S, res, k){
+  const out=[];
+  // PHRASES FIRST, because the discriminating unit is often a pair of words and
+  // checking them singly misses it entirely. "low voltage" splits into [low,
+  // voltage]; `voltage` then matches a HIGH-voltage advertisement perfectly and no
+  // per-word check fires, even though the one word that carries the meaning was
+  // ignored. So adjacent pairs from the query are checked as pairs.
+  // Clauses first: a bigram must not cross a comma or full stop, or
+  // "engineer, low voltage" yields the phantom phrase "engineer low".
+  const pairs=[];
+  for(const clause of String(S.raw||"").split(/[,.;:!?\n]+/)){
+    const w=norm(clause).split(" ").filter(Boolean);
+    for(let i=0;i<w.length-1;i++) pairs.push([w[i],w[i+1]]);
+  }
+  const seenPair=new Set();
+  for(const [w1,w2] of pairs){
+    const pair=w1+" "+w2;
+    if(seenPair.has(pair)) continue;
+    seenPair.add(pair);
+    // only worth reporting if BOTH halves are real content words
+    if(w1.length<3||w2.length<3) continue;
+    if(STOP.has(w1)||STOP.has(w2)) continue;
+    let corpus=0;
+    for(const a of ADS){
+      const h=" "+norm(a.t+" "+a.o+" "+a.e+" "+(a.k||[]).join(" ")+" "+(a.g||[]).join(" "))+" ";
+      if(h.includes(" "+pair+" ")){ corpus++; if(corpus>40) break; }
+    }
+    if(corpus>40) continue;                       // common phrase, no caveat needed
+    const top=res.slice(0,k).filter(x=>{
+      const h=" "+norm(x.ad.t+" "+x.ad.o+" "+x.ad.e+" "+(x.ad.k||[]).join(" ")+" "
+                       +(x.ad.g||[]).join(" "))+" ";
+      return h.includes(" "+pair+" ");
+    }).length;
+    if(top===0) out.push({t:pair, corpus, top, phrase:true});
+  }
+  for(const t of S.terms){
+    const corpus = DF[t]||0;
+    if(corpus===0){ out.push({t, corpus, top:0}); continue; }
+    if(corpus > NDOC*0.02) continue;              // common words need no caveat
+    const top = res.slice(0,k).filter(x=>{
+      const h=" "+norm(x.ad.t+" "+x.ad.o+" "+x.ad.e+" "+(x.ad.k||[]).join(" ")+" "
+                       +(x.ad.g||[]).join(" "))+" ";
+      return h.includes(" "+t+" ");
+    }).length;
+    if(top===0) out.push({t, corpus, top});
+  }
+  return out;
+}
+
 function render(S, res, lam){
   const p=document.getElementById("parsed");
   const bits=[];
@@ -459,6 +521,16 @@ function render(S, res, lam){
     `${res.length.toLocaleString()} ads scored · showing top 20 · ${blocked} of the top 20 `+
     `demand Norwegian you don't have (λ=${lam})`;
 
+  const unmet=unmetTerms(S,res,10);
+  if(unmet.length){
+    const bits=unmet.map(u=>u.corpus===0
+      ? `<b>${u.t}</b> appears in no advertisement in this corpus`
+      : `<b>${u.t}</b> appears in only ${u.corpus} of ${NDOC.toLocaleString()} advertisements, and in none of the top 10`);
+    document.getElementById("stat").innerHTML +=
+      `<br><span style="color:var(--soft)">⚠ ${bits.join("; ")}. `
+      +`The results below match your other words — treat them as the nearest `
+      +`available, not as what you asked for.</span>`;
+  }
   document.getElementById("out").innerHTML = res.slice(0,20).map((r,i)=>{
     const a=r.ad, bg=[];
     if(r.prox===1) bg.push(`<span class="b ok">exact occupation</span>`);
