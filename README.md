@@ -1,10 +1,11 @@
 # Smart Search — constraint-aware job search over Norwegian job ads
 
-**Search that respects *"I do not speak Norwegian."*** Type a sentence in English or
-Norwegian; get a ranking that treats what you *lack* as a hard fact about the world rather
-than as words to match. Every result shows its own reasoning: the parsed query, the
-occupation code it resolved to, which skills matched, and a badge when an advertisement
-demands Norwegian you do not have.
+**Job search that treats what you *lack* as a fact about the world, not as words to
+match.** Type a sentence in English or Norwegian. The constraints in it — the language a job
+demands, where it is, the experience it expects — are extracted as typed metadata and
+evaluated as **predicates**, so a job you cannot take ranks as one you cannot take. Every
+result shows its own reasoning: what the parser understood, the occupation code it resolved
+to, which skills matched, and why it was penalised.
 
 **[▶ Live demo](https://naomititus.github.io/finnno_smart_search/)** · **[What these numbers
 do not support](LIMITATIONS.md)** — 23 sections of measured limits, disconfirmed
@@ -79,34 +80,48 @@ i.e. **$13,000 per million**, for +0.007 recall.
 
 ---
 
-## The problem, and why embeddings cannot solve it
+## The problem: matching is containment, and similarity is symmetric
 
-**Matching is containment, and similarity cannot express containment.** A job states the
-requirements it has — a set **R**. A seeker has attributes **S**. The job is viable iff
-**R ⊆ S**. Containment is **asymmetric**: needing Norwegian when you have only English is
-fatal; having Norwegian when the job never asked is free. Cosine similarity is
-**symmetric** and has no way to express that difference. No encoder, at any size, ranks on
-containment.
+A job states the requirements it has — a set **R**. A seeker has attributes **S**. The job is
+viable iff **R ⊆ S**, and among viable jobs the best match most of what the seeker asked for.
+Containment is **asymmetric**, and that asymmetry is the whole difficulty:
 
-This was measured before it was asserted, and the measurements broke the original framing:
+| the job requires | seeker falls short | seeker exceeds it |
+|---|---|---|
+| Norwegian at professional level | fatal | free |
+| a place — Bergen | another county is a *near-miss*, not a miss | free |
+| 5 years' experience | disqualifying | free |
+| a security clearance | fatal | free |
 
-- *"jeg snakker ikke norsk"* and *"jeg snakker flytende norsk"* collapse to **cosine
-  0.914**, and stating the constraint moved the seeker **closer** to the ads demanding
-  Norwegian on **5 of 5** personas. Declaring what you lack made results *worse*.
-- But the corpus contains almost no negations to represent. **Absence is expressed by
-  silence**: 36.5% of ads say nothing about language, 99.4% nothing about visa
-  sponsorship, and only **93 of 10,166 (0.9%)** state Norwegian is not required.
-- The ads that *are* accessible affirm **English** rather than negating Norwegian. 96.9% of
-  Norwegian-demanding ads contain `norsk`, against 67.7% of accessible ones — which is
-  *why* the query's own `norsk` token pulls it toward the ads it rules out.
-- A control disconfirmed the tidy story. Padding a query drives cosine to 0.999, but a
-  one-word **content** swap — nurse vs carpenter — is erased at the same rate. The real
-  claim is broader: single-vector retrieval loses *any* single clause once queries are long,
-  not negation specifically.
+Cosine similarity is **symmetric**: it cannot tell "needs Norwegian, seeker has none" from
+"seeker has Norwegian, job never asked". So no encoder, at any size, ranks on containment.
+The fix is architectural — extract typed requirements from **both sides** and evaluate them
+as **predicates over metadata**, in a separate stage with a dial on it.
 
-So the fix is architectural: **extract typed requirements from both sides and evaluate them
-as predicates over metadata, in a separate tunable stage.** Full evidence in
-[LIMITATIONS.md](LIMITATIONS.md) §12–§14, including both hypotheses it disproved.
+**Language is the sharpest case,** and it was measured before it was asserted. 956 of 10,166
+ads (9.4%) are accessible to an English speaker, so the constraint decides almost the entire
+corpus. Worse, embeddings get it backwards: *"jeg snakker ikke norsk"* and *"jeg snakker
+flytende norsk"* collapse to **cosine 0.914**, and stating the constraint moved the seeker
+**closer** to the ads demanding Norwegian on **5 of 5** personas. Declaring what you lack
+made results worse.
+
+**Location has the same shape but a different grade.** It is metadata, not a word in a bag —
+99.1% of ads carry a municipality — and proximity is not binary: a neighbouring municipality
+in the same county is a commutable near-miss, so it scores 0.55 rather than 0. 7.1% of ads
+list several places, so an ad is scored on its *best* one. Treating `bergen` as a search term
+instead let a Bergen ad in the wrong occupation outrank a nurse ad elsewhere.
+
+**And absence is expressed by silence, which has no vector.** An ad states what it requires
+and never enumerates what it does not: 36.5% say nothing about language, 99.4% nothing about
+visa sponsorship, and only **93 ads (0.9%)** state Norwegian is not required. The accessible
+ads affirm *English* rather than negating Norwegian — which is exactly why a query containing
+`norsk` drifts toward the ads it rules out. **This holds for every facet, not just language.**
+
+*Negation was the frame this project started from and it turned out to be the wrong one: a
+control showed a one-word **content** swap (nurse vs carpenter) is erased at the same rate as
+a negation, so the real limit is that single-vector retrieval loses any single clause once
+queries are long. Both disproved hypotheses are in
+[LIMITATIONS.md](LIMITATIONS.md) §12–§14.*
 
 ---
 
@@ -372,7 +387,7 @@ Run it yourself: `node scripts/check_demo_queries.mjs`.
 | **Batch API** | 50% discount, `custom_id` constrained | 9,823 calls in 10m13s; `^[a-zA-Z0-9_-]{1,64}$` rejected all 346 of my first attempt |
 | **Prompt caching** | 97% hit on the facet census | *"the number that sets the bill"* — and 0% on the skills census, a 20% saving left on the table |
 | **Structured output** | tool-use schema + verbatim validation | every skill must appear in the source text or be rejected |
-| **Encoder** | `paraphrase-multilingual-mpnet-base-v2` via **ONNX Runtime** | bilingual; **not** nb-sbert-base, which this project has never run (§12) |
+| **Encoder** | `paraphrase-multilingual-mpnet-base-v2` via **ONNX Runtime** | bilingual, so a Norwegian ad and an English query share a space |
 | **Lexical retrieval** | BM25 with **stem chains** + bilingual stopwords + char 3–5-grams | Norwegian Snowball strips one suffix per call; closed compounds need n-grams |
 | **Occupation taxonomy** | **STYRK-08** hierarchical codes | prefix length is taxonomic distance, so proximity is free |
 | **Skills/occupation graph** | **ESCO** — 1,242 occs · 10,063 skills · 52,009 edges, bilingual | `gloss_en` routes matching through English, where the noise floor is lowest |
