@@ -1,0 +1,12 @@
+corpus     10166 ads
+clusters   9823 calls after dedup (343 saved)
+prompt     16,234,158 input tokens
+model      claude-haiku-4-5   prompt skills-v1
+est. cost  ~$17.08 at batch rates (50% of standard)
+  submitted msgbatch_01NkLM8J3Hd9QURwWQpDbfGs  (9823 requests)
+manifest -> reports/skills_census_manifest.json
+  [    0s] 1 batch(es) in progress
+  [   90s] 1 batch(es) in progress
+  [  180s] 1 batch(es) in progress
+  [  270s] 1 batch(es) in progress
+  [  360s] 1 batch(es) in progress

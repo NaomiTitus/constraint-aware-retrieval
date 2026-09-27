@@ -267,11 +267,30 @@ function run(){
   render(S, score(S,lam), lam);
 }
 
+async function getJSON(path){
+  // A failed fetch used to reject silently and leave "Loading index…" on screen
+  // forever, which is what a missing data file looked like in production. Say what
+  // broke instead.
+  const r = await fetch(path);
+  if(!r.ok) throw new Error(`${path} → HTTP ${r.status}`);
+  return r.json();
+}
+
 (async()=>{
-  document.getElementById("stat").innerHTML='<span class="loading">Loading index…</span>';
-  const [idx,gaz]=await Promise.all([
-    fetch("data/index.json").then(r=>r.json()),
-    fetch("data/occupations.json").then(r=>r.json())]);
+  const stat=document.getElementById("stat");
+  stat.innerHTML='<span class="loading">Loading index (3.8 MB, first visit only)…</span>';
+  let idx,gaz;
+  try{
+    [idx,gaz]=await Promise.all([
+      getJSON("data/index.json"), getJSON("data/occupations.json")]);
+  }catch(e){
+    stat.innerHTML=`<b>Could not load the search index.</b> ${e.message}<br>`+
+      `The page needs <code>docs/data/index.json</code> and `+
+      `<code>docs/data/occupations.json</code> beside it. Rebuild with `+
+      `<code>python3 scripts/export_web.py</code> and commit them.`;
+    document.getElementById("go").disabled=true;
+    return;
+  }
   ADS=idx.ads; GAZ=gaz.labels; TOKENS=gaz.tokens;
   GAZKEYS=Object.keys(GAZ).sort((a,b)=>b.length-a.length);
   document.getElementById("stat").textContent =

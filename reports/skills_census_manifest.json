@@ -1,0 +1,10 @@
+{
+ "batch_ids": [
+  "msgbatch_01NkLM8J3Hd9QURwWQpDbfGs"
+ ],
+ "model": "claude-haiku-4-5",
+ "prompt_version": "skills-v1",
+ "n_calls": 9823,
+ "n_ads": 10166,
+ "submitted_at": "2026-09-27T14:44:03+0200"
+}

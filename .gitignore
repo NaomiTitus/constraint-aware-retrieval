@@ -1,4 +1,6 @@
 data/
+!docs/data/
+!docs/data/**
 .cache/
 *.duckdb
 *.duckdb.wal
