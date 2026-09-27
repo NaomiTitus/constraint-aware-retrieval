@@ -1062,3 +1062,70 @@ in the tree, unwired, as a measured negative result rather than an untested idea
 What this does NOT rule out: resolving skills through a taxonomy might pay with a
 better resolver, or on queries where occupation resolves poorly. It rules out THIS
 resolver at THIS resolution rate on THESE thirteen personas.
+
+### Embeddings bridge the gap the lexical resolver could not — 17% → 76%
+
+I did not try embeddings for skill matching, and should have. §14 measured the dense
+channel failing badly, but **that result is about negation in long documents**, and
+short-phrase paraphrase is the task bi-encoders are actually good at. Over-applying
+the earlier negative result cost a day.
+
+`operate forklift` against `forklift operation`, on the same encoder §12 names:
+
+| gloss | best ESCO match | cosine |
+|---|---|---:|
+| `forklift operation` | `operate forklift` | **0.979** |
+| `wound care` | `carry out wound care` | 0.929 |
+| `medication administration` | `administer prescribed medication` | 0.876 |
+| `concrete and formwork` | `types of concrete forms` | 0.873 |
+| `breastfeeding guidance` | `assess the course of breast-feeding` | 0.838 |
+
+**76% of 300 real glosses resolve at cosine ≥ 0.70, against 17% lexically.** The two
+cases lexical could not touch at any threshold — `concrete and formwork`,
+`breastfeeding guidance` — both resolve correctly, and `medication administration`
+lands on the right concept where stemming had sent it to `manage medical supply
+chains`.
+
+### It also discriminates, which is the test that matters
+
+A resolver that matches everything is worthless, so the negative cases were checked
+explicitly:
+
+| kind | pair | cosine |
+|---|---|---:|
+| paraphrase | `forklift operation` / `operate forklift` | 0.979 |
+| **related but distinct** | `nurse` / `doctor` | **0.541** |
+| related but distinct | `wound care` / `surgical procedures` | 0.549 |
+| **unrelated** | `nurse` / `data engineer` | **0.135** |
+| unrelated | `teaching children` / `welding steel` | 0.015 |
+
+Three clean bands — paraphrase ≥0.88, related-but-distinct 0.54–0.68, unrelated
+≤0.14 — and 0.72 sits in the gap. A nurse does not match doctor postings.
+
+### Norwegian compresses, and the fix is not per-language thresholds
+
+Measured over 400 ESCO skills, similarity between UNRELATED labels:
+
+| comparison | mean | p99 noise floor |
+|---|---:|---:|
+| English ↔ English | 0.172 | **0.511** |
+| **Norwegian ↔ Norwegian** | 0.277 | **0.640** |
+| cross-language | 0.211 | 0.544 |
+| *same concept*, en↔no | *0.852* | *p05 = 0.593* |
+
+Norwegian monolingual comparison sits **0.13 higher at p99**, so a threshold
+calibrated on English over-matches in Norwegian. Per-language thresholds are the
+wrong fix: they need language detection on every phrase, break on mixed phrases, and
+add a calibration constant per language **set by eye against no judgments** — three
+more of exactly the choices §16 records going wrong.
+
+**Route everything through English instead.** Every extracted skill already carries a
+`gloss_en` and all 10,063 ESCO skills have English labels, so the comparison can be
+English↔English where the noise floor is lowest and one global threshold is
+defensible. This is what `gloss_en` was built for after D18; it solves the
+calibration problem for free, at the cost of §15's standing caveat — matching now
+depends on the gloss being right.
+
+**A thin margin worth stating.** The English noise floor is p99 0.511 and true pairs
+bottom out at p05 0.593. 0.72 is deliberately conservative and loses roughly a
+quarter of true matches, trading recall for not matching nurses to doctors.
