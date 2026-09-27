@@ -51,7 +51,16 @@ D3 Graph channel: k-hop from profile seeds, ≥5 shared skills threshold. Also
    query reaches `spesialsykepleier` — promoted in importance by D18.
 D4 RRF fusion (k=60)
 D5 Constraint stage: graded severity from norwegian_requirement_level, λ dial
-D6 Query parser: gazetteer fast path → distilled classifier → LLM residue
+D6 Query parser: gazetteer fast path → distilled classifier → LLM residue.
+   ENTRY POINT IS FREE TEXT (DECISIONS D19). Not CV upload: a CV carries the soft
+   half of S (occupation, skills, years) and not the hard half — location and
+   language are 15 of the 37 hard dev constraints and are preferences about the
+   FUTURE, which a record of the past cannot hold. CV parsing is owed to the
+   BASELINE only (LIMITATIONS §1b), not to the search surface.
+   Output contract: the typed S of eval/GOLD_PARSE_SCHEMA.md. Test set: the 13 dev
+   gold parses. Occupation resolves against ESCO's bilingual labels (1242/1242
+   have both no+en) to a CANDIDATE SET, never a tiebroken winner — `nurse` is
+   genuinely four ESCO occupations and picking one is guessing.
 D7 Linear scorer: rrf + skill_coverage + occupation_proximity + recency + location.
    `occupation_proximity` is the MECHANISM that carries occupation, not a garnish:
    D18 measured that BM25 weights a hard occupation constraint by rarity, which is

@@ -788,3 +788,68 @@ D18's own premise said — extraction reliability is the binding constraint.
 `occupation precision@5` measures agreement with a taxonomy label, not relevance to
 a person, and 5/10 of the top-10 for the no-Norwegian nurse still DEMAND Norwegian —
 which occupation proximity should not fix, and D5 exists to.
+
+## D19 — Free-text query is the entry point; CV upload is measurement, not product
+
+**Date: 2026-09-27, before any input-layer code was written.**
+
+### The decision
+
+The product takes a **free-text query** — *"I am looking for nursing positions in
+Oslo, I have six years of experience"*. CV upload is not a second entry point for
+the product. It is retained for one purpose only: `LIMITATIONS.md` §1b commits to
+running the manual baseline against FINN's live feature, and that feature is now
+CV-upload matching. So a CV parser is owed to the **evaluation**, not to the search
+surface, and it is scoped accordingly.
+
+### Why free text, and the third reason is the one that decides it
+
+**1. Everything already built assumes it.** All 20 personas are free-text queries,
+all 13 dev gold parses derive from them, and `eval/JUDGING_PROTOCOL.md` — committed
+before any ablation — grades relevance "against the persona's **stated** skills and
+preferences". Switching the entry point orphans the personas, the parses and the
+protocol at once.
+
+**2. §1b already recorded that a CV is harder for this thesis, not easier.** A
+query can say *"I do not speak Norwegian."* A CV cannot: it lists what you have,
+never what you lack. The constraint becomes an ABSENCE — Norwegian missing from a
+languages list — and §14 then applies with full force, because absence is expressed
+by silence on both sides and there is no vector and no predicate for text that was
+never written.
+
+**3. A CV cannot carry the hard constraints, which are the entire subject.** The
+containment model needs **R ⊆ S**. A CV populates the *soft* half of S well —
+occupation, skills, years — and the *hard* half not at all. Measured on the 13 dev
+gold parses, the hard constraints are:
+
+| hard constraint | in a CV? |
+|---|---|
+| `occupation` (13) | yes |
+| `language.norwegian` (10) | only as a positive list, never as a limit |
+| `location.place` (5) | **no** — a CV states where you have worked, not where you will |
+| `credential.licence` (5) | usually |
+| `credential.trade_certificate` (2) | usually |
+| `credential.authorisation` (2) | usually |
+
+Location and language — 15 of the 37 hard constraints — are **preferences about the
+future**, and a CV is a record of the past. No parser recovers them from it. So a
+CV-only surface cannot express the constraint this project exists to respect, and
+would need a query bolted on regardless.
+
+**4. Cost.** PDF and DOCX parsing, layout recovery, PII handling, and extraction
+from two to four pages of career history rather than one paragraph — before any of
+it earns a single point of the metric.
+
+### What this commits the input layer to
+
+`PLAN.md` D6 stands as written — gazetteer fast path, then distilled classifier,
+then LLM residue — with the gold parses as its test set and
+`eval/GOLD_PARSE_SCHEMA.md` as its output contract. The parser's job is to produce
+the same typed **S** the gold parses hold, from prose.
+
+### What would reverse this
+
+If the eval shows seekers cannot state their constraints in prose well enough for
+the gazetteer to resolve — resolution is at 9 of 13 today — the answer is a better
+parser or a guided form, **not** a CV. A CV would lose the constraints rather than
+capture them better, which is the wrong direction on the axis that matters.
