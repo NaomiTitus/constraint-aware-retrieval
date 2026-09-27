@@ -17,7 +17,7 @@ each one against what the ad requires. Every result shows its working.
 don't support](LIMITATIONS.md)** · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md)
 
 > **Scope.** One market — NAV/arbeidsplassen's licensed feed, 10,166 active ads over 120 days
-> (FINN ads aren't in that feed). **Four of fifteen extracted facets reach the ranking**, plus
+> (FINN ads aren't in that feed). **Four of the fifteen things extracted from each ad reach the ranking**, plus
 > location, occupation and skills from elsewhere; **the other eleven are extracted and stored
 > but affect nothing** (§4, §11). No CV upload, no personalisation, no learning-to-rank, no
 > incremental crawl. **The live page's ranking has never been judged** — every confidence
@@ -56,14 +56,14 @@ way and 18% the other.
 
 | | total | per ad | per 1,000 |
 |---|---:|---:|---:|
-| facets (`census-v15`, 15 fields) | $22.59 | $0.00222 | $2.22 |
+| facts (`census-v15`, 15 fields per ad) | $22.59 | $0.00222 | $2.22 |
 | skills (`skills-v1`, 6.5 skills/ad) | $23.56 | $0.00232 | $2.32 |
 | **total** | **$46.15** | **$0.00454** | **$4.54** |
 
 At the measured arrival rate of **~388 new ads/day**, that's **~$54/month** to keep the whole
 Norwegian market tagged. Serving queries costs nothing — the front end is static.
 
-**The obvious saving isn't available, which is worth saying.** The facet census ran at a **97%
+**The obvious saving isn't available, which is worth saying.** The facts census ran at a **97%
 prompt-cache hit rate**; the skills census ran at **0%**. Caching looks like an easy win since
 the instructions are ~62% of each call — but the prompt puts the **ad first and instructions
 after**, so two prompts share only ~98 characters. That's far below Haiku's 2,048-token
@@ -277,7 +277,7 @@ requirement combined (3,507 vs 5,703). It's a **judgement call, not a finding** 
 $$\text{final} = \text{words} \times \underbrace{(1 + 0.22\lambda)}_{\text{if English-accessible}} \times \underbrace{(1 - \lambda\sigma)}_{\text{language penalty}}$$
 
 λ is the slider on the demo, 0 to 1. **At λ=0, or when you say nothing about language, the
-ranking is byte-identical to the unconstrained one.** That non-effect is the property the whole
+ranking is byte-identical to the unconstrained one.** That do-nothing guarantee is the property the whole
 design protects — a stage that applies to one side of a paired comparison and not the other is
 a confound.
 
@@ -296,7 +296,7 @@ fitting seven weights would be curve-fitting.
 
 ## Results
 
-378 judgments from `claude-opus-5` under a protocol **committed before any ablation ran**. The
+378 judgments from `claude-opus-5` under a protocol **written down and committed before any of these numbers were measured**. The
 judge never sees the extractor's output, grades relevance 0–3, and flags blocked jobs on a
 separate axis ([protocol](eval/JUDGING_PROTOCOL.md)).
 
@@ -342,7 +342,7 @@ a measured one.
 | Language level, **sealed set** | **27/28 = 96.4%** | 28 ads unseen while writing the prompt |
 | — by level | 1.00 on all six stated levels; **0.67 on "says nothing" (n=3)** | |
 | — costly errors | **0 workable ads hidden** · 1 shown wrongly | CI [0, 0.39] — n too small to bound |
-| Facet census | 9,379 calls · $22.59 · 2.3% demoted · **0 failures** | all 10,166 ads |
+| Facts census | 9,379 calls · $22.59 · 2.3% demoted · **0 failures** | all 10,166 ads |
 | Skills coverage | **98.4%** (was 32.8%) · 6.5/ad · 66,392 total | |
 | Skills recall | **0.861** (was 0.104) | Haiku, the model that ran it; Opus got 0.868 |
 | — rejected | **6.3%** didn't appear verbatim, **discarded not stored** | 4,433 of 70,825 |
@@ -378,7 +378,7 @@ and nurse all clean; mechanical leaks one). Run it: `node scripts/check_demo_que
 | **Extraction** | `claude-haiku-4-5` | 0.861 recall vs Opus's 0.868, at a sixth of the price |
 | **Judge & labels** | `claude-opus-5` | a weak judge can't be fixed by re-prompting |
 | **Batch API** | 50% cheaper | 9,823 calls in 10m13s; a `custom_id` pattern once rejected all 346 of my first attempt |
-| **Prompt caching** | 97% hit on facets, 0% on skills | *"the number that sets the bill"* — and why the skills half can't use it yet |
+| **Prompt caching** | 97% hit on facts, 0% on skills | *"the number that sets the bill"* — and why the skills half can't use it yet |
 | **Structured output** | tool schema + verbatim check | every skill must appear in the ad or be thrown away |
 | **Encoder** | `paraphrase-multilingual-mpnet-base-v2` (ONNX) | bilingual, so Norwegian ads and English queries share a space |
 | **Word matching** | BM25, stem chains, bilingual stopwords, 3–5-char grams | Norwegian Snowball strips one suffix per call; closed compounds need grams |
@@ -407,8 +407,8 @@ Earlier drafts said 4.33% open and 74.6% silent. Both predated the census; **74.
 by a factor of two.** Corrected here rather than quietly dropped.
 
 Two more facts that shaped the design. **FINN ads aren't in the licensed feed** — those uuids
-return 404, and zero appear among the 10,166. And **the good class has almost no lexical
-signal**: a 22-pattern bilingual lexicon fires on **5 ads in 10,166**. English-accessible ads
+return 404, and zero appear among the 10,166. And **the ads you want are almost impossible to find by keyword**: a 22-pattern bilingual
+word list fires on **5 ads in 10,166**. English-accessible ads
 don't announce themselves; they're simply written in English. Detection is language ID, not
 classification.
 
