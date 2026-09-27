@@ -1035,3 +1035,30 @@ What would settle it: a `+skills` arm pooled and judged like the others, about 1
 further pairs at roughly $2, measured against the existing CVR@10 and nDCG@10
 baseline. Until then the module resolves and reports, and the demo continues to match
 skills as text — which is weaker, and honest about being weaker.
+
+### The judged answer: ESCO skill resolution does not help
+
+The `+skills` arm was pooled and judged. 2 new pairs, $0.03, same judge and
+`judge-v1` prompt. 359 judgments total.
+
+| arm | CVR@10 | nDCG@10 | MRR@10 | ΔCVR |
+|---|---:|---:|---:|---:|
+| + constraints λ=0.7 | 0.077 | **0.735** | 0.949 | +0.050 |
+| + skills (ESCO concepts) | 0.077 | **0.724** | 0.949 | +0.050 |
+
+**No improvement on any metric, and 1.5% worse nDCG.** The arm also changed only
+**2 of 130 top-10 slots**, which says the signal barely reaches the ranking at all.
+
+That is the finding: **the asymmetry §17 identified is real, and closing it this way
+does not pay.** 13% of glosses resolve, 67% of advertisements carry any concept, and
+what survives is too sparse to move a top-10 that occupation and constraints have
+already shaped.
+
+**This is what the $0.03 bought.** The module is coherent, the reasoning was sound,
+and I would have shipped it on intuition — the same intuition that produced three
+reverted heuristics in §16. One judged arm settled it in minutes. The resolver stays
+in the tree, unwired, as a measured negative result rather than an untested idea.
+
+What this does NOT rule out: resolving skills through a taxonomy might pay with a
+better resolver, or on queries where occupation resolves poorly. It rules out THIS
+resolver at THIS resolution rate on THESE thirteen personas.

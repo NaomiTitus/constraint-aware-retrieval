@@ -165,6 +165,36 @@ def build_everything(model: str):
             adj = K.apply(adj, ad_facets_seq, prof, lam=lam)
             rankings[pid][name] = topk(adj)
 
+    # ROUND 3 ADDS THE +skills ARM (LIMITATIONS §18). Occupation is compared as a
+    # taxonomy code; skills were still compared as text, so `PyTorch` did not imply
+    # `machine learning`. This resolves both sides onto ESCO skill concepts — 10,063
+    # skills, all bilingual — and scores their overlap. Whether that HELPS is exactly
+    # what no existing arm could show, which is why it is pooled and judged rather
+    # than tuned by eye.
+    esco_sk = json.loads((ROOT / "reports" / "skills_esco_resolved.json")
+                         .read_text(encoding="utf-8"))["ad_to_uris"]
+    from finn_smart_search.retrieval.skills_match import EscoSkillIndex
+    sk_index = EscoSkillIndex.build(
+        con.execute("SELECT uri,lang,title FROM esco_skill").fetchall())
+    ad_sk = [set(esco_sk.get(u, ())) for u in uuids]
+
+    for pid in dev:
+        want: set[str] = set()
+        for c in parses[pid].constraints:
+            if c.facet == "skill":
+                want.update(m.uri for m in sk_index.resolve(str(c.value), top_k=2))
+        base = list(bm_parse_full[pid])
+        if want:
+            # A BONUS, never a gate. Only 67% of advertisements carry any resolved
+            # concept at all, so gating on it would silently drop a third of the
+            # corpus for a signal that resolves 13% of glosses.
+            base = [s * (1.0 + 0.45 * (len(want & ad_sk[i]) / len(want)))
+                    for i, s in enumerate(base)]
+        adj = occ.apply_esco(base, ad_occs,
+                             occ.esco_from_gold_parse(parses[pid], esco_gaz))
+        prof = gp.to_seeker_profile(parses[pid], people)
+        rankings[pid]["skills_esco"] = topk(K.apply(adj, ad_facets_seq, prof, lam=0.7))
+
     pools = P.build_pools(people, rankings)          # raises on a sealed persona
     # Do not pay twice for a pair the first round already judged.
     already: set[str] = set()

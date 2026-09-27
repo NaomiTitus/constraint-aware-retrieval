@@ -4640,6 +4640,32 @@
    "notes": "Seeker wants warehouse work with a forklift certificate. The ad is a PhD research position in machine learning and signal processing requiring a relevant Master's degree, strong mathematics and programming background — a completely different occupation and level. Grade 0. On language: the ad requires good English (not a stated seeker deficiency — the seeker communicated in English and only said they lack Norwegian), and Norwegian is listed only as a PREFERRED criterion (\"Good oral and written presentation skills in Norwegian\" under Preferred selection criteria), with free Norwegian training offered. A preference is not a requirement, so no language violation is recorded. No licence or authorisation requirement the seeker lacks is stated either (the Master's degree is a qualification issue folded into the grade, not one of the seeker's explicitly stated gaps).",
    "judge_prompt_version": "judge-v1",
    "model": "claude-opus-5"
+  },
+  {
+   "pair_id": "p4_backend_no_norsk-9763",
+   "persona_id": "p4_backend_no_norsk",
+   "ad_uuid": "f5c68023-0ff0-4fde-9b38-8333523d26cc",
+   "ad_index": 9763,
+   "grade": 2,
+   "violates": false,
+   "violated_facet": null,
+   "constraint_evidence": "",
+   "notes": "Strong technical overlap: Python as the common layer, Kubernetes, Docker, CI/CD, internal platform/infrastructure work, permanent role based in Oslo — and the ad explicitly welcomes people coming from a backend background. Graded 2 rather than 3 because the role is a senior developer-experience/platform engineering position (Team Factory, internal tooling, on-prem infrastructure), not the backend application development the seeker describes; the specialism and seniority framing (\"Senior\", interest in team lead, setting technical direction) are a step off what was asked for. No PostgreSQL/database-centric backend work is mentioned. Per the instruction to take the lower grade when uncertain, 2.\n\nTask two: the ad says nothing about Norwegian language ability — it is written in English and imposes no language requirement on the applicant, so silence is not a violation. The security clearance requirement (\"All employees at Six Robotics are required to undergo a security clearance due to our close collaboration with the Norwegian Armed Forces.\") is a potential practical obstacle for a non-citizen, but the seeker said nothing about citizenship or work authorisation, and the ad states prior clearance is not necessary — so no facet the seeker explicitly said they lack is violated.",
+   "judge_prompt_version": "judge-v1",
+   "model": "claude-opus-5"
+  },
+  {
+   "pair_id": "p5_data_scientist_norsk-5397",
+   "persona_id": "p5_data_scientist_norsk",
+   "ad_uuid": "8648e34f-b36d-42e9-ab4e-601e90495fff",
+   "ad_index": 5397,
+   "grade": 1,
+   "violates": false,
+   "violated_facet": null,
+   "constraint_evidence": "",
+   "notes": "Seeker is a data scientist (ML, Python, SQL) seeking an AI or analytics position. This is a 3-year PhD fellowship (stipendiat) in clinical/biological psychology focused on MRI/fMRI neuroimaging of music therapy for addiction. It does share analytical/technical overlap — machine learning, multivariate methods, programming in Python, handling large datasets — and the master's degree requirement explicitly includes informatics, so the seeker could be formally eligible. However, the occupation and level are different: a research training position requiring coordination and execution of MRI scans with vulnerable clinical participants, strong interest in clinical neuroscience, and publication of neuroscience research. This is not an AI/analytics industry role and the seeker would very likely not apply; the data-analysis component is only one part. Graded 1 (adjacent) rather than 2, taking the lower grade given the uncertainty, because the core domain (clinical neuroimaging research) and contract type (PhD fellowship) are both off even though analytical skills transfer.\n\nTask two: the advertisement requires \"Gode kunnskapar i norsk eller eit anna skandinavisk språk\" — the seeker explicitly states \"Jeg snakker norsk\", so this is satisfied. It also requires good written and oral English; the seeker says nothing about English, and silence from the seeker on a requirement is not an explicit statement that they lack it, so no violation is recorded. No authorisation or licence requirement is imposed. No violation.",
+   "judge_prompt_version": "judge-v1",
+   "model": "claude-opus-5"
   }
  ],
  "rejected": [],
