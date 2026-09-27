@@ -228,3 +228,248 @@ def test_from_gold_parse_resolves_a_stated_occupation(gaz):
     c = from_gold_parse(_P(), gaz)
     assert c is not None and c.resolved
     assert max(c.codes, key=c.codes.get) == "7115"
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# THE ESCO PATH — bilingual identity, compound affixes, candidate sets
+# ════════════════════════════════════════════════════════════════════════════
+
+from finn_smart_search.retrieval.occupation import (  # noqa: E402
+    AdOccupation, EscoGazetteer, EscoOccupationConstraint, OCCUPATION_STOPWORDS,
+    apply_esco, esco_from_gold_parse)
+
+# Shaped after the real ESCO table: 1,242 occupations, every one with BOTH a
+# Norwegian and an English label under one URI. The nurse family is included in
+# full because it is the case that broke the first gazetteer.
+ESCO = [
+    ("u_nurse_general", "en", "nurse responsible for general care"),
+    ("u_nurse_general", "no", "sykepleier"),
+    ("u_nurse_assist", "en", "nurse assistant"),
+    ("u_nurse_assist", "no", "pleiemedhjelper"),
+    ("u_nurse_spec", "en", "specialist nurse"),
+    ("u_nurse_spec", "no", "spesialsykepleier"),
+    ("u_carpenter", "en", "carpenter"),
+    ("u_carpenter", "no", "tømrer"),
+    ("u_teacher_primary", "en", "primary school teacher"),
+    ("u_teacher_primary", "no", "grunnskolelærer"),
+    ("u_dev_software", "en", "software developer"),
+    ("u_dev_software", "no", "programvareutvikler"),
+    ("u_warehouse", "en", "warehouse operative"),
+    ("u_warehouse", "no", "lagermedarbeider"),
+    ("u_socialwork", "en", "social work assistant"),
+    ("u_socialwork", "no", "sosialarbeiderassistent"),
+]
+# (esco_uri, styrk_code) per ad — the corpus co-occurrence that supplies hierarchy
+AD_ROWS = (
+    [("u_nurse_general", "2223")] * 660
+    + [("u_nurse_assist", "5321")] * 554
+    + [("u_nurse_spec", "2221")] * 40
+    + [("u_carpenter", "7115")] * 93
+    + [("u_teacher_primary", "2341")] * 119
+    + [("u_dev_software", "2512")] * 23
+    + [("u_warehouse", "4321")] * 200
+    + [("u_socialwork", "5321")] * 82
+)
+
+
+@pytest.fixture(scope="module")
+def esco():
+    return EscoGazetteer.build(ESCO, AD_ROWS)
+
+
+# ── bilingual identity: the property D18 was built for ────────────────────────
+
+def test_the_two_languages_of_one_occupation_resolve_to_the_same_uri(esco):
+    """THE POINT. `carpenter` and `tømrer` are two labels of one identity, so they
+    must reach the same ads. The STYRK-label gazetteer never managed this."""
+    assert esco.resolve("carpenter") == esco.resolve("tømrer")
+    assert set(esco.resolve("carpenter")) == {"u_carpenter"}
+
+
+def test_an_english_multiword_phrase_resolves_cross_language(esco):
+    assert set(esco.resolve("primary school teacher")) == {"u_teacher_primary"}
+    assert set(esco.resolve("grunnskolelærer")) == {"u_teacher_primary"}
+
+
+# ── containment, not Jaccard ──────────────────────────────────────────────────
+
+def test_a_specific_label_is_not_penalised_for_being_long(esco):
+    """Symmetric Jaccard scored `nurse` against `nurse responsible for general care`
+    at 0.25 and dropped it below threshold, which is how the first gazetteer
+    resolved `nurse` to the assistant. Containment scores it 1.0."""
+    assert "u_nurse_general" in esco.resolve("nurse")
+
+
+# ── the Norwegian closed-compound rule ────────────────────────────────────────
+
+def test_a_compound_head_reaches_its_compound(esco):
+    """`utvikler` is not a TOKEN of `programvareutvikler`, it is a suffix of it.
+    Whole-token comparison cannot connect them; this is why `backend-utvikler`
+    failed to resolve at all before."""
+    assert "u_dev_software" in esco.resolve("backend-utvikler")
+
+
+def test_prefix_matching_is_deliberately_not_supported(esco):
+    """`lager` is a PREFIX of `lagermedarbeider`, and prefix matching was removed
+    anyway: on the real 2,470-label ESCO set it resolved `lager` to `anklager` and
+    `kobber- og blikkenslager`, which merely end with those letters. The false
+    matches outnumbered the true one, so an unresolved phrase is handed to D6's
+    later stages instead."""
+    assert esco.resolve("lager") == {}
+
+
+def test_a_short_accidental_suffix_does_not_match(esco):
+    """The 6-character floor. `lager` is a suffix of `anklager` (accuser) and that
+    match is pure noise."""
+    from finn_smart_search.retrieval.occupation import _token_match
+    assert not _token_match("lager", "anklager")
+    assert _token_match("utvikler", "programvareutvikler")
+    assert _token_match("sykepleier", "spesialsykepleier")
+
+
+def test_a_short_token_does_not_affix_match(esco):
+    """The length floor is what stops `er` or `for` matching half the taxonomy."""
+    from finn_smart_search.retrieval.occupation import _token_match
+    assert not _token_match("er", "erfaring")
+    assert _token_match("utvikler", "programvareutvikler")
+
+
+# ── the occupational stoplist ─────────────────────────────────────────────────
+
+def test_a_match_resting_only_on_generic_filler_does_not_resolve(esco):
+    """`warehouse work` matched `social work assistant` on the word `work` and
+    resolved to a social worker. A match carrying no occupational information is
+    not a match."""
+    codes = esco.resolve("warehouse work")
+    assert "u_socialwork" not in codes
+    assert "u_warehouse" in codes
+
+
+def test_the_stoplist_covers_both_languages(esco):
+    assert {"work", "job", "position"} <= OCCUPATION_STOPWORDS
+    assert {"arbeid", "jobb", "stilling"} <= OCCUPATION_STOPWORDS
+
+
+def test_a_phrase_of_only_stopwords_does_not_resolve(esco):
+    assert esco.resolve("looking for a job position") == {}
+
+
+# ── candidate sets, and no tiebreak ───────────────────────────────────────────
+
+def test_a_genuinely_ambiguous_phrase_returns_EVERY_candidate(esco):
+    """`nurse` is four ESCO occupations at different skill levels. The information
+    that would choose between them is not in the word, so all of them come back."""
+    codes = esco.resolve("nurse")
+    assert {"u_nurse_general", "u_nurse_assist", "u_nurse_spec"} <= set(codes)
+
+
+def test_candidate_weights_are_uniform_so_there_is_no_hidden_tiebreak(esco):
+    """A weight difference here would be a tiebreak in disguise — and a tiebreak by
+    ad count is exactly what resolved `nurse` to the 554-ad assistant over the
+    660-ad nurse and got it wrong."""
+    codes = esco.resolve("nurse")
+    assert len(set(round(v, 12) for v in codes.values())) == 1
+
+
+def test_ad_counts_are_available_for_reporting_but_do_not_affect_resolution(esco):
+    assert esco.ads_per_uri["u_nurse_general"] == 660
+    assert esco.ads_per_uri["u_nurse_assist"] == 554
+    codes = esco.resolve("nurse")
+    assert codes["u_nurse_assist"] == codes["u_nurse_general"]
+
+
+def test_an_overly_ambiguous_phrase_fails_open_rather_than_guessing(esco):
+    """Beyond `max_candidates` the phrase has not identified an occupation. Failing
+    open leaves the lexical channel untouched; narrowing to an arbitrary subset
+    would demote every ad outside a guess."""
+    assert esco.resolve("nurse", max_candidates=1) == {}
+
+
+def test_coverage_below_the_threshold_does_not_resolve(esco):
+    assert esco.resolve("nurse", min_coverage=1.01) == {}
+
+
+# ── proximity: identity first, hierarchy as fallback ──────────────────────────
+
+def test_an_esco_identity_match_is_full_proximity(esco):
+    c = EscoOccupationConstraint("tømrer", esco.resolve("tømrer"),
+                                 esco.styrk_for(esco.resolve("tømrer")))
+    assert c.proximity(AdOccupation("u_carpenter", "7115")) == 1.0
+
+
+def test_the_compound_rule_makes_a_specialist_a_candidate_of_the_general_query(esco):
+    """`sykepleier` is a suffix of `spesialsykepleier`, so a specialist nurse is a
+    CANDIDATE for a nurse query — which is the right answer and not a bug. It is
+    also why the next test must use a code outside the candidate set to exercise
+    the STYRK fallback at all."""
+    uris = esco.resolve("sykepleier")
+    assert {"u_nurse_general", "u_nurse_spec"} <= set(uris)
+
+
+def test_an_adjacent_styrk_code_still_scores_without_an_esco_match(esco):
+    """ESCO URIs are flat, so identity alone cannot reach an ad whose URI the
+    seeker's phrase never matched. 2224 shares the unit group 222 with the nurse
+    codes but is not among them, so only the STYRK fallback can score it."""
+    uris = esco.resolve("sykepleier")
+    c = EscoOccupationConstraint("sykepleier", uris, esco.styrk_for(uris))
+    p = c.proximity(AdOccupation("u_unknown_uri", "2224"))
+    assert 0.0 < p < 1.0
+
+
+def test_an_unrelated_ad_scores_zero_on_both_paths(esco):
+    uris = esco.resolve("sykepleier")
+    c = EscoOccupationConstraint("sykepleier", uris, esco.styrk_for(uris))
+    assert c.proximity(AdOccupation("u_carpenter", "7115")) == 0.0
+
+
+def test_an_ad_missing_its_esco_uri_still_scores_via_styrk(esco):
+    """2.1% of the corpus has no ESCO tag but 100% has a STYRK code, so the
+    fallback is load-bearing rather than theoretical."""
+    uris = esco.resolve("sykepleier")
+    c = EscoOccupationConstraint("sykepleier", uris, esco.styrk_for(uris))
+    assert c.proximity(AdOccupation(None, "2223")) > 0.0
+
+
+# ── the two non-effects, again, on this path ──────────────────────────────────
+
+def test_an_unstated_occupation_leaves_the_esco_ranking_identical():
+    scores = [0.9, 0.5, 0.31]
+    ads = [AdOccupation("u_carpenter", "7115")] * 3
+    assert apply_esco(scores, ads, None) == scores
+
+
+def test_an_unresolved_occupation_leaves_the_esco_ranking_identical(esco):
+    """D18's outcome measured why this matters: a predicate applied to one side of
+    a paired comparison and not the other is a confound, so a gazetteer miss must
+    change NOTHING rather than change a little."""
+    c = EscoOccupationConstraint("kvantekryptograf", esco.resolve("kvantekryptograf"))
+    assert not c.resolved
+    scores = [0.9, 0.5]
+    ads = [AdOccupation("u_carpenter", "7115"), AdOccupation("u_nurse_general", "2223")]
+    assert apply_esco(scores, ads, c) == scores
+
+
+def test_the_esco_predicate_promotes_the_right_occupation(esco):
+    uris = esco.resolve("nurse")
+    c = EscoOccupationConstraint("nurse", uris, esco.styrk_for(uris))
+    out = apply_esco([10.0, 3.0],
+                     [AdOccupation("u_carpenter", "7115"),
+                      AdOccupation("u_nurse_general", "2223")], c)
+    assert out[1] > out[0] == 0.0
+
+
+def test_esco_from_gold_parse_returns_none_without_an_occupation(esco):
+    class _P:
+        constraints = ()
+    assert esco_from_gold_parse(_P(), esco) is None
+
+
+def test_esco_from_gold_parse_carries_both_uris_and_styrk(esco):
+    class _C:
+        facet, value, priority = "occupation", "carpenter", "hard"
+    class _P:
+        constraints = (_C(),)
+    c = esco_from_gold_parse(_P(), esco)
+    assert c is not None and c.resolved
+    assert set(c.uris) == {"u_carpenter"}
+    assert "7115" in c.styrk

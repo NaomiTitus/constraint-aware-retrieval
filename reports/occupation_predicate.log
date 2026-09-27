@@ -1,6 +1,6 @@
 corpus 10166 ads
 gazetteer: 1,441 labels -> 313 styrk codes
-bm25 built in 30s
+bm25 built in 28s
 
 === GAZETTEER RESOLUTION on the 13 dev personas ===
 

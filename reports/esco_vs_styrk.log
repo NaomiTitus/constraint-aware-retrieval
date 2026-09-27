@@ -1,0 +1,61 @@
+corpus 10166 ads — 9952 carry an ESCO uri (97.9%), 10161 a styrk code
+styrk-label gazetteer 1,441 labels; esco gazetteer 2,470 bilingual labels
+bm25 built in 29s
+
+=== RESOLUTION: does the seeker's phrase reach an occupation? ===
+
+  persona                          phrase                   styrk-label          ESCO
+  c1_lager_no_language_mention     lager                              —             —
+  c2_sykepleier_authorisation_only sykepleier                   2 codes        4 uris
+  c4_laerer_norsk_speaker          grunnskolelærer              1 codes        1 uris
+  p1_sykepleier_no_norsk           nurse                        4 codes        5 uris
+  p1_sykepleier_norsk              sykepleier                   2 codes        4 uris
+  p2_tomrer_no_norsk               carpenter                    1 codes        2 uris
+  p2_tomrer_norsk                  tømrer                       1 codes        2 uris
+  p4_backend_no_norsk              backend developer            4 codes             —
+  p4_backend_norsk                 backend-utvikler                   —             —
+  p5_data_scientist_no_norsk       data scientist               3 codes        1 uris
+  p5_data_scientist_norsk          data scientist               3 codes        1 uris
+  p6_grunnskolelaerer              primary school teacher       1 codes        2 uris
+  p7_lagermedarbeider              warehouse work                     —        2 uris
+
+  resolved: styrk-label 10/13   ESCO 10/13
+
+=== PAIRED OVERLAP@10 — do the NO and EN variants converge? ===
+
+  pair         raw query      gold parse   x styrk-label          x ESCO
+  p1                0/10            0/10            0/10            0/10
+  p2                0/10            0/10            0/10            0/10
+  p4                7/10            8/10            4/10            8/10
+  p5                0/10            2/10            5/10            3/10
+  mean            1.8/10          2.5/10          2.2/10          2.8/10
+
+=== OCCUPATION PRECISION@5 ===
+   yardstick is the STYRK-label constraint for EVERY arm, so arm 4 is
+   not graded by the identifier it uses
+
+  persona                               raw query     gold parse  x styrk-label         x ESCO
+  c2_sykepleier_authorisation_only            4/5            5/5            5/5            5/5
+  c4_laerer_norsk_speaker                     5/5            5/5            5/5            5/5
+  p1_sykepleier_no_norsk                      0/5            0/5            0/5            0/5
+  p1_sykepleier_norsk                         5/5            5/5            5/5            5/5
+  p2_tomrer_no_norsk                          3/5            5/5            5/5            5/5
+  p2_tomrer_norsk                             4/5            5/5            5/5            5/5
+  p4_backend_no_norsk                         2/5            3/5            5/5            3/5
+  p5_data_scientist_no_norsk                  0/5            0/5            0/5            0/5
+  p5_data_scientist_norsk                     0/5            0/5            0/5            0/5
+  p6_grunnskolelaerer                         1/5            5/5            5/5            5/5
+  mean share                                 48%           66%           70%           66%
+
+=== p1_sykepleier_no_norsk — the English nurse query ===
+  raw query        ['spesiallege', 'lærer i moderne språ', 'vaktmester', 'Selgere (engros)', 'murer']
+  gold parse       ['pleiemedhjelper', 'spesialsykepleier', 'spesialveterinær', 'spesiallege', 'pleiemedhjelper']
+  x styrk-label    ['pleiemedhjelper', 'pleiemedhjelper', 'pleiemedhjelper', 'pleiemedhjelper', 'pleiemedhjelper']
+  x ESCO           ['pleiemedhjelper', 'spesialsykepleier', 'pleiemedhjelper', 'sykepleier', 'sykepleier']
+
+  arm 4 top-10 for the no-Norwegian nurse: 5/10 still DEMAND Norwegian.
+  Occupation proximity should not fix that — D5 does.
+
+written reports/esco_vs_styrk.json
+
+REMINDER: zero relevance pairs judged. Structural check only.

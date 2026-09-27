@@ -1,0 +1,117 @@
+{
+ "resolution": {
+  "c1_lager_no_language_mention": {
+   "phrase": "lager",
+   "styrk": "\u2014",
+   "esco": "\u2014"
+  },
+  "c2_sykepleier_authorisation_only": {
+   "phrase": "sykepleier",
+   "styrk": "2 codes",
+   "esco": "4 uris"
+  },
+  "c4_laerer_norsk_speaker": {
+   "phrase": "grunnskolel\u00e6rer",
+   "styrk": "1 codes",
+   "esco": "1 uris"
+  },
+  "p1_sykepleier_no_norsk": {
+   "phrase": "nurse",
+   "styrk": "4 codes",
+   "esco": "5 uris"
+  },
+  "p1_sykepleier_norsk": {
+   "phrase": "sykepleier",
+   "styrk": "2 codes",
+   "esco": "4 uris"
+  },
+  "p2_tomrer_no_norsk": {
+   "phrase": "carpenter",
+   "styrk": "1 codes",
+   "esco": "2 uris"
+  },
+  "p2_tomrer_norsk": {
+   "phrase": "t\u00f8mrer",
+   "styrk": "1 codes",
+   "esco": "2 uris"
+  },
+  "p4_backend_no_norsk": {
+   "phrase": "backend developer",
+   "styrk": "4 codes",
+   "esco": "\u2014"
+  },
+  "p4_backend_norsk": {
+   "phrase": "backend-utvikler",
+   "styrk": "\u2014",
+   "esco": "\u2014"
+  },
+  "p5_data_scientist_no_norsk": {
+   "phrase": "data scientist",
+   "styrk": "3 codes",
+   "esco": "1 uris"
+  },
+  "p5_data_scientist_norsk": {
+   "phrase": "data scientist",
+   "styrk": "3 codes",
+   "esco": "1 uris"
+  },
+  "p6_grunnskolelaerer": {
+   "phrase": "primary school teacher",
+   "styrk": "1 codes",
+   "esco": "2 uris"
+  },
+  "p7_lagermedarbeider": {
+   "phrase": "warehouse work",
+   "styrk": "\u2014",
+   "esco": "2 uris"
+  }
+ },
+ "resolved": {
+  "styrk": 10,
+  "esco": 10,
+  "of": 13
+ },
+ "pair_overlap": {
+  "raw query": 1.75,
+  "gold parse": 2.5,
+  "x styrk-label": 2.25,
+  "x ESCO": 2.75
+ },
+ "precision_at5": {
+  "raw query": 0.48,
+  "gold parse": 0.6599999999999999,
+  "x styrk-label": 0.7,
+  "x ESCO": 0.6599999999999999
+ },
+ "p1_top5": {
+  "raw query": [
+   "spesiallege",
+   "l\u00e6rer i moderne spr\u00e5",
+   "vaktmester",
+   "Selgere (engros)",
+   "murer"
+  ],
+  "gold parse": [
+   "pleiemedhjelper",
+   "spesialsykepleier",
+   "spesialveterin\u00e6r",
+   "spesiallege",
+   "pleiemedhjelper"
+  ],
+  "x styrk-label": [
+   "pleiemedhjelper",
+   "pleiemedhjelper",
+   "pleiemedhjelper",
+   "pleiemedhjelper",
+   "pleiemedhjelper"
+  ],
+  "x ESCO": [
+   "pleiemedhjelper",
+   "spesialsykepleier",
+   "pleiemedhjelper",
+   "sykepleier",
+   "sykepleier"
+  ]
+ },
+ "p1_blocking_arm4": 5
+}
