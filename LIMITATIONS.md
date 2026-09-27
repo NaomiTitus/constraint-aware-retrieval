@@ -1280,3 +1280,56 @@ heuristic but a way to know when to distrust itself: `automation engineer` resol
 to six codes spanning industrial engineers, electronics technicians, electricians
 *and building caretakers*, and nothing downstream knows that set is too broad to act
 on confidently.
+
+## 20. A 23-query sanity suite across ten industries: 83%, and what the 17% is
+
+`eval/demo_queries.json` + `scripts/check_demo_queries.mjs`. Two to three queries per
+NAV industry, each with a **stated expectation** — the industry its results should
+land in, the language level the parser should extract, the place it should resolve.
+Roughly half specify English-only or no-Norwegian. It runs the **page's own
+JavaScript** against the shipped index, so what is checked is what ships.
+
+**Not a relevance benchmark.** No judgments, no pre-registration, and "results land
+in the expected NAV industry" is a crude proxy for relevance. It is a smoke test with
+an expectation attached, so a regression is visible instead of a feeling.
+
+| | |
+|---|---:|
+| industry match in top-5 | **96/115 = 83%** |
+| language parse failures | **0 of 23** |
+| place parse failures | **0 of 23** |
+| occupation unresolved | 1 of 23 (`anleggsmaskinfører`) |
+
+### The tie pathology it found
+
+Two queries returned results scoring **identically** — `Jeg er rørlegger og søker
+jobb i Trondheim` gave eight advertisements tied at 0.780, ordered by nothing but
+corpus sort order. Cause: when every query word is consumed by the occupation phrase,
+`terms` is empty, there is no lexical signal, and every advertisement sharing a STYRK
+code scores the same.
+
+Underneath it, a worse problem: **`helsefagarbeider` resolves to STYRK 2263 and
+2422** — environmental health and policy administration professionals, not care
+workers — and `rørlegger` to four codes of which three are unrelated. So the tie was
+between advertisements that should never have been candidates.
+
+**The fix is a tie-breaker, and its size is the honest part.** An advertisement whose
+own standardised label matches the seeker's phrase is direct evidence; a code that
+resolved to four unrelated groups is not. As a **0.35 bonus this measured FLAT** —
+82% either way across all 23 queries, shuffling which ones failed without improving
+the total. So it is kept at **0.02**, purely to settle ties on evidence rather than
+on sort order, and it takes the suite to 83% with the correct `rørlegger`
+advertisement moving from rank 22 to rank 1.
+
+### The remaining failure is not a ranking bug
+
+`helsefagarbeider` in Bergen stays at 0/5, and the reason is worth stating: **only 9
+advertisements in the corpus carry that label and none of them are in Bergen.** The
+correct ones sit at `lprox=0.55` (same county) while unrelated Bergen advertisements
+sharing the mis-resolved STYRK code sit at `lprox=1`. The system correctly traded
+occupation against location when nothing satisfied both — and then lost because the
+occupation resolution was wrong upstream.
+
+That is the same conclusion as §19 from a different query: **the occupation predicate
+propagates resolution errors at full confidence, and nothing downstream knows when
+its candidate set is too broad to trust.**
