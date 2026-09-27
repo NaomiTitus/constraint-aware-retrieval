@@ -457,3 +457,94 @@ Four tests now read `eval/golden_set.json` itself:
 The closed vocabulary is the only one of the four that generalises: the bug was a
 key name nothing validated, and that class of bug recurs wherever data files
 carry fields by convention.
+
+## D16 — The dev/sealed persona split, pre-registered before any retrieval ran
+
+**Date: 2026-09-27. The git timestamp on this commit is the pre-registration.**
+No retrieval ablation, no relevance judgment and no gold persona parse existed
+when this was written, which is the only condition under which the split is worth
+anything.
+
+### Why it had to be decided first
+
+`PLAN.md` E1 pre-registered "10 dev, 6 SEALED" and `STANDARDS.md` says sealed
+personas stay sealed until the final run — but **no split existed anywhere in the
+repo.** All 19 personas sat in one undifferentiated list. Left alone, the first
+retrieval eval would have consumed every persona, leaving nothing held out and
+voiding E1 silently.
+
+The split is also the one artefact here that **decays with time**. A schema is as
+good written tomorrow; a held-out set chosen after seeing which personas embarrass
+the system is contaminated no matter how honest the chooser. So it goes first.
+
+### E1's arithmetic was stale, and reconciling it is the decision
+
+E1 says **16 personas across 10 verticals**. The file holds **19 across 11** — the
+original 15 plus the four controls added in `4925087`, after E1 was written.
+
+**The sealed COUNT is kept at 6, as pre-registered.** Raising it would be a
+post-hoc change to a pre-registered quantity; lowering it weakens the held-out
+measurement. Dev absorbs the growth and becomes 13. The sealed share therefore
+falls from 6/16 = 37.5% to 6/19 = 31.6%, and that is a consequence of honouring
+the pre-registered number rather than a new choice.
+
+### Two structural constraints removed most of the freedom
+
+**Pairs move as units of two.** `p1`–`p5` exist for the within-pair comparison —
+the variants differ only in the language sentence, which is what makes the
+negation stress-test controlled rather than two unrelated queries. Splitting a
+pair across dev and sealed destroys the instrument rather than holding anything
+back. So the sealed set is assembled from blocks of 2, 1 and 1, not from 19 free
+choices.
+
+**The controls' non-effect needs coverage on both sides.** `expect_language_constraint:
+false` asserts that a seeker who says nothing about language gets a bit-identical
+ranking. `tests/unit/test_constraints_only_when_stated.py` already guards that for
+`constraints.py` in isolation, but end-to-end leakage through parser, fusion and
+scorer is a different failure surface. So three controls sit in dev, where the bug
+would be caught while it is cheap, and one sits in sealed, so the property is
+verified on held-out data too.
+
+### The split
+
+**SEALED — 6 instances, 5 verticals.** Opened once, at the end.
+
+| persona | vertical | why sealed |
+|---|---|---|
+| `p3_kokk_norsk` + `p3_kokk_no_norsk` | Hospitality | The paired negation stress-test on held-out data (E7). Chosen over `p4` — the easiest case, which cannot discriminate — and over `p5`, which is needed in dev as the reference failure. Hospitality is genuinely English-friendly, so a system that hides everything when Norwegian is absent fails here *visibly* rather than arguably. |
+| `p8_regnskapsforer` | Finance | Authorisation-versus-language in a regulation-bound vertical. The distinction is developed against `c2` and `p1` in dev, so sealing this costs no iteration. |
+| `p9_multilingual_support` | Customer service | The one persona where lacking Norwegian is an **asset**. A system that only ever penalises its absence gets this backwards — a discriminating property precisely because it must not be tuned on. |
+| `p10_civil_engineer` | Engineering | The bilingual large-employer ad regime, covered nowhere in dev. If correct bilingual handling does not fall out of general correctness, that is exactly what a held-out set should catch. |
+| `c3_utvikler_remote_seniority` | Technology | The control on held-out data, and the only persona exercising `remote` + `seniority` + `skills`. Technology is the thinnest vertical (240 ads), where a leaking language stage shows first. |
+
+**DEV — 13 instances, 6 verticals.** `p1`, `p2`, `p4`, `p5` pairs; `p6`, `p7`;
+`c1`, `c2`, `c4`.
+
+Four kept in dev deliberately, each for a stated reason:
+
+- **`p5` — the originating bug.** The query that started the project. It is the
+  reference failure and development has to be able to iterate against it.
+- **`p6` — the designed negative control.** Norwegian genuinely *is* required to
+  teach in a Norwegian primary school, so a good system returns few results *and
+  says so*. Calibrating "says so" is iterative work, not an end-of-project
+  discovery.
+- **`c1`, `c2`, `c4` — the non-effect guards.** `c1` is the majority case; `c2` is
+  authorisation in isolation, the `norsk autorisasjon` trap named on day one;
+  `c4` is a fluent speaker who never mentions it. These must work *during*
+  development, not be verified after shipping.
+
+### A consequence to state rather than discover
+
+**Sealed verticals are disjoint from dev verticals.** That was not forced — it
+fell out of stratifying on difficulty and facet coverage — and it is kept because
+it makes the sealed run a test of generalisation to unseen verticals, which is
+what a real product meets. The cost is that the sealed number is **not a
+like-for-like replicate of dev**: it may be lower for reasons unrelated to the
+architecture, and must be reported as a lower bound rather than as the headline.
+
+### What this does not cover
+
+The sealed set has no "Norwegian genuinely required, return few results" case —
+`p6` holds that in dev, and `p8` covers it only partially through regulation. If
+the final report wants that property measured held-out, it needs a new persona
+written now, before any results exist, not a reassignment later.

@@ -196,7 +196,10 @@ network and no API key**. A reviewer who cannot get green will not read further.
   agreeing with itself and every headline number is void.
 - **`eval/JUDGING_PROTOCOL.md` is committed BEFORE any ablation runs.** The git
   timestamp is the pre-registration.
-- **Sealed personas stay sealed** until the final run.
+- **Sealed personas stay sealed** until the final run. The split is declared in
+  `eval/personas.yaml` as `split: dev|sealed`, pre-registered 2026-09-27
+  (DECISIONS.md D16), and enforced by `tests/unit/test_persona_split.py` — the
+  rule was stated here for the whole project while nothing implemented it.
 - **No automated access to finn.no**, ever. See DATA_LICENSE.md.
 - **Every gold row carries `extractor_version` + `prompt_version`.**
 - **Demotion rate is reported**, never silent — it converts precision errors into

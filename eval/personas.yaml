@@ -1,4 +1,16 @@
-# Ten personas, five of them paired -> 15 query instances.
+# Ten personas, five of them paired, plus four controls -> 19 query instances.
+#
+# DEV / SEALED SPLIT, pre-registered 2026-09-27. 13 dev, 6 sealed. The git
+# timestamp on this commit is the pre-registration; see DECISIONS.md D16 for the
+# reasoning and PLAN.md E1. The rule, from STANDARDS.md: sealed personas are
+# opened ONCE, at the end. No sealed persona may be inspected, tuned against, or
+# used to choose a hyperparameter, and `tests/unit/test_persona_split.py` asserts
+# the structure so the split cannot drift silently.
+#
+# Sealed verticals are DISJOINT from dev verticals, deliberately. That makes the
+# sealed run a test of generalisation to unseen verticals rather than a rerun of
+# dev, and it means the sealed number should be read as a LOWER bound on dev
+# performance, not as a like-for-like replicate.
 #
 # Written first-person, as someone would actually type into a job search. Paired
 # variants differ ONLY in the language sentence, linked by `pair_id` — that is
@@ -12,6 +24,7 @@
 personas:
   # ── paired: the five that carry the argument ──────────────────────────────
   - id: p1_sykepleier_norsk
+    split: dev
     pair_id: p1
     vertical: Healthcare
     why: >
@@ -23,6 +36,7 @@ personas:
       flytende norsk. Jeg ser etter fast stilling, gjerne dagvakt.
 
   - id: p1_sykepleier_no_norsk
+    split: dev
     pair_id: p1
     vertical: Healthcare
     query: >
@@ -30,6 +44,7 @@ personas:
       Norwegian. I am looking for a permanent position, preferably day shifts.
 
   - id: p2_tomrer_norsk
+    split: dev
     pair_id: p2
     vertical: Trades
     why: >
@@ -40,6 +55,7 @@ personas:
       rehabilitering. Jeg snakker norsk. Jeg har førerkort klasse B.
 
   - id: p2_tomrer_no_norsk
+    split: dev
     pair_id: p2
     vertical: Trades
     query: >
@@ -48,6 +64,7 @@ personas:
       B driving licence.
 
   - id: p3_kokk_norsk
+    split: sealed
     pair_id: p3
     vertical: Hospitality
     why: >
@@ -58,6 +75,7 @@ personas:
       og engelsk. Jeg kan jobbe kveld og helg.
 
   - id: p3_kokk_no_norsk
+    split: sealed
     pair_id: p3
     vertical: Hospitality
     query: >
@@ -65,6 +83,7 @@ personas:
       speak Norwegian but I speak fluent English. I can work evenings and weekends.
 
   - id: p4_backend_norsk
+    split: dev
     pair_id: p4
     vertical: Software
     why: The English-friendliest vertical; the easiest case the baseline should win.
@@ -73,6 +92,7 @@ personas:
       norsk. Jeg ser etter fast stilling i Oslo eller hybrid.
 
   - id: p4_backend_no_norsk
+    split: dev
     pair_id: p4
     vertical: Software
     query: >
@@ -80,6 +100,7 @@ personas:
       I do not speak Norwegian. I am looking for a permanent role in Oslo or hybrid.
 
   - id: p5_data_scientist_norsk
+    split: dev
     pair_id: p5
     vertical: Data
     why: >
@@ -91,6 +112,7 @@ personas:
       snakker norsk. Jeg ser etter stilling innen AI eller analyse.
 
   - id: p5_data_scientist_no_norsk
+    split: dev
     pair_id: p5
     vertical: Data
     query: >
@@ -99,6 +121,7 @@ personas:
 
   # ── unpaired ──────────────────────────────────────────────────────────────
   - id: p6_grunnskolelaerer
+    split: dev
     vertical: Education
     why: >
       A DESIGNED NEGATIVE CONTROL, and it must not be dropped when it scores
@@ -110,6 +133,7 @@ personas:
       like to teach in Norway.
 
   - id: p7_lagermedarbeider
+    split: dev
     vertical: Logistics
     why: Low-text-volume ads — tests behaviour when there is little to extract from.
     query: >
@@ -117,6 +141,7 @@ personas:
       speak Norwegian yet but I am learning.
 
   - id: p8_regnskapsforer
+    split: sealed
     vertical: Finance
     why: >
       Norwegian-regulation-bound, so it tests the authorisation-versus-language
@@ -126,6 +151,7 @@ personas:
       speak Norwegian. I am looking for a permanent position.
 
   - id: p9_multilingual_support
+    split: sealed
     vertical: Customer service
     why: >
       The one persona where NOT speaking Norwegian is an ASSET. A system that only
@@ -135,6 +161,7 @@ personas:
       I am looking for customer service or support work.
 
   - id: p10_civil_engineer
+    split: sealed
     vertical: Engineering
     why: Large-employer bilingual-ad regime — many ads are half Norwegian, half English.
     query: >
@@ -162,6 +189,7 @@ personas:
   # extracts 15; the personas above test one.
 
   - id: c1_lager_no_language_mention
+    split: dev
     vertical: Logistics
     control: true
     expect_language_constraint: false
@@ -175,6 +203,7 @@ personas:
       klasse B. Jeg kan jobbe skift.
 
   - id: c2_sykepleier_authorisation_only
+    split: dev
     vertical: Healthcare
     control: true
     expect_language_constraint: false
@@ -190,6 +219,7 @@ personas:
       fast stilling i Trondheim, gjerne dagvakt.
 
   - id: c3_utvikler_remote_seniority
+    split: sealed
     vertical: Technology
     control: true
     expect_language_constraint: false
@@ -203,6 +233,7 @@ personas:
       Kubernetes. Jeg ønsker å jobbe hjemmefra eller hybrid.
 
   - id: c4_laerer_norsk_speaker
+    split: dev
     vertical: Education
     control: true
     expect_language_constraint: false
