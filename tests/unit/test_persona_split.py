@@ -9,14 +9,19 @@ at all. Both statements read as commitments while enforcing nothing.
 So the invariants live here, where breaking them fails CI:
 
   - every persona declares a split, so a new one cannot default into dev silently;
-  - the SEALED COUNT stays 6, the pre-registered number (DECISIONS.md D16);
+  - the SEALED COUNT stays at the pre-registered number — 6 in D16, amended to 7
+    in D17 before any result existed, and frozen for good once the first CVR@10
+    is computed;
   - pairs are never split across dev/sealed, because the paired variants differ
     only in the language sentence and the comparison IS the measurement;
   - the non-effect controls are represented on BOTH sides;
   - the sealed set can still run the paired negation stress-test E7 asks for.
 
-None of these assert that the split is a GOOD one — that is a judgment recorded
-in D16. They assert it is the split that was pre-registered, unchanged.
+  - the "Norwegian genuinely required, return few results" property is guarded in
+    dev and verified held-out.
+
+None of these assert that the split is a GOOD one — that is a judgment recorded in
+D16 and D17. They assert it is the split that was pre-registered, unchanged.
 """
 from __future__ import annotations
 
@@ -30,7 +35,7 @@ PERSONAS = Path(__file__).resolve().parents[2] / "eval" / "personas.yaml"
 
 # The pre-registered quantities. Changing these numbers means changing a
 # pre-registration, which is a DECISIONS.md entry and not a test edit.
-N_SEALED = 6
+N_SEALED = 7   # 6 at pre-registration, amended to 7 pre-results — D17
 N_DEV = 13
 VALID = {"dev", "sealed"}
 
@@ -121,3 +126,20 @@ def test_the_originating_bug_persona_is_in_dev(personas):
     p5 = [p for p in personas if p.get("pair_id") == "p5"]
     assert p5, "p5 is missing entirely"
     assert all(p["split"] == "dev" for p in p5), "p5 (originating bug) must stay in dev"
+
+
+def test_the_return_few_results_property_is_held_out_too(personas):
+    """`expect_few_results` marks a persona where Norwegian is GENUINELY required,
+    so the correct behaviour is to return few results or none and say so. D16
+    recorded that the sealed set lacked such a case; D17 added
+    `p11_barnevernspedagog` to fix it before any results existed. A system that
+    manufactures matches here is worse than one returning nothing, so the property
+    needs guarding in dev AND verifying held-out."""
+    marked = [p for p in personas if p.get("expect_few_results")]
+    assert marked, "no persona marks `expect_few_results`"
+    splits = {p["split"] for p in marked}
+    assert "dev" in splits, "the return-few property is not developed against"
+    assert "sealed" in splits, (
+        "the return-few property is not held out — a system that manufactures "
+        "matches for a genuinely-Norwegian role would only ever be measured on "
+        "data it was tuned against")

@@ -548,3 +548,83 @@ The sealed set has no "Norwegian genuinely required, return few results" case �
 `p6` holds that in dev, and `p8` covers it only partially through regulation. If
 the final report wants that property measured held-out, it needs a new persona
 written now, before any results exist, not a reassignment later.
+
+## D17 — Amendment to D16: a seventh sealed persona, added before any results existed
+
+**Date: 2026-09-27, hours after D16 and still with zero retrieval results, zero
+relevance judgments and zero gold persona parses in the repo.** This is an
+amendment to a quantity D16 pre-registered, and it is filed as one rather than
+folded into D16, because the audit trail is the only thing that makes the original
+pre-registration worth anything.
+
+### What D16 left broken, in its own words
+
+D16 closed with: *"The sealed set has no 'Norwegian genuinely required, return few
+results' case — `p6` holds that in dev... If the final report wants that property
+measured held-out, it needs a new persona written now, before any results exist,
+not a reassignment later."*
+
+That is the condition being met. The fix is a **new** persona, not a reassignment
+of an existing one — reassignment would let knowledge of the dev set leak into the
+choice of what to hold back, which is exactly the contamination D16 was written to
+prevent.
+
+### Why the property is worth a sealed slot
+
+`p6_grunnskolelaerer` encodes a behaviour that is easy to get backwards: when
+Norwegian genuinely IS required, the right answer is **few results or none, said
+plainly**. A system that manufactures plausible matches there is *worse* than one
+that returns nothing, because it spends the seeker's applications on jobs they
+cannot lawfully hold. Measuring that only on a persona the system was tuned
+against would tell us nothing about whether the behaviour generalises.
+
+### `p11_barnevernspedagog` — Social services
+
+Chosen against corpus evidence rather than intuition:
+
+| | |
+|---|---:|
+| ads in the vertical | **308** |
+| explicitly demanding Norwegian | 219 — 71% |
+| census calls accessible | **0** |
+
+308 ads is the point. A negative control in a vertical with four ads measures the
+corpus, not the system — "returned nothing" would be trivially correct. At 308,
+with zero accessible, "returns few and says so" is a real behaviour with a real
+opportunity to fail. And the requirement is legitimate rather than incidental:
+statutory child-welfare work is Norwegian-language client contact, case
+documentation and court reporting.
+
+**Vertical disjointness is preserved.** Social services appears in neither the dev
+set (Data, Education, Healthcare, Logistics, Software, Trades) nor the existing
+sealed set (Customer service, Engineering, Finance, Hospitality, Technology), so
+D16's "sealed measures generalisation, read it as a lower bound" framing still
+holds, and `test_sealed_verticals_are_disjoint_from_dev` still passes.
+
+**Why sealed and not dev.** `p6` already carries this property in dev, which is
+where the "and say so" wording gets calibrated. `p11` asks whether that
+calibration generalises to a vertical never developed against — the one form of
+the question no dev persona can answer.
+
+### The counts, amended
+
+| | pre-registered in D16 | amended |
+|---|---:|---:|
+| sealed | 6 | **7** |
+| dev | 13 | 13 |
+| total instances | 19 | **20** |
+| sealed share | 31.6% | 35.0% |
+
+Dev is untouched, so nothing the system will be tuned on changed. The sealed share
+moves back toward E1's original 37.5%.
+
+### The rule this establishes for any future amendment
+
+Amending a pre-registration is legitimate **only** while no result exists that
+could motivate the amendment, and **only** when recorded as an amendment with its
+date and reason. Once the first CVR@10 is computed, the sealed set is frozen: after
+that point adding, removing or reassigning a sealed persona invalidates the held-out
+measurement whatever the justification, and the honest move is to report the
+limitation instead. `expect_few_results` is now a machine-checked field
+(`tests/unit/test_persona_split.py`) so this property cannot silently disappear
+from either side of the split.

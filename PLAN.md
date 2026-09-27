@@ -52,13 +52,16 @@ D7 Linear scorer: rrf + skill_coverage + occupation_proximity + recency + locati
    and `unstated` must not score the same as `violated`.
 
 ## E. Evaluation
-E1 19 persona instances across 11 verticals; 13 dev, 6 SEALED (opened once, at the
+E1 20 persona instances across 12 verticals; 13 dev, 7 SEALED (opened once, at the
    end). Split pre-registered 2026-09-27 in personas.yaml `split:` — DECISIONS.md D16.
    Corrects this line's original "16 personas / 10 dev": four controls were added
    after E1 was written. The SEALED COUNT of 6 is preserved as pre-registered; dev
    absorbed the growth. Pairs are never split across dev/sealed — that would destroy
    the within-pair comparison. Sealed verticals are disjoint from dev, so the sealed
-   run measures generalisation and reads as a LOWER bound, not a replicate.
+   run measures generalisation and reads as a LOWER bound, not a replicate. Sealed was
+   amended 6 -> 7 the same day, pre-results, to add p11 (Social services) — the
+   "Norwegian genuinely required, return few results" case D16 flagged as missing.
+   DECISIONS.md D17.
 E2 JUDGING_PROTOCOL.md committed BEFORE any ablation (git timestamp = pre-registration)
 E3 Pool depth 10; coverage diagnostic; extend to 20 only if top-10s are unjudged
 E4 LLM judge, isolated from extractor output (unit-tested)

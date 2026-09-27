@@ -1,6 +1,13 @@
-# Ten personas, five of them paired, plus four controls -> 19 query instances.
+# Eleven personas, five of them paired, plus four controls -> 20 query instances.
 #
-# DEV / SEALED SPLIT, pre-registered 2026-09-27. 13 dev, 6 sealed. The git
+# DEV / SEALED SPLIT, pre-registered 2026-09-27. 13 dev, 7 sealed.
+#
+# AMENDED the same day, before any retrieval ran, to add `p11_barnevernspedagog`
+# to the sealed set: D16 recorded that sealed had no "Norwegian genuinely
+# required, return few results" case and that the fix had to be a NEW persona
+# written before results existed, never a reassignment afterwards. Sealed
+# therefore moved 6 -> 7. That is an amendment to a pre-registered quantity and
+# it is recorded as one in DECISIONS.md D17, not folded in silently. The git
 # timestamp on this commit is the pre-registration; see DECISIONS.md D16 for the
 # reasoning and PLAN.md E1. The rule, from STANDARDS.md: sealed personas are
 # opened ONCE, at the end. No sealed persona may be inspected, tuned against, or
@@ -123,6 +130,7 @@ personas:
   - id: p6_grunnskolelaerer
     split: dev
     vertical: Education
+    expect_few_results: true
     why: >
       A DESIGNED NEGATIVE CONTROL, and it must not be dropped when it scores
       badly. Norwegian genuinely IS required to teach in a Norwegian primary
@@ -167,6 +175,31 @@ personas:
     query: >
       I am a civil engineer with experience in structural design and Eurocode.
       I do not speak Norwegian. I am open to roles anywhere in Norway.
+
+  - id: p11_barnevernspedagog
+    split: sealed
+    vertical: Social services
+    expect_few_results: true
+    why: >
+      THE DESIGNED NEGATIVE CONTROL, HELD OUT. Norwegian is genuinely required
+      for statutory child-welfare work — client contact, case documentation and
+      court reporting are all in Norwegian, and no amount of goodwill makes an
+      English-only caseworker lawful. The corpus agrees: 308 ads in this vertical,
+      219 of them explicitly demanding Norwegian, and ZERO the census calls
+      accessible.
+
+      So the correct behaviour is to return few results or none, AND SAY SO. A
+      system that manufactures matches here is worse than one that returns
+      nothing, because it wastes the seeker's applications on jobs they cannot
+      hold. `expect_few_results: true` marks that.
+
+      Sealed rather than dev because p6 already carries this property in dev,
+      where the "and say so" wording gets calibrated. This one asks whether that
+      calibration GENERALISES to a vertical never developed against — which is
+      the only version of the question a dev persona cannot answer.
+    query: >
+      I am a qualified social worker with experience in child welfare and family
+      support. I do not speak Norwegian. I am looking for a permanent position.
 
   # ── controls: NO language constraint stated ───────────────────────────────
   #
