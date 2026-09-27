@@ -171,7 +171,15 @@ def build_everything(model: str):
     # skills, all bilingual — and scores their overlap. Whether that HELPS is exactly
     # what no existing arm could show, which is why it is pooled and judged rather
     # than tuned by eye.
-    esco_sk = json.loads((ROOT / "reports" / "skills_esco_resolved.json")
+    # EMBEDDING-RESOLVED when available, lexical otherwise. The lexical resolver
+    # judged as worthless (§18): 13% of glosses, 67% of ads, no metric moved. The
+    # embedding resolver reaches 66% of glosses and 96% of ads and discriminates
+    # cleanly — nurse/doctor 0.541, nurse/data-engineer 0.135 — but so did the
+    # lexical one on its own terms, which is why this is pooled and judged rather
+    # than shipped on resolution rate.
+    _emb = ROOT / "reports" / "skills_esco_resolved_emb.json"
+    _lex = ROOT / "reports" / "skills_esco_resolved.json"
+    esco_sk = json.loads((_emb if _emb.exists() else _lex)
                          .read_text(encoding="utf-8"))["ad_to_uris"]
     from finn_smart_search.retrieval.skills_match import EscoSkillIndex
     sk_index = EscoSkillIndex.build(
@@ -179,10 +187,28 @@ def build_everything(model: str):
     ad_sk = [set(esco_sk.get(u, ())) for u in uuids]
 
     for pid in dev:
+        # The SEEKER's skills resolved the same way the advertisements were, so both
+        # sides land in one concept space. Embedding the query side too when the
+        # embedding index is present — comparing an embedded corpus against a
+        # lexically-resolved query would be the vocabulary mismatch all over again.
         want: set[str] = set()
-        for c in parses[pid].constraints:
-            if c.facet == "skill":
-                want.update(m.uri for m in sk_index.resolve(str(c.value), top_k=2))
+        phrases = [str(c.value) for c in parses[pid].constraints if c.facet == "skill"]
+        if phrases and _emb.exists():
+            import numpy as _np
+            _z = _np.load(ROOT / "data" / "esco_skill_emb.npz", allow_pickle=True)
+            _E, _U = _z["E"], list(_z["uris"])
+            from fastembed import TextEmbedding as _TE
+            _m = _TE(model_name="sentence-transformers/"
+                                "paraphrase-multilingual-mpnet-base-v2")
+            _Q = _np.array(list(_m.embed(phrases)), dtype=_np.float32)
+            _Q /= _np.linalg.norm(_Q, axis=1, keepdims=True)
+            for _row in _Q @ _E.T:
+                _k = int(_row.argmax())
+                if _row[_k] >= 0.72:
+                    want.add(_U[_k])
+        else:
+            for ph in phrases:
+                want.update(m.uri for m in sk_index.resolve(ph, top_k=2))
         base = list(bm_parse_full[pid])
         if want:
             # A BONUS, never a gate. Only 67% of advertisements carry any resolved

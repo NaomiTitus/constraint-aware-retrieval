@@ -425,11 +425,44 @@ function render(S, res, lam){
     if(r.boosted && a.a) bg.push(`<span class="b ok">open to English speakers</span>`);
     if(a.l==="unstated" && r.sev>0) bg.push(`<span class="b n">silent on language</span>`);
     for(const m of r.matched.slice(0,4)) bg.push(`<span class="b n">${m}</span>`);
+    const skills=(a.k||[]).map((ph,j)=>{
+      const gl=(a.g||[])[j];
+      return `<li>${ph}${gl?` <span class="en">&mdash; ${gl}</span>`:""}</li>`;}).join("");
+    const places=(a.L||[]).map(p=>p[0]+(p[1]?` (${p[1]})`:"")).join(" \u00b7 ")||"\u2014";
+    const LANG={professional:"professional Norwegian required",
+      certified:"certified Norwegian required (CEFR test)",fluent:"fluent Norwegian required",
+      conversational:"conversational Norwegian required",
+      scandinavian_accepted:"a Scandinavian language accepted",
+      either_norwegian_or_english:"Norwegian OR English accepted",
+      desirable:"Norwegian desirable, not required",
+      explicitly_not_required:"Norwegian explicitly not required",
+      unstated:"says nothing about language"};
+    // THE ADVERTISEMENT TEXT IS DELIBERATELY NOT HERE. DATA_LICENSE.md forbids
+    // redistributing it, so the panel shows what this project DERIVED from the
+    // advertisement and the button opens the original on arbeidsplassen.no.
+    const more=`<div class="more" hidden>
+      <h4>Skills the extractor found</h4>
+      ${skills?`<ul>${skills}</ul>`:`<p class="en">None extracted from this advertisement.</p>`}
+      <h4>Language</h4><p>${LANG[a.l]||a.l}${a.w&&a.w!=="unstated"?` \u00b7 working language: ${a.w}`:""}</p>
+      <h4>Where</h4><p>${places}</p>
+      <h4>Terms</h4><p>${[a.ext,a.eng,a.c].filter(Boolean).join(" \u00b7 ")||"\u2014"}${a.x?` \u00b7 expires ${a.x}`:""}</p>
+      <p class="en">The advertisement text itself is not redistributed \u2014 see the data licence.</p>
+      <a class="open-ad" href="${a.url}" target="_blank" rel="noopener">Read the full advertisement \u2197</a>
+      </div>`;
     return `<li class="${r.sev>=.9?"blocked":""}">
       <p class="t">${i+1}. <a href="${a.url}" target="_blank" rel="noopener">${a.t||a.o}</a></p>
-      <p class="meta">${a.o||"—"}${a.m?" · "+a.m:""}${a.ext?" · "+a.ext:""}${a.x?" · expires "+a.x:""}</p>
-      <p class="badges">${bg.join("")}</p></li>`;
+      <p class="meta">${a.o||"\u2014"}${a.m?" \u00b7 "+a.m:""}${a.ext?" \u00b7 "+a.ext:""}${a.x?" \u00b7 expires "+a.x:""}</p>
+      <p class="badges">${bg.join("")}</p>
+      <span class="toggle">\u25b8 details</span>
+      ${more}</li>`;
   }).join("") || `<li>No advertisement matched. Try naming an occupation.</li>`;
+
+  // Bound after render, because the rows are rebuilt on every search and on every
+  // move of the lambda slider.
+  document.querySelectorAll("#out .toggle").forEach(el=>{
+    el.onclick=()=>{ const d=el.nextElementSibling; d.hidden=!d.hidden;
+      el.textContent=(d.hidden?"\u25b8":"\u25be")+" details"; };
+  });
 }
 
 function run(){

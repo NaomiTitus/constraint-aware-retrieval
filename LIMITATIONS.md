@@ -1168,3 +1168,49 @@ without the second would be dishonest.
 The one rung that clearly earns its place on relevance is **parsing the query at
 all**: +0.124 nDCG, significant. Structure beats prose; what is done with the
 structure afterwards is, on this evidence, worth less than extracting it.
+
+### And the embedding resolver judged as no better than the lexical one
+
+The embedding resolver was pooled and judged on the same terms. 19 new pairs, $0.26,
+378 judgments total.
+
+| arm | CVR@10 | nDCG@10 |
+|---|---:|---:|
+| + constraints λ=0.7 | 0.077 | 0.680 |
+| + skills (embeddings) | 0.077 | 0.704 |
+
+| delta | Δ | 95% CI | verdict |
+|---|---:|---|---|
+| CVR@10 | +0.000 | [−0.023, +0.023] | not distinguishable |
+| nDCG@10 | +0.024 | [−0.017, +0.071] | not distinguishable |
+
+**A far better resolver produces the same judged outcome.** 66% of glosses resolve
+against 13%, 96% of advertisements carry a concept against 67%, the discrimination is
+clean — and none of it reaches the ranking. Two independent resolvers, one
+crude and one good, both measure as nothing.
+
+That is a stronger result than either arm alone: **the problem is not resolution
+quality, it is that skills do not discriminate a top-10 which occupation and
+constraints have already shaped.** Thirteen personas each name two to four skills;
+by the time the occupation predicate and the language constraint have run, the
+remaining ordering is decided by something else.
+
+### The conflation risk, checked directly
+
+Asked whether the system confuses `data engineer` with `electrical engineer`, or
+pairs an electrical engineer with wound-care skills:
+
+| query | top 5 |
+|---|---|
+| electrical engineer + PLC | `ingeniør, elektro` ×2, `tekniker, instrumentering`, `mekatronikk`, `kvalitetsingeniør` |
+| data engineer + Python | `datavarehusutvikler` **5 of 5**, every one titled "Data Engineer" |
+| nurse + wound care | `sykepleier` **5 of 5** |
+
+**Zero care or teaching advertisements in the top 30 for the electrical engineer
+query.** The separation holds.
+
+One honest qualification: `data engineer` resolved on the bare token `data`, not the
+phrase, and landed correctly **because the lexical terms `python` and `sql` carried
+it**. That is consistent with the bootstrap finding that the occupation predicate is
+not distinguishable — the separation is real, and the lexical channel is doing more
+of the work than the taxonomy is.
