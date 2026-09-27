@@ -19,9 +19,9 @@ hypotheses, and bugs found after the tests were green.
 | **Query latency** | **174 ms** p50 · 224 ms p95 | full scan + rank of all 10,166 ads, in the browser, no server |
 | **Time to interactive** | ~400 ms after download | 2.8 MB gzipped index · 86 ms parse · 309 ms index build |
 | **Infrastructure at query time** | **none** | static GitHub Pages; no API call, no vector DB, no backend |
-| **Cost to build the index** | **$46.15** one-off | facet census $22.59 + skills census $23.56, whole corpus |
-| **Marginal cost per ad** | **$0.0047** | $0.00241 facets + $0.00232 skills, measured not estimated |
-| **Cost to evaluate it** | **$4.55** | 378 relevance judgments from a frontier judge |
+| **Ongoing cost to tag an ad** | **$0.0047** → **~$64/month** | $4.73 per 1,000 ads at ~443 new ads/day; the only cost that recurs |
+| **One-off R&D** | **$8.30** | prompt development, golden set, 378 judgments — spent once, not per ad |
+| **One-off backfill** | **$46.15** | tagging the existing 10,166-ad corpus; scales with corpus size, not time |
 | **Extraction models** | `claude-haiku-4-5` | both censuses — 9,379 + 9,823 calls, 0 failures |
 | **Judge + label model** | `claude-opus-5` | judging, and the golden skill labels haiku is scored against |
 | **Throughput** | 9,823 ads in **10m13s** | Batch API, single submission |
@@ -32,6 +32,50 @@ So extraction runs on Haiku and the money goes where a weak model cannot be repa
 re-prompting: the **judge**, which decides whether any of this works, and the **golden
 labels** Haiku is measured against. Scaling to 100× the corpus is $4.7k of Haiku, not
 $13k of Opus, and the judging cost does not scale with the corpus at all.
+
+
+### What it costs to run, separated properly
+
+Three different kinds of money, and conflating them is how a pilot budget gets
+mis-sold. Every figure below is **actual token usage pulled from the Batch API**, not an
+estimate — my own estimates were out by 38% in one direction and 15% in the other.
+
+**① Ongoing — the only cost that recurs.** Each new advertisement is tagged once:
+
+| per advertisement | | per 1,000 ads |
+|---|---:|---:|
+| facet census (`census-v15`, 15 typed facets) | $0.00241 | $2.41 |
+| skills census (`skills-v1`, 6.53 skills/ad) | $0.00232 | $2.32 |
+| **total taxonomy cost per ad** | **$0.00473** | **$4.73** |
+
+Arrival rate measured from the corpus itself — 443 ads/day over the 7 days before the
+crawl, the window least distorted by expiry — so **~13,500 new ads/month ≈ $64/month,
+$764/year** to keep the whole Norwegian market tagged. Query serving adds nothing: the
+front end is static and calls no API.
+
+Two levers, both measured rather than guessed. The skills census took **0% prompt-cache
+hits** where the facet census took **97%** — 39% of each call is a static instruction
+prefix, and marking it cacheable takes the bill to **$0.00426/ad (~$57/month)**, a 20%
+saving still on the table. Body-hash deduplication already removes 3.4% of calls.
+
+**② One-off R&D — $8.30, and it does not scale with the corpus.**
+
+| | |
+|---:|---|
+| $2.42 | 18 prompt-development runs, 1,036 calls — fifteen census prompt versions |
+| $1.33 | skills pilots on the 44 golden ads: Haiku $0.20, Opus $1.13 |
+| $4.55 | **378 relevance judgments** across three rounds (`claude-opus-5`) |
+
+This is the number that surprises people: **proving the thing works cost less than
+$9.** It is fixed — judging 378 pairs costs the same whether the corpus is 10,000 ads
+or 10 million. What is *not* in it is my time, which dominated: the golden skill labels
+were authored by Opus precisely because I had no time to hand-label 144 of them (§15).
+
+**③ One-off backfill — $46.15** to tag the existing 10,166 ads ($22.59 facets + $23.56
+skills). This scales with corpus size, not with time, and it is the figure to quote for
+a market you have not indexed yet — **~$4,700 per million advertisements**, or ~$4,260
+with the caching lever. The same backfill on Opus would be **$130 per 10,166 ads**,
+i.e. **$13,000 per million**, for +0.007 recall.
 
 ---
 
