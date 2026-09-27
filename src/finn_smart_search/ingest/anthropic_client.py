@@ -101,7 +101,10 @@ def _err(custom_id: str, message: str) -> dict:
     return {"custom_id": custom_id, "type": "errored", "error": message}
 
 
-def parse_result(raw: Mapping[str, Any]) -> dict:
+def parse_result(raw: Mapping[str, Any], tool_name: str = TOOL_NAME) -> dict:
+    """`tool_name` is a parameter because the batch client now carries a SECOND
+    tool: the LLM judge (`eval/judge_llm.py`). The default preserves the census
+    behaviour exactly, so nothing that called this before changes."""
     cid = raw["custom_id"]
     res = raw.get("result") or {}
     kind = res.get("type")
@@ -120,10 +123,10 @@ def parse_result(raw: Mapping[str, Any]) -> dict:
         return _err(cid, "stop_reason=max_tokens: tool call truncated mid-JSON")
 
     block = next((b for b in msg.get("content") or []
-                  if b.get("type") == "tool_use" and b.get("name") == TOOL_NAME), None)
+                  if b.get("type") == "tool_use" and b.get("name") == tool_name), None)
     if block is None:
         names = [b.get("name") or b.get("type") for b in msg.get("content") or []]
-        return _err(cid, f"no {TOOL_NAME} tool_use block; got {names}")
+        return _err(cid, f"no {tool_name} tool_use block; got {names}")
 
     return {"custom_id": cid, "type": "succeeded", "facets": block["input"],
             "usage": dict(msg.get("usage") or {})}
@@ -177,6 +180,6 @@ class AnthropicBatchClient:
                 if line.strip():
                     yield json.loads(line)
 
-    def results(self, batch_id: str):
+    def results(self, batch_id: str, tool_name: str = TOOL_NAME):
         for raw in self.raw_results(batch_id):
-            yield parse_result(raw)
+            yield parse_result(raw, tool_name)
