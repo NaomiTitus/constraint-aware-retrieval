@@ -476,9 +476,17 @@ function score(S, lam){
     // gave English-written advertisements 1.32x against 1.22x for others. That
     // difference was enough to put a go-to-market sales role titled "GTM Engineer"
     // above three genuine automation matches.
+    // GATED ON LAMBDA, and it was not. The non-effect rule says lambda=0 must leave the
+    // ranking bit-identical to the unconstrained one — that is the property the whole
+    // design protects, because a stage applied to one side of a paired comparison and
+    // not the other is a confound. The boost fires only when the seeker states they
+    // lack Norwegian, which makes it part of the constraint stage; leaving it outside
+    // the gate meant lambda=0 still reordered results (2 boosted ads in the top 10 for
+    // "nurse in Bergen, I do not speak norwegian"), so the arm labelled
+    // "constraints off" was never actually off.
     let boost=1.0;
     if(S.norwegian==="none" || S.norwegian==="basic"){
-      if(ad.a || ad.w==="english" || ad.w==="both") boost = 1.22;
+      if(ad.a || ad.w==="english" || ad.w==="both") boost = 1 + lam*0.22;
     }
     out.push({ad, final: base*boost*(1-lam*sev), prox, sev, matched, lprox,
               boosted: boost>1.0});

@@ -918,7 +918,7 @@ the arm existed.
 
 **That round has now run.** 30 further pairs, $0.41, same judge and same
 `judge-v1` prompt — so nothing was re-registered and the protocol's one-revision
-allowance is still unspent. 357 judgments total, **0 rejected across both rounds**,
+allowance is still unspent. 357 judgments at that point — 378 after the embedding round below — **0 rejected across all rounds**,
 and every arm is now **100% judged**.
 
 ### The result, with the constrained arm in the pool
@@ -1295,7 +1295,7 @@ an expectation attached, so a regression is visible instead of a feeling.
 
 | | |
 |---|---:|
-| industry match in top-5 | **96/115 = 83%** |
+| industry match in top-5 | **95/115 = 83% (82% after the λ-gate fix, §24)** |
 | language parse failures | **0 of 23** |
 | place parse failures | **0 of 23** |
 | occupation unresolved | 1 of 23 (`anleggsmaskinfører`) |
@@ -1512,3 +1512,47 @@ constraint rung already straddles a loss. 1.22 was never fitted against topical
 relevance; it was chosen to clear the language floor and it does that at the cost of
 occupation fit. Fixing it properly means judging the page's own ranking (§22's
 outstanding item), not turning a dial.
+
+## 24. The non-effect rule was broken by the one stage exempt from λ
+
+An adversarial audit of the README found the invariant this project rests on was false in
+the shipped page. §12–§14 argue for a separate constraint stage; `constraints.py`,
+`occupation.py` and `location.py` all implement the **non-effect rule** — an unstated or
+unresolvable constraint leaves the ranking bit-identical — and the README asserted it for
+the page too. It was not true.
+
+The accessibility boost was a flat multiplier computed from the seeker's stated level and
+**never multiplied by λ**:
+
+```js
+let boost=1.0;
+if(S.norwegian==="none" || S.norwegian==="basic"){
+  if(ad.a || ad.w==="english" || ad.w==="both") boost = 1.22;     // λ nowhere
+}
+out.push({ad, final: base*boost*(1-lam*sev), ...});               // β sits outside the gate
+```
+
+Measured on the shipped index: for *"I am a nurse in Bergen. I do not speak norwegian"* at
+**λ = 0**, the top ten differs from the same query without the language clause, and **2 of
+the 10 carry `boosted: true`**. So the arm labelled "constraints off" was never off.
+
+**Why this is worse than a wrong number.** The boost fires only when the seeker states they
+lack Norwegian, which makes it part of the constraint stage by definition. Leaving it
+outside the gate is exactly the confound §17's design exists to avoid — *a stage applied to
+one side of a paired comparison and not the other*. Any λ=0 baseline drawn from the page
+was contaminated, and the λ slider never showed the honest off-state it claims to.
+
+**The fix is `β = 1 + 0.22λ`.** Verified: λ=0 now returns byte-identical top-tens on both
+test pairs, and β reaches 1.22 at λ=1 as before.
+
+**What it cost, stated because it was not free.** The industry suite fell from **83% to
+82%** (95/115 → 94/115) — one query — and the §23.1 teacher pathology is **unchanged**: at
+λ=0.7 the multiplier drops from 1.22 to 1.154 and the upper-secondary query still returns
+PhD fellowships. So this was not a ranking improvement. It was a correctness fix to an
+invariant, and it confirms §23.1's diagnosis is about *which ads are accessible* rather
+than about the size of the multiplier.
+
+**Why the tests did not catch it.** `tests/` covers `constraints.py`'s non-effect rule
+directly and thoroughly. The page is a second implementation with no test of the same
+property — the eighth entry for STANDARDS §3.1, and the clearest argument yet for §22's
+outstanding item.

@@ -1,0 +1,9 @@
+node        v22.22.2   darwin/x64
+ads         10166   queries 8   runs 400
+JSON.parse  100 ms      (index + gazetteer, one-off)
+index build 343 ms      (DF + place tables, one-off)
+query  p50  165.5 ms
+query  p95  197.8 ms
+query  p99  224.9 ms
+query  min  144.4 ms   max 281.2 ms
+payload     see `gzip -9c docs/data/index.json | wc -c`

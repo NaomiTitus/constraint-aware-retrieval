@@ -1,0 +1,37 @@
+Actual token usage pulled from the Batch API results endpoint, 2026-09-27.
+Recorded because the README quotes these and the run logs held only estimates.
+
+SKILLS CENSUS  msgbatch_01NkLM8J3Hd9QURwWQpDbfGs   claude-haiku-4-5, skills-v1
+  results with usage            9,823
+  input_tokens             27,515,452
+  output_tokens             3,922,487
+  cache_creation_input_tokens        0
+  cache_read_input_tokens            0      <- 0% cache, vs 97% on the facet census
+  batch rates $0.50/$2.50 per MTok (50% of standard $1/$5)
+  ACTUAL  $23.56     est. in run log was $17.08  (estimate 38% low)
+  per ad (10,166) $0.00232     per call (9,823) $0.00240
+  created 12:44:03Z -> ended 12:54:17Z = 10m13s
+
+JUDGE ROUND 1  msgbatch_01WKA1tR8r4BzJnSNu7PD1LT   claude-opus-5, judge-v1
+  results with usage              327
+  input_tokens                854,272
+  output_tokens               139,726
+  batch rates $2.50/$12.50 per MTok
+  ACTUAL  $3.88      est. in run log was $4.58  (estimate 18% high)
+  per judgment $0.0119
+  rounds 2 and 3 recorded in LIMITATIONS at $0.41 and $0.26 -> 378 judgments, $4.55 total
+
+FACET CENSUS   $22.59 measured in-run, see census_full.log (97% cache hit, $0.00222/ad)
+
+R&D TOTAL excluding full-corpus backfill:
+  prompt-development runs (18 runs, 1,036 calls)   $2.42
+  skills pilots (haiku $0.20 + opus $1.13)         $1.33
+  judging, three rounds                            $4.55
+                                                  ------
+                                                   $8.30
+BACKFILL (operational, scales with corpus): $22.59 + $23.56 = $46.15 = $0.00454/ad
+
+PROMPT-CACHE LEVER: NOT AVAILABLE as the prompt stands. skills_prompt.render_prompt puts
+the advertisement FIRST and instructions after, so two rendered prompts share only 98
+chars (~24 tokens) -- far below haiku-4.5's 2,048-token minimum cacheable prefix.
+Realising it requires reordering the prompt and re-validating extraction.

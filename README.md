@@ -11,10 +11,11 @@ to, which skills matched, and why it was penalised.
 not support](LIMITATIONS.md)** · [Architecture](ARCHITECTURE.md) · [Decision log](DECISIONS.md)
 
 > **Scope.** One market: the NAV/arbeidsplassen licensed feed, 10,166 currently-active ads in
-> a 120-day window (FINN ads are excluded from that feed by licence). **Six of sixteen
-> extracted facets are wired into ranking** — language level, working language,
-> accessibility, location, occupation and skills; the other ten are extracted, validated and
-> stored but scored by nothing (§4, §11). No CV upload, no personalisation, no
+> a 120-day window (FINN ads are excluded from that feed by licence). **Four of the fifteen
+> extracted facets reach the ranking** — language level, working language, evidence spans and
+> authorisation — plus derived accessibility and three fields from outside the census
+> (location, occupation, skills). **The other eleven are extracted, validated and stored but
+> scored by nothing** (§4, §11). No CV upload, no personalisation, no
 > learning-to-rank, no incremental re-crawl. **The shipped page's own ranking has not been
 > judged** — every confidence interval below comes from the Python pipeline (§22).
 
@@ -26,10 +27,10 @@ not support](LIMITATIONS.md)** · [Architecture](ARCHITECTURE.md) · [Decision l
 |---|---:|---|
 | **Language extraction** | **96.4%** (27/28) | sealed held-out set, never seen during prompt development · **0** accessible ads hidden |
 | **Constraint violations @10** | **halved**, 0.154 → 0.077 | 378 relevance judgments; 95% CI excludes zero |
-| **Query latency** | **174 ms** p50 · 224 ms p95 | full scan + rank of all 10,166 ads, in the browser, no server |
-| **Time to interactive** | ~400 ms after download | 2.9 MB gzipped index · 86 ms parse · 309 ms index build |
+| **Query latency** | **166 ms** p50 · 198 ms p95 | full scan + rank of all 10,166 ads, no server · `scripts/bench_page.mjs` |
+| **Time to interactive** | ~450 ms after download | 2.9 MB gzipped index · 100 ms parse · 343 ms index build |
 | **Infrastructure at query time** | **none** | static GitHub Pages; no API call, no vector DB, no backend |
-| **Cost** | **$0.0047**/ad → **~$64/month** | $0.0047 × 443 new ads/day × 30 days. Plus $8.30 R&D once and $46.15 to backfill — split out below |
+| **Cost** | **$0.0045**/ad → **~$54/month** | $46.15 ÷ 10,166 ads, at ~388 new ads/day. Plus $8.30 R&D once — split out below |
 | **Extraction models** | `claude-haiku-4-5` | both censuses — 9,379 + 9,823 calls, 0 failures |
 | **Judge + label model** | `claude-opus-5` | judging, and the golden skill labels haiku is scored against |
 | **Throughput** | 9,823 ads in **10m13s** | Batch API, single submission |
@@ -38,8 +39,8 @@ not support](LIMITATIONS.md)** · [Architecture](ARCHITECTURE.md) · [Decision l
 **0.868**, Haiku recall **0.861** — inside noise — at **$130 vs $23** for the full corpus.
 So extraction runs on Haiku and the money goes where a weak model cannot be repaired by
 re-prompting: the **judge**, which decides whether any of this works, and the **golden
-labels** Haiku is measured against. Scaling to 100× the corpus is $4.7k of Haiku, not
-$13k of Opus, and the judging cost does not scale with the corpus at all.
+labels** Haiku is measured against. Scaling to a million ads is ~$4.5k of Haiku against ~$23k of Opus,
+and the judging cost does not scale with the corpus at all.
 
 
 ### What it costs to run, separated properly
@@ -50,21 +51,28 @@ estimate — my own estimates were out by 38% in one direction and 15% in the ot
 
 **① Ongoing — the only cost that recurs.** Each new advertisement is tagged once:
 
-| per advertisement | | per 1,000 ads |
-|---|---:|---:|
-| facet census (`census-v15`, 15 typed facets) | $0.00241 | $2.41 |
-| skills census (`skills-v1`, 6.53 skills/ad) | $0.00232 | $2.32 |
-| **total taxonomy cost per ad** | **$0.00473** | **$4.73** |
+| | total spend | per advertisement | per 1,000 ads |
+|---|---:|---:|---:|
+| facet census (`census-v15`, 15 typed facets) | $22.59 | $0.00222 | $2.22 |
+| skills census (`skills-v1`, 6.53 skills/ad) | $23.56 | $0.00232 | $2.32 |
+| **total taxonomy cost** | **$46.15** | **$0.00454** | **$4.54** |
 
-Arrival rate measured from the corpus itself — 443 ads/day over the 7 days before the
-crawl, the window least distorted by expiry — so **~13,500 new ads/month ≈ $64/month,
-$764/year** to keep the whole Norwegian market tagged. Query serving adds nothing: the
-front end is static and calls no API.
+All four figures are spend ÷ 10,166 advertisements. Per *API call* they are higher —
+deduplication by body hash collapses the corpus to 9,379 and 9,823 calls — but per-ad is the
+number that scales with a market.
 
-Two levers, both measured rather than guessed. The skills census took **0% prompt-cache
-hits** where the facet census took **97%** — 39% of each call is a static instruction
-prefix, and marking it cacheable takes the bill to **$0.00426/ad (~$57/month)**, a 20%
-saving still on the table. Body-hash deduplication already removes 3.4% of calls.
+Arrival rate measured from the corpus: **~388 new ads/day** over the two weeks before the
+crawl, so **~11,800/month ≈ $54/month, $645/year** to keep the whole Norwegian market tagged.
+Query serving adds nothing — the front end is static and calls no API.
+
+**The obvious cost lever is not available yet, and saying so is the point.** The facet census
+ran at a **97% prompt-cache hit rate** — *"the number that sets the bill"* — while the skills
+census ran at **0%**. The static instruction block is ~62% of each skills call, so caching it
+looks like an easy win. But the prompt renders the **advertisement first and the instructions
+after it**: two rendered prompts share only ~98 characters, about 24 tokens, far below Haiku's
+2,048-token minimum cacheable prefix. `cache_control` as the prompt stands today would cache
+**nothing**. Realising it means reordering the prompt and re-validating the extraction — a
+real change, not a flag flip. Deduplication already removes 3.4% of calls.
 
 **② One-off R&D — $8.30, and it does not scale with the corpus.**
 
@@ -79,10 +87,11 @@ $9.** It is fixed — judging 378 pairs costs the same whether the corpus is 10,
 or 10 million. It excludes my own time, which dominated.
 
 **③ One-off backfill — $46.15** to tag the existing 10,166 ads ($22.59 facets + $23.56
-skills). This scales with corpus size, not with time, and it is the figure to quote for
-a market you have not indexed yet — **~$4,700 per million advertisements**, or ~$4,260
-with the caching lever. The same backfill on Opus would be **$130 per 10,166 ads**,
-i.e. **$13,000 per million**, for +0.007 recall.
+skills). This scales with corpus size, not with time, and it is the figure to quote for a
+market you have not indexed yet: **~$4,500 per million advertisements.** Opus is 5× Haiku per
+token, so the same backfill there is **~$230 per 10,166 ads ≈ $23,000 per million** — for
++0.007 recall. (The $130 figure in §18 is the *skills* half alone; the full backfill is both
+censuses.)
 
 ---
 
@@ -119,7 +128,9 @@ instead let a Bergen ad in the wrong occupation outrank a nurse ad elsewhere.
 
 **And absence is expressed by silence, which has no vector.** An ad states what it requires
 and never enumerates what it does not: 36.5% say nothing about language, 99.4% nothing about
-visa sponsorship, and only **93 ads (0.9%)** state Norwegian is not required. The accessible
+visa sponsorship, and only **93 ads (0.9%)** carry the label `explicitly_not_required` — and
+§14 retracts even that: 82 of the 93 contain no explicit negation, the census inferred it from
+a positive English working language. The accessible
 ads affirm *English* rather than negating Norwegian — which is exactly why a query containing
 `norsk` drifts toward the ads it rules out. **This holds for every facet, not just language.**
 
@@ -161,11 +172,11 @@ flowchart TB
   end
 
   subgraph EXT["3 · Extraction — the 'training' pass"]
-    E -->|"dedup.signature<br/>exact body hash"| J["9,379 clusters<br/>from 10,166 ads"]
+    E -->|"dedup.signature<br/>exact body hash"| J["9,823 clusters<br/>from 10,166 ads"]
     J -->|"census-v15 · haiku-4-5<br/>97% prompt-cache hit<br/>$22.59 · 21 min"| K["15 typed facets<br/>language · contract<br/>location · authorisation"]
     J -->|"skills-v1 · haiku-4-5<br/>$23.56 · 10m13s"| L["66,392 skills<br/>phrase + gloss_en + level"]
     K -->|"census_validate<br/>2.3% demoted, 0 failures"| M[("ad_facets<br/>ad_language")]
-    L -->|"verbatim validation<br/>6.3% REJECTED, not stored"| M
+    L -->|"verbatim validation<br/>6.3% REJECTED, not stored"| L2["reports/skills_census.json<br/>NOT merged into ad_facets:<br/>a mixed row would carry<br/>neither version honestly"]
   end
 
   subgraph VAL["4 · Validation"]
@@ -175,6 +186,8 @@ flowchart TB
   end
 
   M --> Q["export_web.py<br/>DERIVED FIELDS ONLY"]
+  L2 --> Q
+  P -.->|"gates the export"| Q
   G --> Q
   I --> Q
   Q --> R["docs/data/index.json<br/>2.9 MB gzipped"]
@@ -236,6 +249,11 @@ point.**
 
 ## Scoring
 
+*This documents the **shipped page** (`docs/index.html`), which is the implementation a
+reader can go and use. The judged Python pipeline shares the STYRK ladder, the location
+values and the severity tables — verified identical — but not the ω weights or the label
+bonus, which exist only in the page. That gap is limit 1 below.*
+
 ### ① Lexical base — rarity, weighted by field
 
 Term overlap over title + occupation labels ($T$) and skills + glosses + category ($S$),
@@ -244,7 +262,12 @@ comparable across query lengths:
 
 $$\mathrm{idf}(t) = \ln\!\left(1 + \frac{N}{\mathrm{df}(t)+1}\right), \qquad N = 10{,}166$$
 
-$$\text{base} = \frac{\displaystyle\sum_{t \in Q} \mathrm{idf}(t)\,w_f(t) \;+\; \sum_{p \in B} \mathrm{idf}(p)\,w_f(p)}{\displaystyle\sum_{t \in Q}\mathrm{idf}(t) + \sum_{p \in B}\mathrm{idf}(p)}, \qquad w_f = \begin{cases}1.0 & \text{hit in } T\\ 0.55 & \text{hit in } S \text{ only}\end{cases}$$
+$$\text{base} = \frac{\displaystyle\sum_{t \in Q} \mathrm{idf}(t)\,w(t) \;+\; \sum_{p \in B} \mathrm{idf}(p)\,w'(p)}{\displaystyle\sum_{t \in Q}\mathrm{idf}(t) + \sum_{p \in B}\mathrm{idf}(p)}$$
+
+$$w = \begin{cases}1.0 & \text{in } T\\ 0.55 & \text{in } S \text{ only}\end{cases} \qquad w' = \begin{cases}1.0 & \text{in } T\\ 0.80 & \text{in } S \text{ only}\end{cases}$$
+
+A bigram found only in the skills field keeps **0.80** rather than 0.55: a matched *phrase*
+is strong evidence wherever it sits, where a lone common word is not.
 
 Field weighting is not cosmetic: a term in the **job title** is far stronger evidence than
 the same term buried in a skill list. Matching is on **word boundaries** — `includes("nurse")`
@@ -307,15 +330,25 @@ by a stated requirement. It is a **design decision, not evidence** (§3b).
 
 $$\text{final} = \text{base} \times \underbrace{\beta}_{\substack{1.22 \text{ if English-accessible} \\ \text{and seeker lacks Norwegian}}} \times \underbrace{(1 - \lambda\sigma)}_{\text{constraint penalty}}$$
 
-$\lambda$ is the slider on the demo, from 0 (off) to 1 (full). **At $\lambda = 0$, or when
-the seeker said nothing, the ranking is bit-identical to the unconstrained one** — that
-non-effect is the property the whole design protects, because a stage that applies to one
-side of a paired comparison and not the other is a confound.
+$\lambda$ is the slider on the demo, from 0 (off) to 1 (full). **At $\lambda = 0$, or when the
+seeker said nothing, the ranking is bit-identical to the unconstrained one** — that non-effect
+is the property the whole design protects, because a stage applied to one side of a paired
+comparison and not the other is a confound.
 
-**Every constant here is structural, not fitted** — 0.55, 0.78, 0.62, 0.18, 1.22, the 0.5
-silence default, the STYRK ladder. Each is chosen from the shape of the taxonomy and left
-alone, because fitting them requires relevance judgments and
-[JUDGING_PROTOCOL.md](eval/JUDGING_PROTOCOL.md) was pre-registered with none applied. With
+*That invariant was broken until an audit of this README caught it.* $\beta$ was a flat 1.22
+sitting **outside** the $\lambda$ gate, so $\lambda = 0$ still reordered results — two boosted
+ads in the top ten for "nurse in Bergen, I do not speak norwegian" — and the arm labelled
+"constraints off" was never off. It is now $\beta = 1 + 0.22\lambda$. The fix cost one point on
+the industry suite (83% → 82%) and did **not** resolve §23.1; it was made because the paired
+comparison is meaningless without it.
+
+**Almost every constant here is structural, not fitted** — 0.55, 0.80, 0.78, 0.62, 0.18,
+1.22, the 0.5 silence default, the STYRK ladder. Each is chosen from the shape of the taxonomy
+and left alone, because fitting them requires relevance judgments and
+[JUDGING_PROTOCOL.md](eval/JUDGING_PROTOCOL.md) was pre-registered with none applied. **The
+one exception is the 0.02 label bonus, which was selected against an outcome**: at 0.35 it
+measured flat (82% either way), so it was cut to a tie-breaker and the suite read 83% (§20).
+That is fitting on 23 self-authored queries, and it should be read as such. With
 enough judgments this stage becomes a learned reranker; at n=13 personas, fitting seven
 weights would be curve-fitting. That is a deliberate choice with a cost, not an omission.
 
@@ -357,16 +390,19 @@ significance.
 
 | arm | CVR@10 ↓ | nDCG@10 ↑ | MRR@10 ↑ |
 |---|---:|---:|---:|
-| BM25 over the parsed query | 0.154 | **0.798** | 0.923 |
-| + constraint stage (λ=0.7) | **0.077** | 0.735 | 0.923 |
+| BM25 over the parsed query | 0.154 | **0.798** | 0.962 |
+| + constraint stage (λ=0.7) | **0.077** | 0.735 | 0.949 |
 | **dense retrieval** | **0.277** | **0.383** | 0.560 |
 
 **The dense channel is the worst arm on every measure** — roughly half the nDCG of every
 lexical arm at more than double the violation rate. That is the point, not a disappointment.
 
-**One component clearly earns its place and five measured as nothing — which is why only
-three are in the shipped ranking.** The constraint stage halves violations, and it is a
-genuine **trade**, because the nDCG cost is *also* significant.
+**One component clearly earns its place, and five measured as nothing.** The constraint stage
+halves violations, and it is a genuine **trade**, because the nDCG cost is *also* significant.
+The shipped page still runs seven scoring components, three of which are on that null list —
+the occupation predicate, the label bonus and IDF weighting — because they were kept for
+behaviour the judged metrics do not capture (tie-breaking, sense disambiguation) rather than
+for a measured lift. That is a defensible call and it is not a measured one.
 Quoting the first without the second would be dishonest. Five plausible components measured
 as **no effect at all**: the occupation predicate, both skill resolvers, IDF weighting on
 the query it was built for, and the label bonus. The one rung that clearly earns its place
@@ -381,7 +417,7 @@ on relevance is **parsing the query at all**.
 | — accessibility errors | **0 hidden wrongly** · 1 shown wrongly (4.5%) | CI [0, 0.39] — n too small to bound |
 | Facet census, full corpus | 9,379 calls · $22.59 · 2.3% demoted · **0 failures** | 10,166 ads |
 | Skills, coverage | **98.4%** (from 32.8%) · 6.53 skills/ad · 66,392 total | |
-| Skills, recall vs golden | **0.868** (from 0.104) | 44 ads labelled by `claude-opus-5` |
+| Skills, recall vs golden | **0.861** (from 0.104) | Haiku, the model that ran the census; Opus scored 0.868 |
 | — rejection rate | **6.3%** failed verbatim validation, **discarded not stored** | 4,433 of 70,825 returned |
 
 Skills recall is agreement with labels **Opus produced**, not human labels — an upper bound
@@ -389,7 +425,7 @@ on agreement, not on correctness (§15).
 
 ### The shipped page — 23-query suite across ten industries
 
-- **83% industry match in top-5** (95/115) · 0 language parse failures · 0 place parse
+- **82% industry match in top-5** (94/115, down one from the λ-gate fix above) · 0 language parse failures · 0 place parse
   failures · 1 occupation unresolved
 - **5/6 discrimination pairs**: data / electrical / software engineer and nurse all clean
   at 5/5 with no bleed; mechanical leaks 1
@@ -423,7 +459,7 @@ Run it yourself: `node scripts/check_demo_queries.mjs`.
 | **Lexical retrieval** | BM25 with **stem chains** + bilingual stopwords + char 3–5-grams | Norwegian Snowball strips one suffix per call; closed compounds need n-grams |
 | **Occupation taxonomy** | **STYRK-08** hierarchical codes | prefix length is taxonomic distance, so proximity is free |
 | **Skills/occupation graph** | **ESCO** — 1,242 occs · 10,063 skills · 52,009 edges, bilingual | `gloss_en` routes matching through English, where the noise floor is lowest |
-| **Store** | **DuckDB** | single-file OLAP; 16 tables, 220,988 feed rows, embedded |
+| **Store** | **DuckDB** | single-file OLAP; 17 tables, 220,988 feed rows, embedded |
 | **Evaluation** | TREC **depth-10 pooling** · CVR@10 · nDCG@10 (gains $2^g-1$) · MRR@10 · ΔCVR_paired | pooling bias is the failure mode, and it bit once (§17) |
 | **Statistics** | percentile bootstrap, 10,000 replicates, **persona-level** resampling | ad-level resampling would fake significance |
 | **Front end** | vanilla JS, zero dependencies, static Pages | no backend to run; the λ slider makes the effect visible rather than asserted |
@@ -441,7 +477,7 @@ measure its own fix, and every component that measured as nothing.
 |---|---|
 | Corpus | **10,166** active ads, full body text, 120-day window |
 | Feed walk | 220,988 listing entries → 59,830 distinct ads, 3m45s, resumable |
-| DuckDB | 16 tables · `ad_locations` 12,003 rows (7.1% of ads list several) |
+| DuckDB | 17 tables · `ad_locations` 12,003 rows (7.1% of ads list several) |
 | ESCO graph | 1,242 occupations · 10,063 skills · 52,009 occ→skill edges, bilingual |
 | Accessible to an English speaker | **956 ads (9.4%)** — the needle in the haystack |
 | Blocked by a STATED requirement | 5,703 (56.1%) |
@@ -482,7 +518,9 @@ In priority order, with the reason for the order:
 ```
 src/finn_smart_search/
   ingest/        nav_feed.py  silver.py  store.py  anthropic_client.py
-  understanding/ census_prompt.py  census_validate.py  skills_prompt.py
+  pii.py         scrub before anything is stored
+  understanding/ census.py  census_prompt.py  census_validate.py  skills_prompt.py
+                 enrich_language.py
                  dedup.py  html_clean.py  langid.py  taxonomy.py  text_norm.py
   esco/          fetch.py
   retrieval/     bm25.py  constraints.py  occupation.py  location.py  skills_match.py
@@ -492,7 +530,7 @@ eval/            JUDGING_PROTOCOL.md  GOLD_PARSE_SCHEMA.md  JUDGE_SCENARIOS.md
                  personas.yaml  gold_parses.yaml  golden_skills.json
                  judgments.json  demo_queries.json
 scripts/         run_skills_census.py  run_judgments.py  export_web.py
-                 check_demo_queries.mjs  (+ 12 probe_*.py)
+                 check_demo_queries.mjs  (+ 11 probe_*.py)
 docs/            index.html  data/index.json      <- the GitHub Pages demo
 reports/         every probe, census and ablation log, kept including the wrong ones
 ```
@@ -529,7 +567,11 @@ node scripts/check_demo_queries.mjs           # the 23-query suite
 pytest                                        # the TDD gate
 ```
 
-Every script that spends money is a **dry run by default** and prints its estimate first.
+**Spend guards, stated precisely because "it's all safe" is the kind of claim that ages
+badly.** `run_skills_census.py`, `run_judgments.py` and `run_skills_pilot.py` require
+`--submit` and are dry runs by default. `run_census.py` **spends by default** — its
+`--dry-run` is opt-in — and is bounded by `--max-spend` instead. `run_pilot.py` and
+`run_sealed_eval.py` have no guard at all. All of them print an estimate before spending.
 `data/` is gitignored — no ad text, employer names or contact details are redistributed.
 
 **Licences.** Code is [MIT](LICENSE). The advertisement data is *not* redistributed and is
