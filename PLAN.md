@@ -30,6 +30,13 @@ C3 80 double-labelled → LLM noise floor, reported beside every number
 C4 Hájek-weighted P/R/prevalence; report Kish ESS; bootstrap CIs by employer
 
 ## D. Retrieval
+Framing (revised 2026-09-27): the operation is CONTAINMENT, not similarity. A job's
+required set R against a seeker's attribute set S, viable iff R ⊆ S, ranked by weighted
+coverage of what the seeker asked for. Each facet is THREE-valued — satisfied, violated,
+or UNSTATED — because silence is the dominant way absence appears in this corpus
+(LIMITATIONS §14) and treating it as a violation costs 3,507 ads. Negation is not a
+separate problem: a seeker's "I do not speak X" is the attribute level `none`, which is
+how `constraints.py` already types it.
 D1 BM25, dual Snowball stemming (no + en), char 3-5grams for compounds
 D2 Dense: brute-force numpy (10k×768 = 30MB, ~5ms). DEVIATION: nb-sbert-base needs
    torch, and there is no PyTorch wheel for Python 3.13 on Intel macOS. Running
@@ -39,7 +46,10 @@ D3 Graph channel: k-hop from profile seeds, ≥5 shared skills threshold
 D4 RRF fusion (k=60)
 D5 Constraint stage: graded severity from norwegian_requirement_level, λ dial
 D6 Query parser: gazetteer fast path → distilled classifier → LLM residue
-D7 Linear scorer: rrf + skill_coverage + occupation_proximity + recency + location
+D7 Linear scorer: rrf + skill_coverage + occupation_proximity + recency + location.
+   Coverage is WEIGHTED and three-valued, not a match count: a missing hard requirement
+   (`norsk autorisasjon`, 462 ads) disqualifies where a missing preference only demotes,
+   and `unstated` must not score the same as `violated`.
 
 ## E. Evaluation
 E1 16 personas across 10 verticals; 10 dev, 6 SEALED (opened once, at the end)

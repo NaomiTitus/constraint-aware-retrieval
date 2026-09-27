@@ -1,5 +1,12 @@
 """Constraints are predicates over metadata, not directions in embedding space.
 
+THE OPERATION IS CONTAINMENT. A job requires a set R; the seeker has a set S; the
+job is viable iff R ⊆ S. Containment is asymmetric — needing Norwegian you lack is
+fatal, having Norwegian the job never asked for is free — and cosine similarity is
+symmetric, so no encoder expresses it. That, not negation, is why this module
+exists: the seeker's phrasing is irrelevant, and `NorwegianLevel` below types what
+they HAVE rather than what they deny. See README and LIMITATIONS §14.
+
 This module is the project's thesis in code, and its most important property
 is a NON-effect: a constraint the seeker did not state must change nothing.
 

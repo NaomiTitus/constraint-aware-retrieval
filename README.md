@@ -2,20 +2,30 @@
 
 Search over Norwegian job ads that actually respects *"I do not speak Norwegian."*
 
-**The thesis.** A bi-encoder cannot represent negation. `"jeg snakker ikke norsk"` and
-`"jeg snakker flytende norsk"` collapse to nearly the same vector under a multilingual
-sentence encoder — **measured at cosine 0.914** across five paired personas. Constraints
-are **predicates over metadata**; similarity is a **metric over content**. Set-difference is
-not expressible in a metric space. The fix is architectural: extract typed constraints
-*before* retrieval and apply them in a separate, tunable stage.
+**The thesis: matching is containment, and similarity cannot express containment.** A job
+states the requirements it has — a set **R**. A seeker has a set of attributes **S**. The
+job is viable iff **R ⊆ S**, and among viable jobs the best are the ones matching most of
+what the seeker asked for. Containment is **asymmetric**: needing Norwegian when you have
+only English is fatal, while having Norwegian when the job never asked is free. Cosine
+similarity is **symmetric** and has no way to express that difference. So no encoder, at
+any size, ranks on containment — the fix is architectural: extract typed requirements from
+both sides and evaluate them as **predicates over metadata**, in a separate tunable stage.
 
-The measurement also corrected the claim. Near-identical query vectors do **not** produce
-near-identical rankings — overlap@10 is 5.6/10 and rank correlation is ~0, so the result
-list does reshuffle. What survives the reshuffle is the damage: **3.6 of every 10 top
-results still demand Norwegian**, and stating the constraint moved the seeker *closer* to
-those ads than saying nothing at all, on **5 of 5** personas. Encoder:
-`paraphrase-multilingual-mpnet-base-v2` via ONNX Runtime — **not** nb-sbert-base, which
-this project has never run. See [LIMITATIONS.md](LIMITATIONS.md) §12.
+**Why negation is the wrong frame, and how this project found that out.** The work started
+from the claim that a bi-encoder cannot represent negation, and measured it: *"jeg snakker
+ikke norsk"* and *"jeg snakker flytende norsk"* collapse to **cosine 0.914**, and stating
+the constraint moved the seeker *closer* to the ads demanding Norwegian on **5 of 5**
+personas. Both results hold. But the corpus contains almost no negations to represent —
+**absence is expressed by silence** (36.5% of ads say nothing about language; 99.4% say
+nothing about visa sponsorship), and the ads that *are* accessible state a positive English
+requirement instead. Seekers phrase constraints negatively; documents never do. So negation
+was a symptom of trying to compute an asymmetric set relation in a symmetric metric space,
+and the phrasing of the query turns out to be irrelevant. The negation probes are the
+evidence that led here, and they are recorded in full in
+[LIMITATIONS.md](LIMITATIONS.md) §12–§14 — including the two hypotheses they disproved.
+
+Encoder used throughout: `paraphrase-multilingual-mpnet-base-v2` via ONNX Runtime — **not**
+nb-sbert-base, which this project has never run (§12).
 
 ## Status
 
