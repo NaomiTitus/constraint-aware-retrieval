@@ -980,3 +980,58 @@ Three honest readings that travel with it:
 - **Thirteen dev personas, four intact pairs.** No confidence intervals are computed
   and none should be quoted; E7 pre-registers bootstrap CIs on every adjacent-rung
   delta and they have not been run.
+
+## 18. ESCO skill resolution: built, measured at 17%, and deliberately not wired in
+
+The asymmetry §17 exposes is real: occupation is compared as a taxonomy code with
+graded proximity, while skills are compared as **text**. So `PyTorch` does not imply
+`machine learning`, and a seeker writing `ML` reaches an advertisement saying
+`maskinlæring` only if a gloss happens to spell it out. ESCO has the vocabulary —
+10,063 skills, **100% of them carrying both a Norwegian and an English label**.
+
+`retrieval/skills_match.py` resolves extracted skill text onto those concepts. It is
+**not in the ranking**, and the reason is the point of this section.
+
+### The difficulty, measured before any code was written
+
+ESCO skill labels are **verb phrases** — `develop business case`, `implement sales
+strategies`, `comply with food safety and hygiene`. The census extractor produces
+**noun phrases** — `medication administration`, `quality control of finished
+products`. Against 5,000 real extracted glosses:
+
+| matching | resolves |
+|---|---:|
+| exact label | **2.5%** |
+| any shared content token | 99% |
+| **containment + IDF (this module)** | **17%** |
+
+Exact is useless, any-token is uselessly loose. 17% is what a scored middle gets.
+Only **3%** of glosses share no token with any ESCO label at all, so coverage is not
+the ceiling — matching is.
+
+### Stemming was reached for and does not fix it
+
+`forklift operation` against `operate forklift` is a perfect semantic match scoring
+0.45, purely because `operation` and `operate` are different strings. Stemming looked
+like the answer and **is not**: English Snowball gives `oper` and `operat`, still
+different. The measured lift from 17% to 21% came from index-side IDF shifts, not
+from morphology being solved — and it **broke the flagship case**, switching
+`medication administration` from `assist in the administration of medication` (0.89,
+correct) to `manage medical supply chains` (0.90, wrong), because stemming collapses
+medication/medical and administration/administer.
+
+So stemming is a parameter, defaulting off, with the trade recorded in the module and
+asserted in a test. **Higher resolution rate is not higher quality.**
+
+### Why it is not wired into ranking
+
+Three separate heuristics were tuned by eye against a single query earlier the same
+day (§16), each fixing the visible case and breaking another. This is the same
+shape: two threshold choices and a stemming choice, all settleable only by reading
+examples, and **the judged ablation isolates occupation and constraints — not
+skills**. There is no arm that would show whether resolution helps.
+
+What would settle it: a `+skills` arm pooled and judged like the others, about 130
+further pairs at roughly $2, measured against the existing CVR@10 and nDCG@10
+baseline. Until then the module resolves and reports, and the demo continues to match
+skills as text — which is weaker, and honest about being weaker.
