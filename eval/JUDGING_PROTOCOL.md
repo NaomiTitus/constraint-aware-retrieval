@@ -107,3 +107,47 @@ If a grade is genuinely uncertain, record the LOWER grade and say why in `notes`
 Systematic optimism inflates nDCG for every system equally but destroys the
 comparison against the manual FINN baseline, where a human is grading a different
 corpus.
+
+---
+
+## Errata — appended, never rewritten
+
+This file is the pre-registration; its git timestamp is the whole point. So
+corrections are **appended and dated**, and the original lines above stand
+unaltered. Neither erratum changes a rule.
+
+### E1 · 2026-09-27 — the isolation test is encoded on 14 names, not 16
+
+"Silence is not a violation" above is justified with *"74.6% of the corpus says
+nothing"*. **That figure is wrong.** It predated the census and was an estimate;
+the census of all 10,166 ads puts the `unstated` rate at **36.5%**
+(`LIMITATIONS.md` §3, which also records that 74.6% was wrong by a factor of two).
+**The rule is unaffected** — a third of the corpus is still more than enough for
+inferring requirements from silence to be the error this evaluation exists to
+detect.
+
+### E2 · 2026-09-27 — `skills` and `seniority` are allowlisted in the isolation test
+
+`STANDARDS.md` §4 requires the rendered judge prompt to contain **no `ad_facets`
+field name**. Grounding the closed key vocabulary against the table showed that two
+of the sixteen keys are ordinary English words — **`skills`** and **`seniority`** —
+and this document's own grade rubric reads *"judged against the persona's stated
+**skills** and preferences"*. A literal test therefore fails on the protocol's own
+required wording.
+
+Ruled by the owner on 2026-09-27, before any judge code was written:
+`tests/unit/test_judge_isolation.py` asserts
+
+- none of the **14 distinctive** facet keys appears in the prompt,
+- none of the **8 `ad_facets` column names** appears,
+- the literal string `ad_facets` never appears,
+- **no snake_case identifier appears anywhere in the prompt**, which is what still
+  catches `skills` or `seniority` the moment either is used as an identifier rather
+  than as English, and catches any key added to the schema later,
+- the facet vocabulary in the test still matches the live table, so a new key
+  cannot silently fall outside the check,
+- and `judge_llm.py`'s own code references no extractor field at all.
+
+The intent of §4 is preserved — the judge cannot see the extractor's output — and
+the two exceptions are recorded here rather than left implicit. `eval/JUDGE_SCENARIOS.md`
+carries the grounding and the 25 approved scenarios.

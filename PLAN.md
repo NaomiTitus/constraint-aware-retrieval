@@ -82,7 +82,13 @@ E1 20 persona instances across 12 verticals; 13 dev, 7 SEALED (opened once, at t
    DECISIONS.md D17.
 E2 JUDGING_PROTOCOL.md committed BEFORE any ablation (git timestamp = pre-registration)
 E3 Pool depth 10; coverage diagnostic; extend to 20 only if top-10s are unjudged
-E4 LLM judge, isolated from extractor output (unit-tested)
+E4 LLM judge, isolated from extractor output (unit-tested). DONE: eval/judge_llm.py
+   + eval/pool.py, 57 tests, built to the STANDARDS §3 gate (grounded, scenario
+   table approved 2026-09-27, tests failed first on NotImplementedError). Isolation
+   encoded per JUDGING_PROTOCOL erratum E2 — `skills`/`seniority` are also ordinary
+   English, so the test uses 14 distinctive names plus a no-snake_case rule.
+   Depth-10 pool over the current 5-arm ladder = 346 unique pairs (~$5 to judge).
+   NOT YET RUN: no judgment exists, so every metric below is still unmeasured.
 E5 120 human relevance pairs → Cohen's κ, quadratic-weighted
 E6 Ablation: BM25 / dense / hybrid / +graph / +constraints soft / hard / +rerank
 E7 Paired negation stress-test; CVR@10; bootstrap CIs on every adjacent-rung delta
