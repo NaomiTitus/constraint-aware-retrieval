@@ -37,16 +37,25 @@ or UNSTATED — because silence is the dominant way absence appears in this corp
 (LIMITATIONS §14) and treating it as a violation costs 3,507 ads. Negation is not a
 separate problem: a seeker's "I do not speak X" is the attribute level `none`, which is
 how `constraints.py` already types it.
-D1 BM25, dual Snowball stemming (no + en), char 3-5grams for compounds
+D1 BM25, dual Snowball stemming (no + en), char 3-5grams for compounds. DONE.
+   Stem CHAINS not single-pass stems (Norwegian Snowball strips one suffix, so
+   sykepleier/sykepleiere never met). Bilingual STOPWORDS added against this
+   module's original reasoning: IDF only suppresses the majority language, so
+   English boilerplate scored idf 5.8 against `nurse` at 2.04 — DECISIONS D18.
 D2 Dense: brute-force numpy (10k×768 = 30MB, ~5ms). DEVIATION: nb-sbert-base needs
    torch, and there is no PyTorch wheel for Python 3.13 on Intel macOS. Running
    paraphrase-multilingual-mpnet-base-v2 via ONNX Runtime instead — same family, same
    768 dims. No result may be attributed to nb-sbert. LIMITATIONS §12.
-D3 Graph channel: k-hop from profile seeds, ≥5 shared skills threshold
+D3 Graph channel: k-hop from profile seeds, ≥5 shared skills threshold. Also
+   supplies OCCUPATION PROXIMITY (styrk_code, role_family) so a `sykepleier`
+   query reaches `spesialsykepleier` — promoted in importance by D18.
 D4 RRF fusion (k=60)
 D5 Constraint stage: graded severity from norwegian_requirement_level, λ dial
 D6 Query parser: gazetteer fast path → distilled classifier → LLM residue
 D7 Linear scorer: rrf + skill_coverage + occupation_proximity + recency + location.
+   `occupation_proximity` is the MECHANISM that carries occupation, not a garnish:
+   D18 measured that BM25 weights a hard occupation constraint by rarity, which is
+   the wrong ordering by construction. BM25 scores the free-text residue only.
    Coverage is WEIGHTED and three-valued, not a match count: a missing hard requirement
    (`norsk autorisasjon`, 462 ads) disqualifies where a missing preference only demotes,
    and `unstated` must not score the same as `violated`.

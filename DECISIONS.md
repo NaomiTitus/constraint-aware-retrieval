@@ -628,3 +628,94 @@ measurement whatever the justification, and the honest move is to report the
 limitation instead. `expect_few_results` is now a machine-checked field
 (`tests/unit/test_persona_split.py`) so this property cannot silently disappear
 from either side of the split.
+
+## D18 — Occupation is a predicate over metadata, not a BM25 term
+
+**Date: 2026-09-27, decided from the D1 probe on the real corpus.** No relevance
+judgments exist, so this rests on structural measurement only, and it is recorded
+as a design decision rather than a quality result.
+
+### What D1 does well, and where it inverts
+
+The lexical channel works on Norwegian queries. `p1_sykepleier_norsk` returns
+`sykepleier` for 10 of 10; `p2_tomrer_norsk` returns `tømrer` for 5 of 5;
+`c4_laerer_norsk_speaker` returns `grunnskolelærer` for 5 of 5. Index builds in
+~30s over 10,166 ads, queries in 6ms.
+
+**English queries invert.** `p1_sykepleier_no_norsk` — the same seeker, same
+occupation, language sentence swapped — returned a psychiatrist, a Norwegian
+teacher, a caretaker, a sales rep and a bricklayer. No nurses.
+
+### Why, measured
+
+In a 95%-Norwegian corpus, ordinary English words are RARE and therefore score as
+informative:
+
+| term | df | idf |
+|---|---:|---:|
+| `i` | 94.4% | 0.06 |
+| `for` | 95.7% | 0.04 |
+| `shifts` | 0.3% | **5.84** |
+| `preferably` | 0.3% | **5.75** |
+| `permanent` | 0.6% | **5.03** |
+| **`nurse`** | 13.0% | **2.04** |
+
+IDF suppresses the *majority* language's function words and inflates the
+minority's. The only content-bearing term in the query was the weakest in it, and
+any long English-written ad accumulated the rest.
+
+### Two fixes applied, and their measured worth
+
+**A bilingual stopword list**, which `bm25.py` originally argued against on the
+grounds that IDF would handle function words. That reasoning is false for a mixed
+corpus and the docstring now carries the refutation. Boilerplate that maps to a
+structured field is stopped too — `permanent`, `shift`, `experience` — because
+`ads.engagementtype` (99.9%), `ads.extent` (100%) and
+`ad_facets.min_years_experience` compare them properly instead of as bag-of-words
+evidence competing with the occupation.
+
+**Indexing `ad_taxonomy.job_title_en`**, the bilingual bridge A4's ESCO work
+already built, populated for 100% of the corpus.
+
+Mean paired overlap@10 across p1/p2/p4/p5, where the two variants differ only in
+the language sentence:
+
+| | mean overlap@10 |
+|---|---:|
+| raw query, title only, no stopwords | 0.8/10 |
+| + bilingual stopwords | 2.0/10 |
+| + `job_title_en` indexed | 1.8/10 |
+| + querying the GOLD PARSE instead of prose | **2.5/10** |
+
+Both fixes help and neither is sufficient. `p1` and `p2` remain at 0/10.
+
+### The decision
+
+**Occupation must be applied as a predicate against `ad_taxonomy`, not as an
+IDF-weighted term.** The failure is not a tuning problem, and one more lexical
+trick will not reach it: the taxonomy bridge *worked* — `nurse` matches 1,320 ads
+— and it made things no better, because a term matching 1,320 ads necessarily has
+low IDF while an incidental `hospital` matching 54 has high IDF. BM25 is being
+asked to treat a **hard constraint** as graded similarity evidence, and it weights
+it by rarity, which is the wrong ordering by construction.
+
+This is the project's own thesis arriving a second time from a different
+direction. Containment is not similarity: an occupation requirement is a predicate
+over metadata, `ad_taxonomy.job_title_standardised` and `job_title_en` are exactly
+that metadata at 100% coverage, and the seeker's `occupation` constraint is already
+typed `hard` in every gold parse. Expressing it lexically is the same category
+error as expressing negation in embedding space.
+
+**So D7's `occupation_proximity` is promoted from a ranking feature to the
+mechanism that carries occupation**, with BM25 scoring only the free-text residue —
+skills and context — where graded lexical evidence is the right model. D3's graph
+channel supplies proximity for near-miss occupations (`spesialsykepleier` for a
+`sykepleier` query), which is what the ESCO `styrk_code` and `role_family` columns
+are for.
+
+### What this does not settle
+
+Whether the resulting ranking is GOOD. `eval/JUDGING_PROTOCOL.md` is pre-registered
+with zero pairs judged; everything above is structural — occupation labels read from
+`ad_taxonomy`, which is derived independently of BM25, so the check is not circular,
+but it is not a relevance measurement either.

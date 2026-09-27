@@ -1,0 +1,148 @@
+corpus: 10166 ads
+
+A_title_only: built in 23.8s — 251,798 terms (15,341,733 postings)
+B_title_plus_taxonomy: built in 29.0s — 253,172 terms (15,655,805 postings)
+mean query time 6ms over 13 dev personas
+
+── c1_lager_no_language_mention  [Logistics]
+   1.  99.41 BLOCKS  Lagermedarbeidere og materia   Vi trenger lagermedarbeidere med truckførerbev
+   2.  96.95 BLOCKS  gaffeltruckfører               TRUCKFØRER MED FART OG ORDEN? VI VIL HA DEG PÅ
+   3.  90.45         gaffeltruckfører               Vi søker truckførere til vår samarbeidspartner
+   4.  89.37         lagerkoordinator               Fabrikkarbeider med truckførerbevis – Bli del 
+   5.  86.51         gaffeltruckfører               TRUCKFØRER
+   10 hits; 5/10 of the top-10 demand Norwegian
+
+── c2_sykepleier_authorisation_only  [Healthcare]
+   1.  81.29 BLOCKS  sykepleier                     Jobb som sykepleier i Trondheim
+   2.  76.39         sykepleier                     Rekrutteringsstilling
+   3.  72.93         sykepleier                     Sykepleier med langvakter på helg
+   4.  72.07 BLOCKS  sykepleier                     Sykepleier 
+   5.  68.52 BLOCKS  sykepleier                     Sykepleier
+   10 hits; 7/10 of the top-10 demand Norwegian
+
+── c4_laerer_norsk_speaker  [Education]
+   1. 130.66 BLOCKS  grunnskolelærer                Vil du bli lærer ved Gjerdrum barneskole?
+   2. 127.77 BLOCKS  grunnskolelærer                Lærer – 100 % vikariat
+   3. 127.27 BLOCKS  grunnskolelærer                Lærer
+   4. 125.01         grunnskolelærer                Grunnskolelærer
+   5. 120.41         grunnskolelærer                Lærer
+   10 hits; 6/10 of the top-10 demand Norwegian
+
+── p1_sykepleier_no_norsk  [Healthcare]
+   1.  51.13 BLOCKS  spesiallege                    Psychiatrist
+   2.  43.45         lærer i moderne språk i vide   Norwegian Teacher
+   3.  41.65         vaktmester                     🏔️ WORK IN THE HEART OF THE NORWEGIAN FJORDS!
+   4.  41.47 BLOCKS  Selgere (engros)               Territory Manager , Peripheral Vascular Health
+   5.  40.62         murer                          Experienced Bricklayers wanted - good pay, per
+   10 hits; 3/10 of the top-10 demand Norwegian
+
+── p1_sykepleier_norsk  [Healthcare]
+   1.  49.39 BLOCKS  sykepleier                     Jobb på sykehus
+   2.  49.04 BLOCKS  sykepleier                     Dedicare søker sykepleiere til jobb på sykehus
+   3.  48.09 BLOCKS  sykepleier                     Jobb som sykepleier i Trondheim
+   4.  47.92 BLOCKS  sykepleier                     Behov for sykepleier til vakre Møre
+   5.  47.76 BLOCKS  sykepleier                     Jobb som sykepleier i Troms og Finnmark
+   10 hits; 10/10 of the top-10 demand Norwegian
+
+── p2_tomrer_no_norsk  [Trades]
+   1. 163.88         tømrer                         Carpenters - Førde. Free accommodation and fli
+   2. 163.88         tømrer                         Carpenters - Bergen. Free accommodation and fl
+   3. 152.67         Kuldemontører mv.              Install the Systems That Keep Buildings Runnin
+   4. 143.04         tømrer                         Kopier - Vi søker tømrere / We are hiring carp
+   5. 139.90         elektriker                     Electricians needed for project in Central Ber
+   10 hits; 1/10 of the top-10 demand Norwegian
+
+── p2_tomrer_norsk  [Trades]
+   1.  90.36 BLOCKS  tømrer                         Tømrer med fagbrev - Nybygg og rehabilitering 
+   2.  86.55         tømrer                         Tømrer
+   3.  81.33         tømrer                         Dyktige tømrere søkes.
+   4.  80.17 BLOCKS  Tømrere og snekkere            # Tømrermester søkes til prosjektering og lede
+   5.  79.79         tømrer                         Faglært Tømrer
+   10 hits; 4/10 of the top-10 demand Norwegian
+
+── p4_backend_no_norsk  [Software]
+   1. 154.67 BLOCKS  programvareutvikler            Senior Fullstackutvikler - 8+ års erfaring - O
+   2. 143.08         programvareutvikler            Full-Stack Developer
+   3. 134.70         IKT-systemanalytiker           Site Reliability Engineer
+   4. 124.33 BLOCKS  IKT-systemutvikler             Vil du utvikle teknologi for et smartere og gr
+   5. 122.04 BLOCKS  IKT-systemutvikler             Systemutvikler
+   10 hits; 4/10 of the top-10 demand Norwegian
+
+── p4_backend_norsk  [Software]
+   1. 117.25 BLOCKS  databasedesigner               Kan du databaser eller har jobbet noen år som 
+   2. 111.56         IKT-systemanalytiker           Site Reliability Engineer
+   3. 102.86         GIS-spesialist                 GIS-utvikler
+   4. 100.52 BLOCKS  programvareutvikler            Senior Fullstackutvikler - 8+ års erfaring - O
+   5.  99.23         programvareutvikler            Full-Stack Developer
+   10 hits; 5/10 of the top-10 demand Norwegian
+
+── p5_data_scientist_no_norsk  [Data]
+   1. 117.52         forsker innen datavitenskap    PhD Candidate in Machine Learning & Signal Pro
+   2. 111.94         forsker innen datavitenskap    Full-Stack Machine Learning  Engineer
+   3. 106.88         Universitets- og høyskolelek    PhD Research Fellow in fairness in artificial
+   4. 106.88 BLOCKS  analytiker, bankprodukter      Bank Partnerships Manager
+   5. 106.45 BLOCKS  markedsanalytiker              We are looking for a new Marketing Performance
+   10 hits; 2/10 of the top-10 demand Norwegian
+
+── p5_data_scientist_norsk  [Data]
+   1. 163.06         forsker innen datavitenskap    Vil du bruke data til å løse utfordringer for 
+   2. 153.37 BLOCKS  forsker innen datavitenskap    Fra master til meningsfull jobb - Vil du bruke
+   3. 113.22 BLOCKS  programvareutvikler            Fra master til meningsfull jobb - Vil du være 
+   4. 110.02 BLOCKS  datavarehusutvikler            Senior Data Engineer
+   5. 103.38         utvikler av IKT-intelligenss   Lyst til å jobbe med AI i et av Nordens størst
+   10 hits; 5/10 of the top-10 demand Norwegian
+
+── p6_grunnskolelaerer  [Education]
+   1.  68.21         grunnskolelærer                Vacancy: Temporary Teaching Position 
+   2.  66.81         elektriker                     Electricians in Bergen. Free apartment and fli
+   3.  66.15         prosessoperatør, matproduksj   Production Team Member – Premium Salmon Proces
+   4.  66.00         lærer i moderne språk i vide   Norwegian Teacher
+   5.  65.52         forskningsassistent på unive   Researcher in Applied Mineralogy
+   10 hits; 1/10 of the top-10 demand Norwegian
+
+── p7_lagermedarbeider  [Logistics]
+   1. 166.33         gaffeltruckfører               Warehouse workers with forklift certificate
+   2.  99.36         gaffeltruckfører               Experienced Forklift Driver
+   3.  98.68         Havbruksarbeidere              Salmon Production & Logistics Workers Wanted!
+   4.  98.38         gaffeltruckfører               Elektrikere til spennende maritimt prosjekt - 
+   5.  96.73         Kuldemontører mv.              Kopier - Vi søker ventilasjonsmontører i Berge
+   10 hits; 0/10 of the top-10 demand Norwegian
+
+=== DO THE PAIRED VARIANTS RETRIEVE THE SAME ADS? ===
+   each pair differs ONLY in the language sentence — but one is written
+   in Norwegian and the other in English, so this measures whether the
+   lexical channel survives the language switch at all.
+
+   pair     A title only   B + taxonomy
+   p1               0/10           0/10
+   p2               0/10           0/10
+   p4               7/10           7/10
+   p5               1/10           0/10
+
+   mean  A 2.0/10    B 1.8/10    delta -0.2
+
+   Arm A is the cross-language failure: `nurse` never matches `sykepleier`, so the
+   English variant falls back to generic English vocabulary and retrieves chefs
+   and bricklayers. Arm B indexes ad_taxonomy.job_title_en, populated for 100% of
+   the corpus by A4's ESCO work, which bridges the two LEXICALLY — no encoder.
+
+=== THE CASE THAT EXPOSED IT: p1_sykepleier_no_norsk top-5 ===
+   A_title_only  / raw query    0/5 nurses  ['spesiallege', 'Selgere (engros)', 'renholder, privathjem', 'kokk']
+   B_+taxonomy   / raw query    0/5 nurses  ['spesiallege', 'lærer i moderne språk i videregående skole', 'vaktmester', 'Selgere (engros)']
+   C_+taxonomy   / GOLD PARSE   1/5 nurses  ['pleiemedhjelper', 'spesialsykepleier', 'spesialveterinær', 'spesiallege']
+
+=== PAIRED OVERLAP, raw query vs gold parse (arm B index) ===
+   the parse strips the language sentence and the boilerplate, so the
+   two variants of a pair should converge on the SAME ads.
+
+   p1     raw  0/10    gold parse  0/10
+   p2     raw  0/10    gold parse  0/10
+   p4     raw  7/10    gold parse  8/10
+   p5     raw  0/10    gold parse  2/10
+
+   mean  raw 1.8/10   gold parse 2.5/10   delta +0.8
+
+written reports/bm25_dev_probe.json
+
+REMINDER: no relevance judgment exists. Nothing above is a quality
+measurement — it says only whether D1 is worth judging.

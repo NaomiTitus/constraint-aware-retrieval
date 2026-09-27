@@ -1,0 +1,218 @@
+{
+ "n_ads": 10166,
+ "n_terms": 253172,
+ "build_seconds": 0.0,
+ "query_ms": 5.523773340078501,
+ "personas": {
+  "c1_lager_no_language_mention": {
+   "n_hits": 10,
+   "top_occupations": [
+    "Lagermedarbeidere og materialforvaltere",
+    "gaffeltruckf\u00f8rer",
+    "gaffeltruckf\u00f8rer",
+    "lagerkoordinator",
+    "gaffeltruckf\u00f8rer"
+   ],
+   "blocking_in_top10": 5
+  },
+  "c2_sykepleier_authorisation_only": {
+   "n_hits": 10,
+   "top_occupations": [
+    "sykepleier",
+    "sykepleier",
+    "sykepleier",
+    "sykepleier",
+    "sykepleier"
+   ],
+   "blocking_in_top10": 7
+  },
+  "c4_laerer_norsk_speaker": {
+   "n_hits": 10,
+   "top_occupations": [
+    "grunnskolel\u00e6rer",
+    "grunnskolel\u00e6rer",
+    "grunnskolel\u00e6rer",
+    "grunnskolel\u00e6rer",
+    "grunnskolel\u00e6rer"
+   ],
+   "blocking_in_top10": 6
+  },
+  "p1_sykepleier_no_norsk": {
+   "n_hits": 10,
+   "top_occupations": [
+    "spesiallege",
+    "l\u00e6rer i moderne spr\u00e5k i videreg\u00e5ende skole",
+    "vaktmester",
+    "Selgere (engros)",
+    "murer"
+   ],
+   "blocking_in_top10": 3
+  },
+  "p1_sykepleier_norsk": {
+   "n_hits": 10,
+   "top_occupations": [
+    "sykepleier",
+    "sykepleier",
+    "sykepleier",
+    "sykepleier",
+    "sykepleier"
+   ],
+   "blocking_in_top10": 10
+  },
+  "p2_tomrer_no_norsk": {
+   "n_hits": 10,
+   "top_occupations": [
+    "t\u00f8mrer",
+    "t\u00f8mrer",
+    "Kuldemont\u00f8rer mv.",
+    "t\u00f8mrer",
+    "elektriker"
+   ],
+   "blocking_in_top10": 1
+  },
+  "p2_tomrer_norsk": {
+   "n_hits": 10,
+   "top_occupations": [
+    "t\u00f8mrer",
+    "t\u00f8mrer",
+    "t\u00f8mrer",
+    "T\u00f8mrere og snekkere",
+    "t\u00f8mrer"
+   ],
+   "blocking_in_top10": 4
+  },
+  "p4_backend_no_norsk": {
+   "n_hits": 10,
+   "top_occupations": [
+    "programvareutvikler",
+    "programvareutvikler",
+    "IKT-systemanalytiker",
+    "IKT-systemutvikler",
+    "IKT-systemutvikler"
+   ],
+   "blocking_in_top10": 4
+  },
+  "p4_backend_norsk": {
+   "n_hits": 10,
+   "top_occupations": [
+    "databasedesigner",
+    "IKT-systemanalytiker",
+    "GIS-spesialist",
+    "programvareutvikler",
+    "programvareutvikler"
+   ],
+   "blocking_in_top10": 5
+  },
+  "p5_data_scientist_no_norsk": {
+   "n_hits": 10,
+   "top_occupations": [
+    "forsker innen datavitenskap",
+    "forsker innen datavitenskap",
+    "Universitets- og h\u00f8yskolelektorer/-l\u00e6rere",
+    "analytiker, bankprodukter",
+    "markedsanalytiker"
+   ],
+   "blocking_in_top10": 2
+  },
+  "p5_data_scientist_norsk": {
+   "n_hits": 10,
+   "top_occupations": [
+    "forsker innen datavitenskap",
+    "forsker innen datavitenskap",
+    "programvareutvikler",
+    "datavarehusutvikler",
+    "utvikler av IKT-intelligenssystemer"
+   ],
+   "blocking_in_top10": 5
+  },
+  "p6_grunnskolelaerer": {
+   "n_hits": 10,
+   "top_occupations": [
+    "grunnskolel\u00e6rer",
+    "elektriker",
+    "prosessoperat\u00f8r, matproduksjon",
+    "l\u00e6rer i moderne spr\u00e5k i videreg\u00e5ende skole",
+    "forskningsassistent p\u00e5 universitet"
+   ],
+   "blocking_in_top10": 1
+  },
+  "p7_lagermedarbeider": {
+   "n_hits": 10,
+   "top_occupations": [
+    "gaffeltruckf\u00f8rer",
+    "gaffeltruckf\u00f8rer",
+    "Havbruksarbeidere",
+    "gaffeltruckf\u00f8rer",
+    "Kuldemont\u00f8rer mv."
+   ],
+   "blocking_in_top10": 0
+  }
+ },
+ "pair_overlap_at_10": {
+  "p1": {
+   "A_title_only": 0,
+   "B_title_plus_taxonomy": 0
+  },
+  "p2": {
+   "A_title_only": 0,
+   "B_title_plus_taxonomy": 0
+  },
+  "p4": {
+   "A_title_only": 7,
+   "B_title_plus_taxonomy": 7
+  },
+  "p5": {
+   "A_title_only": 1,
+   "B_title_plus_taxonomy": 0
+  }
+ },
+ "mean_overlap": {
+  "A_title_only": 2.0,
+  "B_title_plus_taxonomy": 1.75
+ },
+ "p1_english_top5": {
+  "A_title_only  / raw query": [
+   "spesiallege",
+   "Selgere (engros)",
+   "renholder, privathjem",
+   "kokk",
+   "murer"
+  ],
+  "B_+taxonomy   / raw query": [
+   "spesiallege",
+   "l\u00e6rer i moderne spr\u00e5k i videreg\u00e5ende skole",
+   "vaktmester",
+   "Selgere (engros)",
+   "murer"
+  ],
+  "C_+taxonomy   / GOLD PARSE": [
+   "pleiemedhjelper",
+   "spesialsykepleier",
+   "spesialveterin\u00e6r",
+   "spesiallege",
+   "pleiemedhjelper"
+  ]
+ },
+ "pair_overlap_raw_vs_parse": {
+  "p1": {
+   "raw": 0,
+   "parse": 0
+  },
+  "p2": {
+   "raw": 0,
+   "parse": 0
+  },
+  "p4": {
+   "raw": 7,
+   "parse": 8
+  },
+  "p5": {
+   "raw": 0,
+   "parse": 2
+  }
+ },
+ "mean_overlap_raw_vs_parse": {
+  "raw": 1.75,
+  "parse": 2.5
+ }
+}
