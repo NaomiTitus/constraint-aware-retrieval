@@ -1227,7 +1227,27 @@ role as technical. The occupation predicate then scored it `prox=1` **correctly 
 the data it was handed.** No ranking change repairs a wrong label; the advertisement
 genuinely claims to be an instrumentation role in the corpus.
 
-**Cause 2, mine: flat term weights.** `plc` appears in **10 advertisements**
+**Cause 2 — CORRECTED BY ABLATION. It was the double count alone.** I applied two
+fixes and credited both. Isolating them:
+
+| | GTM rank | top result |
+|---|---:|---|
+| neither fix | 1 | GTM Engineer |
+| **IDF weighting only** | **1** | GTM Engineer |
+| **double-count fix only** | **4** | Maritim elektriker |
+| both | 4 | Maritim elektriker |
+
+**IDF weighting did nothing for this query.** The double-count fix alone reproduces
+the full effect. The mechanism was narrow and specific: GTM carried
+`stated_working_language: english` AND `english_accessible: true`, so it received
+**1.32×** while `Maritim elektriker` — accessible but with no stated working
+language — received 1.22×. That ~8% margin decided the ordering, because the base
+scores were close enough for a double-counted boost to flip them.
+
+The IDF change stands on its own merits (below) but must not be credited with this
+fix, and the original write-up called it "cause 2" when it was not a cause at all.
+
+**The IDF change, kept but not credited.** `plc` appears in **10 advertisements**
 (idf 6.93) and `engineer` in 179 (idf 4.06), yet a title hit on either scored the
 same 1.0. The most discriminating word in the query was worth the same as the most
 generic. Terms are now weighted by document frequency, computed once at load — the
@@ -1239,8 +1259,9 @@ advertisements **1.32×** against 1.22× for everything else. But `english_acces
 is *derived partly from* the working language — the same evidence counted twice, and
 that margin alone flipped the pair.
 
-After both fixes: `automasjonsingeniør` ranks 1–2, `ingeniør, elektro` 3, GTM drops
-to 4. No regressions on nurse, tømrer or data engineer.
+After the fixes: `automasjonsingeniør` ranks 1–2, `ingeniør, elektro` 3, GTM drops
+to 4. No regressions on nurse, tømrer or data engineer. **Attribution: the
+double-count fix did all of it.**
 
 ### The finding underneath it
 
