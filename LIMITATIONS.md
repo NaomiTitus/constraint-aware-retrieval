@@ -977,9 +977,8 @@ Three honest readings that travel with it:
   `credential.licence` and `credential.trade_certificate` have **no corpus
   counterpart at all** (§15), so the judge can see a master-craftsman requirement the
   seeker lacks while the constraint stage has no field to act on.
-- **Thirteen dev personas, four intact pairs.** No confidence intervals are computed
-  and none should be quoted; E7 pre-registers bootstrap CIs on every adjacent-rung
-  delta and they have not been run.
+- **Thirteen dev personas, four intact pairs.** Bootstrap intervals have NOW been
+  computed (E7) and they qualify the ladder sharply — see the next subsection.
 
 ## 18. ESCO skill resolution: built, measured at 17%, and deliberately not wired in
 
@@ -1129,3 +1128,43 @@ depends on the gloss being right.
 **A thin margin worth stating.** The English noise floor is p99 0.511 and true pairs
 bottom out at p05 0.593. 0.72 is deliberately conservative and loses roughly a
 quarter of true matches, trading recall for not matching nurses to doctors.
+
+### The intervals, and what they take away
+
+E7's bootstrap ran: 10,000 replicates, 95% percentile, **resampling the PERSONA and
+not the advertisement**. Ten advertisements from one persona share a query, a pool
+and an occupation resolution; treating them as independent observations would report
+an interval several times too narrow and turn noise into significance. Both arms are
+evaluated on the same resampled personas, so the interval is on the difference.
+
+| rung | ΔCVR@10 | 95% CI | verdict |
+|---|---:|---|---|
+| BM25 raw → BM25 parse | +0.038 | [−0.008, +0.085] | not distinguishable |
+| BM25 parse → + ESCO occupation | +0.000 | [−0.023, +0.023] | not distinguishable |
+| **+ ESCO → + constraints λ=0.7** | **−0.077** | **[−0.138, −0.023]** | **significant** |
+
+| rung | ΔnDCG@10 | 95% CI | verdict |
+|---|---:|---|---|
+| BM25 raw → BM25 parse | **+0.124** | [+0.017, +0.260] | **significant** |
+| BM25 parse → + ESCO occupation | −0.014 | [−0.052, +0.015] | not distinguishable |
+| + ESCO → + constraints λ=0.7 | **−0.049** | [−0.103, −0.005] | **significant** |
+
+**The headline survives.** CVR@10 −0.077, CI [−0.138, −0.023], excluding zero at
+n=13. The constraint stage's effect is not an artefact of a small sample.
+
+**Two things the intervals take away, and both were mine.**
+
+**The occupation predicate is not distinguishable from BM25 on the parsed query** —
+on either metric, CI straddling zero both times. That is the component D18 argued
+for, that §16 records me tuning three times in one sitting, and at this sample size
+it shows no measurable effect at all. The argument for it remains sound in principle;
+the evidence that it helps does not exist.
+
+**The nDCG cost of the constraint stage is also significant** (−0.049,
+[−0.103, −0.005]), not a rounding artefact. So the headline is precisely a TRADE —
+significantly fewer violations, significantly worse relevance — and quoting the first
+without the second would be dishonest.
+
+The one rung that clearly earns its place on relevance is **parsing the query at
+all**: +0.124 nDCG, significant. Structure beats prose; what is done with the
+structure afterwards is, on this evidence, worth less than extracting it.
