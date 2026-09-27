@@ -93,14 +93,21 @@ def main() -> None:
         # KEY — that is the entire reason skills-v1 produces one — and shipping only
         # the Norwegian phrase would leave an English query term matching Norwegian
         # skill text, which is the cross-language failure D18 measured.
+        # POSITIONALLY ALIGNED. The first version appended to the two lists under
+        # DIFFERENT conditions — a gloss identical to its phrase was skipped — so
+        # every later gloss shifted up one and `computer vision` was displayed
+        # against the next skill's translation. Search was unaffected (both lists
+        # are concatenated into one haystack) but the explanation shown to a user
+        # was wrong, which is worse than useless.
         src = new_skills.get(uuid) or (f.get("skills") or [])
         skills, glosses = [], []
         for sk in src[:12]:
-            ph, gl = sk.get("phrase", ""), sk.get("gloss_en", "")
-            if ph:
-                skills.append(ph)
-            if gl and gl.lower() != ph.lower():
-                glosses.append(gl)
+            ph = (sk.get("phrase") or "").strip()
+            if not ph:
+                continue
+            gl = (sk.get("gloss_en") or "").strip()
+            skills.append(ph)
+            glosses.append("" if gl.lower() == ph.lower() else gl)
         ads.append({
             "u": uuid[:8],                        # short id; the URL carries the full
             "t": title or "",
@@ -239,7 +246,7 @@ def main() -> None:
     tot = sum(len(a["k"]) for a in ads)
     print(f"ads with >=1 skill:    {n_sk} ({n_sk/len(ads):.1%})")
     print(f"skills shipped:        {tot:,} ({tot/len(ads):.2f}/ad) + "
-          f"{sum(len(a['g']) for a in ads):,} English glosses")
+          f"{sum(1 for a in ads for g in a['g'] if g):,} English glosses")
     print(f"skills source:         {skills_source}")
     print("NOT exported, per DATA_LICENSE.md: description_text, employer name, "
           "contact details")

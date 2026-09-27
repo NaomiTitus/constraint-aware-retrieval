@@ -850,3 +850,71 @@ That trade is not a defect: silence on language carries severity 0.5, so a
 strongly-matching advertisement that says nothing is outranked by a weaker match that
 states it accepts English. Whether a seeker prefers that is a product decision, which
 is why λ is a dial on the page rather than a constant in the code.
+
+## 17. The first judged ablation measured the problem and could not measure the fix
+
+327 of 346 pooled pairs judged by `claude-opus-5` under `judge-v1`, 19 errored, and
+**0 failed validation** — no fabricated evidence, no out-of-range grade, no
+authorisation recorded as a language violation.
+
+### What the judgments say
+
+| arm | CVR@10 | nDCG@10 | MRR@10 | judged |
+|---|---:|---:|---:|---:|
+| BM25 raw query | **0.115** | 0.673 | 0.923 | 95% |
+| BM25 gold parse | 0.146 | **0.769** | 0.923 | 92% |
+| + STYRK occupation | 0.154 | 0.763 | 0.904 | 92% |
+| + ESCO occupation | 0.146 | 0.762 | 0.923 | 94% |
+| **dense** | **0.269** | **0.376** | 0.560 | 97% |
+
+Grades: 84 irrelevant · 91 adjacent · 101 plausible · 51 squarely right. 71 of 327
+violate a stated constraint, 62 of those on language. **Eight rows are grade 3 AND
+violating** — a perfect occupational match the seeker cannot take, which the protocol
+calls the most informative row in the dataset.
+
+**The dense channel is confirmed worst on judged data**, at roughly half the nDCG of
+every lexical arm and more than double the violation rate. §14 measured that
+structurally; this is the same verdict from a judge that never saw the extractor.
+
+### ΔCVR_paired is POSITIVE on every arm, and that is the thesis
+
+| arm | mean ΔCVR |
+|---|---:|
+| BM25 raw | +0.225 |
+| BM25 parse | +0.250 |
+| + STYRK | +0.275 |
+| + ESCO | +0.225 |
+| dense | **+0.375** |
+
+Negative would mean the system responded to the constraint. **Positive means stating
+"I do not speak Norwegian" produced MORE violations, not fewer** — on all five arms,
+under a judge held to a pre-registered protocol. This is cell 3's finding (§12,
+5 of 5 personas) reproduced with relevance judgments instead of cosine.
+
+### And the ablation could not evaluate the fix, because of how I pooled it
+
+**None of the five pooled arms includes the constraint stage.** The pool is the union
+of five *unconstrained* rankings, so the proposed system was never put in front of the
+judge.
+
+Two attempts to recover it from the existing judgments both fail, and the second is
+the real barrier:
+
+1. Re-ranking each arm's pooled top-10 and taking ten leaves **the same set** — and
+   CVR@10 is set-based, so λ=0, 0.7 and 1.0 return byte-identical numbers. That is
+   an artefact of my evaluation code, not a property of the constraint stage, which
+   works correctly: severity distributes 1.0 on 1,501 of 3,000 ads, 0.5 on 1,032,
+   and `apply` changes scores as designed.
+2. Re-ranking the full corpus and taking the constrained top-10 leaves **22 of 130
+   advertisements (17%) with no judgment at all**, because the documents the
+   constraint stage promotes were never pooled.
+
+This is precisely the pooling bias `JUDGING_PROTOCOL.md` warns about — *"a document no
+system retrieved is never judged"* — except it landed on the one arm the project
+exists to evaluate. **The fix is a second judging round whose pool includes the
+constrained arm's top-10**, about 130 further pairs at roughly $2. Nothing about the
+judge, the protocol or the metrics needs to change; the pool was simply drawn before
+the arm existed.
+
+Until that round runs, the honest statement is: **the problem is measured and
+confirmed by an isolated judge; the fix is not yet measured at all.**
