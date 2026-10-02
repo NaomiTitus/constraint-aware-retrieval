@@ -1,17 +1,26 @@
-# Smart Search — job search that respects what you can't do
+# Constraint-aware retrieval — search a big catalogue by typing a sentence
 
-**Say what you can't do, and this listens.** Type *"I'm a nurse in Bergen and I don't speak
-Norwegian"* and you get nursing jobs in and around Bergen, each one marked with whether the
-language will shut you out. For that query the answer is brutal: of 1,151 nursing and care
-ads, **exactly one** is open to an English speaker, and it isn't in Bergen. The point is that
-you're told on the first screen instead of finding out a thousand ads later. Ask as a software
-developer and 28% are open.
+**Requirements run one way.** An item that needs more than you have is out; one that asks for
+less is free. Keyword search gets this backwards — it matches words, so *mentioning* a
+requirement you don't meet drags you toward the items demanding it. Measured here, saying you
+don't speak Norwegian made results **worse** for 5 out of 5 test seekers. Embeddings can't
+express the difference either, because cosine similarity is symmetric.
 
-Ordinary keyword search gets this backwards. It matches words, so *mentioning* Norwegian drags
-you toward the jobs that demand it — measured here, saying you don't speak it made results
-**worse** for 5 out of 5 test seekers. So this doesn't match text. It pulls your sentence apart
-into the things it actually asks for — language, place, kind of work, experience — and checks
-each one against what the ad requires. Every result shows its working.
+**So the semantics move off the query path.** A language model reads each item once, when it's
+indexed, and writes down what that item requires. A query is then pulled apart
+deterministically — no model, no API call — into the things it asks for: language, place, kind
+of work. Each is checked against the stored requirement, one way round. What's left at query
+time is arithmetic over arrays: **166 ms** to score all 10,166 items, in the browser, with no
+server and no vector database.
+
+**Nothing in that shape is specific to what's in the catalogue.** It fits any corpus whose
+items state requirements — though it has only been measured on one. That catalogue is
+Norwegian job ads, the application below and the source of every number here: type *"I'm a
+nurse in Bergen and I don't speak Norwegian"* and you get nursing jobs in and around Bergen,
+each one marked with whether the language will shut you out. Of 1,151 nursing and care ads,
+**exactly one** is open to an English speaker, and it isn't in Bergen — and you are told on
+the first screen instead of finding out a thousand ads later. Ask as a software developer and
+28% are open. Every result shows its working.
 
 **[▶ Live demo](https://naomititus.github.io/constraint-aware-retrieval/)** · **[What these numbers
 don't support](LIMITATIONS.md)** · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md)
