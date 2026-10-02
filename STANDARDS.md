@@ -11,7 +11,7 @@ Status legend: `✓` exists · `~` partial · `✗` not yet built
 ## 1. Target layout
 
 ```
-finnno_smart_search/
+constraint-aware-retrieval/
 ├── Makefile                      ✗  setup test ingest census index eval serve web all
 ├── pyproject.toml                ✓  extras: llm · search · api · dev
 ├── README.md                     ✓  thesis · headline result · honest data caveat

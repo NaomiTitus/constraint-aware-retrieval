@@ -13,7 +13,7 @@ you toward the jobs that demand it — measured here, saying you don't speak it 
 into the things it actually asks for — language, place, kind of work, experience — and checks
 each one against what the ad requires. Every result shows its working.
 
-**[▶ Live demo](https://naomititus.github.io/finnno_smart_search/)** · **[What these numbers
+**[▶ Live demo](https://naomititus.github.io/constraint-aware-retrieval/)** · **[What these numbers
 don't support](LIMITATIONS.md)** · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md)
 
 > **Scope.** One market — NAV/arbeidsplassen's licensed feed, 10,166 active ads over 120 days
@@ -429,7 +429,7 @@ classification.
 ## Running it
 
 **The demo needs nothing installed** —
-[naomititus.github.io/finnno_smart_search](https://naomititus.github.io/finnno_smart_search/).
+[naomititus.github.io/constraint-aware-retrieval](https://naomititus.github.io/constraint-aware-retrieval/).
 GitHub Pages serves the index as a static file and search runs in your browser.
 
 Locally you need a file server, not a double-click — the page fetches its index, which browsers
